@@ -46,6 +46,7 @@ const sidebarSections: SidebarSection[] = [
             { name: 'Banners', href: '/banners', icon: Layers },
             { name: 'Referrals', href: '/referrals', icon: Users },
             { name: 'VIP Program', href: '/vip', icon: Crown },
+            { name: 'Levels', href: '/levels', icon: Award },
             { name: 'Gifts', href: '/gifts', icon: Gift },
             { name: 'Frames', href: '/frames', icon: Award },
             { name: 'Avatars', href: '/avatars', icon: User }

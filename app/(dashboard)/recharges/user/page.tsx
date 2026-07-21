@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/Table";
 import { Coins, Plus, Search, DollarSign, UserCheck, Calendar } from "lucide-react";
 import { toast } from 'sonner';
+import { apiClient } from '@/lib/apiClient';
 
 export default function UserRechargePage() {
     const [userId, setUserId] = useState('');
@@ -27,26 +28,38 @@ export default function UserRechargePage() {
         { id: '2', userId: 10008, name: 'Katrina Kaif', amount: 12000, price: 100, date: '2026-07-08 15:45' }
     ]);
 
-    const handleRecharge = (e: React.FormEvent) => {
+    const handleRecharge = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!userId || !amount) return;
 
         setLoading(true);
-        setTimeout(() => {
-            const newLog = {
-                id: Date.now().toString(),
-                userId: parseInt(userId),
-                name: `User_${userId}`,
-                amount: parseInt(amount),
-                price: parseInt(amount) * 0.01,
-                date: new Date().toISOString().replace('T', ' ').substring(0, 16)
-            };
-            setLogs([newLog, ...logs]);
-            toast.success(`Successfully recharged User ID ${userId} with ${amount} Diamonds`);
-            setUserId('');
-            setAmount('');
+        try {
+            const res = await apiClient.post('/api/admin/users/add-diamonds', {
+                userId: Number(userId),
+                diamonds: Number(amount)
+            });
+            if (res.data?.success) {
+                const newLog = {
+                    id: Date.now().toString(),
+                    userId: parseInt(userId),
+                    name: `User_${userId}`,
+                    amount: parseInt(amount),
+                    price: parseInt(amount) * 0.01,
+                    date: new Date().toISOString().replace('T', ' ').substring(0, 16)
+                };
+                setLogs(prev => [newLog, ...prev]);
+                toast.success(`Successfully recharged User ID ${userId} with ${amount} Diamonds`);
+                setUserId('');
+                setAmount('');
+            } else {
+                toast.error(res.data?.message || 'Recharge failed');
+            }
+        } catch (error: any) {
+            console.error('Recharge Error:', error);
+            toast.error(error.response?.data?.message || 'Error communicating with backend');
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
     };
 
     return (

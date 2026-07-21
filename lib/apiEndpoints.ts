@@ -113,4 +113,12 @@ export const API_ENDPOINTS = {
         DELETE: (id: string) => `/api/admin/banners/${id}`,
         TOGGLE: (id: string) => `/api/admin/banners/${id}/toggle`,
     },
+
+    // Levels Management
+    LEVELS_MGMT: {
+        LIST: '/api/admin/levels',
+        CREATE: '/api/admin/levels',
+        UPDATE: (id: string) => `/api/admin/levels/${id}`,
+        DELETE: (id: string) => `/api/admin/levels/${id}`,
+    },
 } as const;
