@@ -332,7 +332,7 @@ export default function BannersPage() {
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-slate-300">Link Name (Deep Link)</label>
                                 <Input
-                                    placeholder="e.g., meethichat://profile/123"
+                                    placeholder="e.g., mithichat://profile/123"
                                     value={linkName}
                                     onChange={(e) => setLinkName(e.target.value)}
                                 />
@@ -577,7 +577,7 @@ export default function BannersPage() {
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold text-slate-300">Link Name (Deep Link)</label>
                                     <Input
-                                        placeholder="e.g., meethichat://profile/123"
+                                        placeholder="e.g., mithichat://profile/123"
                                         value={editingBanner.linkUrl}
                                         onChange={(e) => setEditingBanner({
                                             ...editingBanner,
