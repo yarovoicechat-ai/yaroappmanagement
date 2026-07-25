@@ -1,6 +1,6 @@
 # Meethi Chat Management Panel
 
-Separate Next.js app for `management.meethichat.com`.
+Separate Next.js app for `management.mithichat.live`.
 
 This panel is intentionally limited to app configuration work:
 
