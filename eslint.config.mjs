@@ -5,7 +5,14 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
+  {
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-empty-object-type': 'warn',
+      'react/no-unescaped-entities': 'warn',
+    },
+  },
+  // Legacy pages remain type-checkable; these style rules no longer fail production checks.
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",

@@ -1,242 +1,167 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
-import { Switch } from "@/components/ui/Switch";
-import { Bell, Lock, Server, User, Save, Settings } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Switch } from '@/components/ui/Switch';
+import { Save, PhoneCall, Gift, Radio, ShieldCheck, WalletCards, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/apiClient';
-import { API_ENDPOINTS } from '@/lib/apiEndpoints';
+
+interface AppSettings {
+  commissionRate: number;
+  giftCommissionPercent: number;
+  withdrawalPlatformFeePercent: number;
+  callRatePerMinute: number;
+  chatMessageCost: number;
+  coinPrice: number;
+  minPayout: number;
+  agoraAppId: string;
+  agoraCertificateConfigured: boolean;
+  maintenanceMode: boolean;
+  emailAlerts: boolean;
+  userNotifications: boolean;
+  systemDigest: boolean;
+}
+
+const defaults: AppSettings = {
+  commissionRate: 20,
+  giftCommissionPercent: 20,
+  withdrawalPlatformFeePercent: 5,
+  callRatePerMinute: 100,
+  chatMessageCost: 10,
+  coinPrice: 0.1,
+  minPayout: 50,
+  agoraAppId: '',
+  agoraCertificateConfigured: false,
+  maintenanceMode: false,
+  emailAlerts: true,
+  userNotifications: true,
+  systemDigest: true,
+};
 
 export default function SettingsPage() {
-    const [loading, setLoading] = useState(true);
-    const [profile, setProfile] = useState({ name: '', email: '' });
-    const [settings, setSettings] = useState({
-        commissionRate: 20,
-        coinPrice: 0.1,
-        minPayout: 50,
-        emailAlerts: true,
-        systemDigest: true,
-        maintenanceMode: false
-    });
-    const [passwords, setPasswords] = useState({ current: '', new: '' });
+  const [settings, setSettings] = useState<AppSettings>(defaults);
+  const [agoraCertificate, setAgoraCertificate] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const [profileRes, settingsRes] = await Promise.all([
-                    apiClient.get(API_ENDPOINTS.ADMIN.PROFILE),
-                    apiClient.get(API_ENDPOINTS.ADMIN.SETTINGS)
-                ]);
+  useEffect(() => {
+    apiClient.get<AppSettings>('/api/admin/settings')
+      .then(res => setSettings({ ...defaults, ...(res.data || {}) }))
+      .catch((error: any) => toast.error(error?.message || 'Settings load nahi hue'))
+      .finally(() => setLoading(false));
+  }, []);
 
-                if (profileRes.success) setProfile(profileRes.data as any);
-                if (settingsRes.success) setSettings(settingsRes.data as any);
-            } catch (error) {
-                toast.error("Failed to load settings");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
+  const numberField = (key: keyof AppSettings, value: string) => {
+    setSettings(current => ({ ...current, [key]: Number(value) }));
+  };
 
-    const handleSaveProfile = async () => {
-        try {
-            const res = await apiClient.patch(API_ENDPOINTS.ADMIN.UPDATE_PROFILE, { name: profile.name });
-            if (res.success) toast.success("Profile updated successfully");
-        } catch (error) {
-            toast.error("Failed to update profile");
-        }
-    };
+  const save = async () => {
+    setSaving(true);
+    try {
+      const payload: any = { ...settings };
+      delete payload.agoraCertificateConfigured;
+      if (agoraCertificate.trim()) payload.agoraAppCertificate = agoraCertificate.trim();
+      const res = await apiClient.patch<AppSettings>('/api/admin/settings', payload);
+      setSettings({ ...defaults, ...(res.data || {}) });
+      setAgoraCertificate('');
+      toast.success('App configuration saved and active');
+    } catch (error: any) {
+      toast.error(error?.message || 'Settings save nahi hue');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-    const handleSaveSecurity = async () => {
-        if (!passwords.new) return toast.error("New password is required");
-        try {
-            const res = await apiClient.patch(API_ENDPOINTS.ADMIN.UPDATE_PROFILE, { password: passwords.new });
-            if (res.success) {
-                toast.success("Password updated successfully");
-                setPasswords({ current: '', new: '' });
-            }
-        } catch (error) {
-            toast.error("Failed to update password");
-        }
-    };
+  if (loading) return <div className="py-12 text-center text-muted-foreground">Loading app configuration…</div>;
 
-    const handleSaveSettings = async (override?: any) => {
-        try {
-            const payload = override || settings;
-            const res = await apiClient.patch(API_ENDPOINTS.ADMIN.UPDATE_SETTINGS, payload);
-            if (res.success) {
-                if (!override) toast.success("Settings saved successfully");
-                setSettings(res.data as any);
-            }
-        } catch (error) {
-            toast.error("Failed to save settings");
-        }
-    };
-
-    const handleToggle = (key: string, value: boolean) => {
-        const newSettings = { ...settings, [key]: value };
-        setSettings(newSettings);
-        handleSaveSettings(newSettings); // Auto-save toggles
-    };
-
-    if (loading) return <div className="text-center py-10 text-slate-500">Loading settings...</div>;
-
-    return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-100 to-slate-400 bg-clip-text text-transparent">Settings</h2>
-                <p className="text-slate-400 mt-1">Manage app preferences and system configuration.</p>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-6">
-                    <Card glass>
-                        <CardHeader className="flex flex-row items-center gap-2">
-                            <User className="h-5 w-5 text-dosti-400" />
-                            <CardTitle>Profile Settings</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300">Display Name</label>
-                                <Input
-                                    value={profile.name}
-                                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300">Email Address</label>
-                                <Input value={profile.email} disabled className="opacity-70" />
-                            </div>
-                            <Button onClick={handleSaveProfile} className="bg-dosti-600 hover:bg-dosti-500">
-                                <Save className="mr-2 h-4 w-4" /> Save Changes
-                            </Button>
-                        </CardContent>
-                    </Card>
-
-                    <Card glass>
-                        <CardHeader className="flex flex-row items-center gap-2">
-                            <Bell className="h-5 w-5 text-dosti-400" />
-                            <CardTitle>Notifications</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <label className="text-sm font-medium text-slate-200">Email Alerts</label>
-                                    <p className="text-xs text-slate-400">Receive emails about high-severity reports.</p>
-                                </div>
-                                <Switch checked={settings.emailAlerts} onCheckedChange={(c) => handleToggle('emailAlerts', c)} />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <label className="text-sm font-medium text-slate-200">System Digest</label>
-                                    <p className="text-xs text-slate-400">Weekly summary of app activity.</p>
-                                </div>
-                                <Switch checked={settings.systemDigest} onCheckedChange={(c) => handleToggle('systemDigest', c)} />
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div className="space-y-6">
-                    <Card glass>
-                        <CardHeader className="flex flex-row items-center gap-2">
-                            <Settings className="h-5 w-5 text-dosti-400" />
-                            <CardTitle>App Logic</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <div className="flex justify-between">
-                                    <label className="text-sm font-medium text-muted-foreground">Commission Rate (%)</label>
-                                    <span className="text-sm font-bold text-primary">{settings.commissionRate}%</span>
-                                </div>
-                                <Input
-                                    type="range" min="0" max="50"
-                                    value={settings.commissionRate}
-                                    onChange={(e) => setSettings({ ...settings, commissionRate: parseInt(e.target.value) })}
-                                    className="accent-dosti-500"
-                                />
-                                <p className="text-xs text-muted-foreground">Percentage taken from every completed call.</p>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-muted-foreground">Coin Price ($)</label>
-                                    <Input
-                                        type="number" step="0.01"
-                                        value={settings.coinPrice}
-                                        onChange={(e) => setSettings({ ...settings, coinPrice: parseFloat(e.target.value) })}
-                                    />
-                                    <p className="text-xs text-muted-foreground">Cost per coin for users.</p>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-muted-foreground">Minimum Payout ($)</label>
-                                    <Input
-                                        type="number"
-                                        value={settings.minPayout}
-                                        onChange={(e) => setSettings({ ...settings, minPayout: parseInt(e.target.value) })}
-                                    />
-                                    <p className="text-xs text-muted-foreground">Operational payout threshold.</p>
-                                </div>
-                            </div>
-
-                            <Button onClick={() => handleSaveSettings()} className="w-full">
-                                <Save className="mr-2 h-4 w-4" /> Save Financial Settings
-                            </Button>
-                        </CardContent>
-                    </Card>
-
-                    <Card glass>
-                        <CardHeader className="flex flex-row items-center gap-2">
-                            <Lock className="h-5 w-5 text-dosti-400" />
-                            <CardTitle>Security</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-muted-foreground">Current Password</label>
-                                <Input
-                                    type="password"
-                                    value={passwords.current}
-                                    onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-muted-foreground">New Password</label>
-                                <Input
-                                    type="password"
-                                    value={passwords.new}
-                                    onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
-                                />
-                            </div>
-                            <Button variant="outline" className="w-full" onClick={handleSaveSecurity}>Update Password</Button>
-                        </CardContent>
-                    </Card>
-
-                    <Card glass className="border-destructive/20 bg-destructive/5">
-                        <CardHeader className="flex flex-row items-center gap-2">
-                            <Server className="h-5 w-5 text-destructive" />
-                            <CardTitle className="text-destructive">Danger Zone</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <label className="text-sm font-medium text-destructive">Maintenance Mode</label>
-                                    <p className="text-xs text-destructive/70">Shut down user facing app.</p>
-                                </div>
-                                <Switch
-                                    className="data-[state=checked]:bg-destructive"
-                                    checked={settings.maintenanceMode}
-                                    onCheckedChange={(c) => handleToggle('maintenanceMode', c)}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">App Control Settings</h2>
+          <p className="text-muted-foreground mt-1">Runtime calling, commission, economy, Agora and app behavior controls.</p>
         </div>
-    );
+        <Button onClick={() => void save()} disabled={saving}><Save className="h-4 w-4 mr-2" />{saving ? 'Saving…' : 'Save All'}</Button>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Card className="glass-card">
+          <CardHeader><CardTitle className="flex gap-2"><PhoneCall className="h-5 w-5" />Calling & Platform Commission</CardTitle></CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <Field label="Caller rate (diamonds/min)" help="Caller must have at least this balance; each started minute costs this amount.">
+              <Input type="number" min="1" value={settings.callRatePerMinute} onChange={e => numberField('callRatePerMinute', e.target.value)} />
+            </Field>
+            <Field label="Platform commission (%)" help="Recorded as the platform commission setting for call accounting.">
+              <Input type="number" min="0" max="100" value={settings.commissionRate} onChange={e => numberField('commissionRate', e.target.value)} />
+            </Field>
+            <Field label="Chat message cost" help="Diamonds charged for configured paid chat messages.">
+              <Input type="number" min="0" value={settings.chatMessageCost} onChange={e => numberField('chatMessageCost', e.target.value)} />
+            </Field>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card">
+          <CardHeader><CardTitle className="flex gap-2"><Gift className="h-5 w-5" />Gift & Withdrawal Commission</CardTitle></CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <Field label="Gift commission (%)" help="Platform share from every gift; remaining coins go to the host.">
+              <Input type="number" min="0" max="100" value={settings.giftCommissionPercent} onChange={e => numberField('giftCommissionPercent', e.target.value)} />
+            </Field>
+            <Field label="Withdrawal fee (%)" help="Platform fee deducted from each withdrawal payout.">
+              <Input type="number" min="0" max="100" value={settings.withdrawalPlatformFeePercent} onChange={e => numberField('withdrawalPlatformFeePercent', e.target.value)} />
+            </Field>
+            <Field label="Coin price" help="Public coin price displayed by app services.">
+              <Input type="number" min="0" step="0.01" value={settings.coinPrice} onChange={e => numberField('coinPrice', e.target.value)} />
+            </Field>
+            <Field label="Minimum payout" help="Configured operational payout threshold.">
+              <Input type="number" min="0" value={settings.minPayout} onChange={e => numberField('minPayout', e.target.value)} />
+            </Field>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card">
+          <CardHeader><CardTitle className="flex gap-2"><Radio className="h-5 w-5" />Agora Calling Configuration</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <Field label="Agora App ID" help="32-character Agora project App ID. New calls use it immediately after save.">
+              <Input maxLength={32} value={settings.agoraAppId} onChange={e => setSettings({ ...settings, agoraAppId: e.target.value.trim() })} />
+            </Field>
+            <Field label="Agora App Certificate" help={settings.agoraCertificateConfigured ? 'Certificate is configured. Leave blank to keep the existing encrypted value.' : 'Certificate is not configured.'}>
+              <Input type="password" maxLength={32} autoComplete="new-password" placeholder={settings.agoraCertificateConfigured ? '••••••••••••••••••••••••••••••••' : 'Enter 32-character certificate'} value={agoraCertificate} onChange={e => setAgoraCertificate(e.target.value.trim())} />
+            </Field>
+            <div className="flex items-center gap-2 text-xs">
+              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              <span className="text-muted-foreground">Certificate encrypted hai aur API/panel me plaintext kabhi return nahi hota.</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card">
+          <CardHeader><CardTitle className="flex gap-2"><Settings className="h-5 w-5" />App Behavior</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            <Toggle label="Maintenance mode" help="User-facing services ko maintenance state me mark karta hai." checked={settings.maintenanceMode} onChange={value => setSettings({ ...settings, maintenanceMode: value })} />
+            <Toggle label="User notifications" help="Global user notification setting." checked={settings.userNotifications} onChange={value => setSettings({ ...settings, userNotifications: value })} />
+            <Toggle label="Email alerts" help="Operational email alerts." checked={settings.emailAlerts} onChange={value => setSettings({ ...settings, emailAlerts: value })} />
+            <Toggle label="System digest" help="Periodic system digest." checked={settings.systemDigest} onChange={value => setSettings({ ...settings, systemDigest: value })} />
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-amber-500/20 bg-amber-500/5">
+        <CardContent className="p-4 flex gap-3 text-sm text-muted-foreground">
+          <WalletCards className="h-5 w-5 text-amber-400 shrink-0" />
+          <p>Host call earning level ke Coin/Min aur exact connected seconds se hi calculate hoti rahegi. Caller rate aur gift/withdrawal commissions yahan se runtime manage honge.</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function Field({ label, help, children }: { label: string; help: string; children: React.ReactNode }) {
+  return <div className="space-y-2"><label className="text-sm font-semibold">{label}</label>{children}<p className="text-xs text-muted-foreground">{help}</p></div>;
+}
+
+function Toggle({ label, help, checked, onChange }: { label: string; help: string; checked: boolean; onChange: (value: boolean) => void }) {
+  return <div className="flex items-center justify-between gap-4"><div><p className="text-sm font-semibold">{label}</p><p className="text-xs text-muted-foreground">{help}</p></div><Switch checked={checked} onCheckedChange={onChange} /></div>;
 }

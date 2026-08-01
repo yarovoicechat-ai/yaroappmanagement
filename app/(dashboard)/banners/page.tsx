@@ -23,6 +23,8 @@ interface Banner {
     title: string;
     imageUrl: string;
     linkUrl: string;
+    targetType: 'none' | 'internal' | 'external';
+    targetScreen: string;
     priority: number;
     startDate?: string;
     endDate?: string;
@@ -35,11 +37,20 @@ interface EditFormState {
     title: string;
     imageUrl: string;
     linkUrl: string;
+    targetType: 'none' | 'internal' | 'external';
+    targetScreen: string;
     priority: string;
     startDate: string;
     endDate: string;
 }
 
+const APP_PAGE_OPTIONS = [
+    ['Wallet', 'Wallet / Recharge'], ['Level', 'Host Levels'], ['Frame', 'Profile Frames'],
+    ['Withdrawal', 'Withdrawal'], ['Kyc', 'KYC Verification'], ['VerificationHub', 'Verification Center'],
+    ['HelpAndSupport', 'Help & Support'], ['Notifications', 'Activity'], ['SystemMessage', 'System Messages'],
+    ['CallHistory', 'Call History'], ['Earning', 'Host Earnings'], ['ExchangeCoins', 'Exchange Coins'],
+    ['HostApply', 'Become a Host'], ['Setting', 'App Settings'], ['Profile', 'Profile'],
+] as const;
 export default function BannersPage() {
     const [banners, setBanners] = useState<Banner[]>([]);
     const [loading, setLoading] = useState(true);
@@ -50,6 +61,8 @@ export default function BannersPage() {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState('');
     const [linkName, setLinkName] = useState('');
+    const [targetType, setTargetType] = useState<'none' | 'internal' | 'external'>('none');
+    const [targetScreen, setTargetScreen] = useState('');
     const [priority, setPriority] = useState('0');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -149,7 +162,9 @@ export default function BannersPage() {
             const response = await apiClient.post('/api/admin/banners', {
                 title,
                 imageUrl: uploadedImageUrl,
-                linkUrl: linkName,
+                linkUrl: targetType === 'external' ? linkName : '',
+                targetType,
+                targetScreen: targetType === 'internal' ? targetScreen : '',
                 priority: parseInt(priority) || 0,
                 startDate: startDate || undefined,
                 endDate: endDate || undefined
@@ -161,6 +176,8 @@ export default function BannersPage() {
                 setImageFile(null);
                 setImagePreview('');
                 setLinkName('');
+                setTargetType('none');
+                setTargetScreen('');
                 setPriority('0');
                 setStartDate('');
                 setEndDate('');
@@ -179,7 +196,9 @@ export default function BannersPage() {
             _id: banner._id,
             title: banner.title,
             imageUrl: banner.imageUrl,
-            linkUrl: banner.linkUrl,
+            linkUrl: banner.linkUrl || '',
+            targetType: banner.targetType || (banner.linkUrl ? 'external' : 'none'),
+            targetScreen: banner.targetScreen || '',
             priority: banner.priority.toString(),
             startDate: banner.startDate ? banner.startDate.split('T')[0] : '',
             endDate: banner.endDate ? banner.endDate.split('T')[0] : ''
@@ -207,7 +226,9 @@ export default function BannersPage() {
             const response = await apiClient.patch(`/api/admin/banners/${editingBanner._id}`, {
                 title: editingBanner.title,
                 imageUrl,
-                linkUrl: editingBanner.linkUrl,
+                linkUrl: editingBanner.targetType === 'external' ? editingBanner.linkUrl : '',
+                targetType: editingBanner.targetType,
+                targetScreen: editingBanner.targetType === 'internal' ? editingBanner.targetScreen : '',
                 priority: parseInt(editingBanner.priority) || 0,
                 startDate: editingBanner.startDate || undefined,
                 endDate: editingBanner.endDate || undefined
@@ -328,16 +349,30 @@ export default function BannersPage() {
                                 )}
                             </div>
 
-                            {/* Link Name */}
+                            {/* Banner Action */}
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-300">Link Name (Deep Link)</label>
-                                <Input
-                                    placeholder="e.g., mithichat://profile/123"
-                                    value={linkName}
-                                    onChange={(e) => setLinkName(e.target.value)}
-                                />
+                                <label className="text-sm font-semibold text-slate-300">On Tap Action</label>
+                                <select className="h-10 w-full rounded-md border border-slate-700 bg-slate-900 px-3 text-sm" value={targetType} onChange={(e) => { setTargetType(e.target.value as any); setTargetScreen(''); setLinkName(''); }}>
+                                    <option value="none">No action</option>
+                                    <option value="internal">Open app page</option>
+                                    <option value="external">Open website URL</option>
+                                </select>
                             </div>
-
+                            {targetType === 'internal' && (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-slate-300">App Page</label>
+                                    <select required className="h-10 w-full rounded-md border border-slate-700 bg-slate-900 px-3 text-sm" value={targetScreen} onChange={(e) => setTargetScreen(e.target.value)}>
+                                        <option value="">Select app page</option>
+                                        {APP_PAGE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                                    </select>
+                                </div>
+                            )}
+                            {targetType === 'external' && (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-slate-300">Website URL</label>
+                                    <Input type="url" required placeholder="https://example.com" value={linkName} onChange={(e) => setLinkName(e.target.value)} />
+                                </div>
+                            )}
                             {/* Priority */}
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-slate-300">Priority Weight</label>
@@ -439,18 +474,16 @@ export default function BannersPage() {
                                                 <p className="font-semibold text-slate-200">{banner.title}</p>
                                             </TableCell>
 
-                                            {/* Link */}
+                                            {/* Action */}
                                             <TableCell>
-                                                {banner.linkUrl ? (
-                                                    <p className="text-xs text-primary font-mono truncate max-w-xs"
-                                                        title={banner.linkUrl}>
-                                                        {banner.linkUrl}
-                                                    </p>
+                                                {banner.targetType === 'internal' && banner.targetScreen ? (
+                                                    <span className="text-xs text-cyan-400 font-semibold">App: {banner.targetScreen}</span>
+                                                ) : banner.linkUrl ? (
+                                                    <p className="text-xs text-primary font-mono truncate max-w-xs" title={banner.linkUrl}>{banner.linkUrl}</p>
                                                 ) : (
-                                                    <span className="text-xs text-slate-500 italic">No link</span>
+                                                    <span className="text-xs text-slate-500 italic">No action</span>
                                                 )}
                                             </TableCell>
-
                                             {/* Active/Inactive Toggle */}
                                             <TableCell className="text-center">
                                                 <div className="flex items-center justify-center">
@@ -573,19 +606,30 @@ export default function BannersPage() {
                                     )}
                                 </div>
 
-                                {/* Link Name */}
+                                {/* Banner Action */}
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-300">Link Name (Deep Link)</label>
-                                    <Input
-                                        placeholder="e.g., mithichat://profile/123"
-                                        value={editingBanner.linkUrl}
-                                        onChange={(e) => setEditingBanner({
-                                            ...editingBanner,
-                                            linkUrl: e.target.value
-                                        })}
-                                    />
+                                    <label className="text-sm font-semibold text-slate-300">On Tap Action</label>
+                                    <select className="h-10 w-full rounded-md border border-slate-700 bg-slate-900 px-3 text-sm" value={editingBanner.targetType} onChange={(e) => setEditingBanner({ ...editingBanner, targetType: e.target.value as any, targetScreen: '', linkUrl: '' })}>
+                                        <option value="none">No action</option>
+                                        <option value="internal">Open app page</option>
+                                        <option value="external">Open website URL</option>
+                                    </select>
                                 </div>
-
+                                {editingBanner.targetType === 'internal' && (
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-300">App Page</label>
+                                        <select required className="h-10 w-full rounded-md border border-slate-700 bg-slate-900 px-3 text-sm" value={editingBanner.targetScreen} onChange={(e) => setEditingBanner({ ...editingBanner, targetScreen: e.target.value })}>
+                                            <option value="">Select app page</option>
+                                            {APP_PAGE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+                                {editingBanner.targetType === 'external' && (
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-300">Website URL</label>
+                                        <Input type="url" required placeholder="https://example.com" value={editingBanner.linkUrl} onChange={(e) => setEditingBanner({ ...editingBanner, linkUrl: e.target.value })} />
+                                    </div>
+                                )}
                                 {/* Priority */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold text-slate-300">Priority Weight</label>

@@ -1,6 +1,8 @@
 // API Client with automatic token injection and error handling
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.mithichat.live';
+const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.mithichat.live';
+// Endpoints already include /api; accept either an origin or an origin ending in /api.
+const API_BASE_URL = configuredBaseUrl.replace(/\/+$/, '').replace(/\/api$/i, '');
 
 export interface ApiResponse<T = any> {
     success: boolean;
@@ -38,7 +40,15 @@ class ApiClient {
     }
 
     private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
-        const data = await response.json();
+        const rawBody = await response.text();
+        let data: Record<string, unknown> = {};
+        if (rawBody) {
+            try {
+                data = JSON.parse(rawBody) as Record<string, unknown>;
+            } catch {
+                data = { message: rawBody };
+            }
+        }
 
         if (!response.ok) {
             // Handle unauthorized
@@ -48,11 +58,11 @@ class ApiClient {
                 window.location.href = '/login';
             }
 
-            throw {
-                success: false,
-                message: data.message || data.error || 'An error occurred',
-                error: data.error,
-            };
+            const message = String(data.message || data.error || `Request failed (${response.status})`);
+            const error = new Error(message) as Error & { status?: number; details?: unknown };
+            error.status = response.status;
+            error.details = data;
+            throw error;
         }
 
         // If data doesn't have a success property, but response is OK, wrap it
@@ -64,84 +74,116 @@ class ApiClient {
             };
         }
 
-        return data;
+        return data as unknown as ApiResponse<T>;
     }
 
-    async get<T = any>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
-        const url = new URL(`${this.baseURL}${endpoint}`);
-        if (params) {
-            Object.keys(params).forEach(key => {
-                if (params[key] !== undefined && params[key] !== null) {
-                    url.searchParams.append(key, String(params[key]));
-                }
-            });
+    private catchNetworkError(error: unknown): never {
+        if (error instanceof TypeError && error.message === 'Failed to fetch') {
+            const err = new Error(`Backend server connection failed (${this.baseURL}). Please verify backend server is running.`) as Error & { status?: number };
+            err.status = 503;
+            throw err;
         }
-
-        const response = await fetch(url.toString(), {
-            method: 'GET',
-            headers: this.getHeaders(),
-        });
-
-        return this.handleResponse<T>(response);
+        throw error;
     }
 
-    async post<T = any>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
-        const response = await fetch(`${this.baseURL}${endpoint}`, {
-            method: 'POST',
-            headers: this.getHeaders(),
-            body: JSON.stringify(body),
-        });
+    async get<T = any>(endpoint: string, params?: Record<string, unknown>): Promise<ApiResponse<T>> {
+        try {
+            const url = new URL(`${this.baseURL}${endpoint}`);
+            if (params) {
+                Object.keys(params).forEach(key => {
+                    if (params[key] !== undefined && params[key] !== null) {
+                        url.searchParams.append(key, String(params[key]));
+                    }
+                });
+            }
 
-        return this.handleResponse<T>(response);
+            const response = await fetch(url.toString(), {
+                method: 'GET',
+                headers: this.getHeaders(),
+            });
+
+            return await this.handleResponse<T>(response);
+        } catch (error) {
+            this.catchNetworkError(error);
+        }
     }
 
-    async patch<T = any>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
-        const response = await fetch(`${this.baseURL}${endpoint}`, {
-            method: 'PATCH',
-            headers: this.getHeaders(),
-            body: JSON.stringify(body),
-        });
+    async post<T = any>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
+        try {
+            const response = await fetch(`${this.baseURL}${endpoint}`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(body),
+            });
 
-        return this.handleResponse<T>(response);
+            return await this.handleResponse<T>(response);
+        } catch (error) {
+            this.catchNetworkError(error);
+        }
     }
 
-    async put<T = any>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
-        const response = await fetch(`${this.baseURL}${endpoint}`, {
-            method: 'PUT',
-            headers: this.getHeaders(),
-            body: JSON.stringify(body),
-        });
+    async patch<T = any>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
+        try {
+            const response = await fetch(`${this.baseURL}${endpoint}`, {
+                method: 'PATCH',
+                headers: this.getHeaders(),
+                body: JSON.stringify(body),
+            });
 
-        return this.handleResponse<T>(response);
+            return await this.handleResponse<T>(response);
+        } catch (error) {
+            this.catchNetworkError(error);
+        }
+    }
+
+    async put<T = any>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
+        try {
+            const response = await fetch(`${this.baseURL}${endpoint}`, {
+                method: 'PUT',
+                headers: this.getHeaders(),
+                body: JSON.stringify(body),
+            });
+
+            return await this.handleResponse<T>(response);
+        } catch (error) {
+            this.catchNetworkError(error);
+        }
     }
 
     async delete<T = any>(endpoint: string): Promise<ApiResponse<T>> {
-        const response = await fetch(`${this.baseURL}${endpoint}`, {
-            method: 'DELETE',
-            headers: this.getHeaders(),
-        });
+        try {
+            const response = await fetch(`${this.baseURL}${endpoint}`, {
+                method: 'DELETE',
+                headers: this.getHeaders(),
+            });
 
-        return this.handleResponse<T>(response);
+            return await this.handleResponse<T>(response);
+        } catch (error) {
+            this.catchNetworkError(error);
+        }
     }
 
     async uploadFile<T = any>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> {
-        const headers: HeadersInit = {};
+        try {
+            const headers: HeadersInit = {};
 
-        // Get token from localStorage (don't set Content-Type for FormData)
-        if (typeof window !== 'undefined') {
-            const token = localStorage.getItem('admin_token');
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
+            if (typeof window !== 'undefined') {
+                const token = localStorage.getItem('admin_token');
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
             }
+
+            const response = await fetch(`${this.baseURL}${endpoint}`, {
+                method: 'POST',
+                headers,
+                body: formData,
+            });
+
+            return await this.handleResponse<T>(response);
+        } catch (error) {
+            this.catchNetworkError(error);
         }
-
-        const response = await fetch(`${this.baseURL}${endpoint}`, {
-            method: 'POST',
-            headers,
-            body: formData,
-        });
-
-        return this.handleResponse<T>(response);
     }
 }
 

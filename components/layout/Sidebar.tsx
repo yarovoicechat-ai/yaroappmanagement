@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
     LayoutDashboard, Settings, Menu, X, LogOut, User, Award, Gift,
-    Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight
+    Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight, MessageCircle, type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,7 +20,7 @@ interface SubmenuItem {
 interface SidebarItem {
     name: string;
     href?: string;
-    icon: any;
+    icon: LucideIcon;
     submenu?: SubmenuItem[];
 }
 
@@ -29,31 +29,40 @@ interface SidebarSection {
     items: SidebarItem[];
 }
 
-// Configured specifically for app-admin: configuration, logs, and assets
+// Configured specifically for app-management: configuration, logs, and assets
 const sidebarSections: SidebarSection[] = [
     {
         title: 'Core Console',
         items: [
             { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-            { name: 'Settings', href: '/settings', icon: Settings },
-            { name: 'System Logs', href: '/logs', icon: Terminal },
-            { name: 'CMS Editor', href: '/cms', icon: FileText }
+            { name: 'App Settings', href: '/settings', icon: Settings },
+            { name: 'System Logs', href: '/logs', icon: Terminal }
         ]
     },
     {
-        title: 'Engagement Assets',
+        title: 'App Content & Economy',
         items: [
+            { name: 'CMS Editor', href: '/cms', icon: FileText },
             { name: 'Banners', href: '/banners', icon: Layers },
+            { name: 'Ads', href: '/ads', icon: Layers },
             { name: 'Referrals', href: '/referrals', icon: Users },
             { name: 'VIP Program', href: '/vip', icon: Crown },
             { name: 'Levels', href: '/levels', icon: Award },
             { name: 'Gifts', href: '/gifts', icon: Gift },
             { name: 'Frames', href: '/frames', icon: Award },
-            { name: 'Avatars', href: '/avatars', icon: User }
+            { name: 'Avatars', href: '/avatars', icon: User },
+            { name: 'Content Moderation', href: '/moderation', icon: Settings }
+        ]
+    },
+    {
+        title: 'Events & Messaging',
+        items: [
+            { name: 'Events', href: '/events', icon: FileText },
+            { name: 'System Messages', href: '/messages/system', icon: MessageCircle },
+            { name: 'Activity Messages', href: '/messages/activity', icon: MessageCircle }
         ]
     }
 ];
-
 export default function Sidebar() {
     const { user, logout } = useAuth();
     const pathname = usePathname();
@@ -113,7 +122,7 @@ export default function Sidebar() {
             >
                 <div className="px-6 mb-6 mt-4 md:mt-0 flex items-center justify-between">
                     <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                        App Config Panel
+                        App Management Panel
                     </h1>
                 </div>
 

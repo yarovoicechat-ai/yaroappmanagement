@@ -24,6 +24,6 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "♻️ Restarting PM2..."
-pm2 restart app-admin
+pm2 reload app-management --update-env
 
 echo "✅ Deployment completed successfully!"

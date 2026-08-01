@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import {
     Gift, Layers, Award, User, Crown, FileText,
     Settings, TrendingUp, Activity, LucideIcon,
@@ -39,17 +40,20 @@ export default function Home() {
     const [femaleAvatars, setFemaleAvatars] = useState<any[]>([]);
     const [levels, setLevels] = useState<any[]>([]);
 
+    const [avatarRequests, setAvatarRequests] = useState<any[]>([]);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const [giftsRes, bannersRes, framesRes, maleRes, femaleRes, levelsRes] = await Promise.all([
+                const [giftsRes, bannersRes, framesRes, maleRes, femaleRes, levelsRes, avatarReqRes] = await Promise.all([
                     apiClient.get(API_ENDPOINTS.GIFTS.LIST),
                     apiClient.get(API_ENDPOINTS.BANNERS.LIST),
                     apiClient.get(API_ENDPOINTS.FRAMES.LIST),
                     apiClient.get(API_ENDPOINTS.AVATARS.LIST('male')),
                     apiClient.get(API_ENDPOINTS.AVATARS.LIST('female')),
                     apiClient.get(API_ENDPOINTS.LEVELS_MGMT.LIST),
+                    apiClient.get('/api/v1/avatar-requests?status=pending'),
                 ]);
 
                 if (giftsRes.success) setGifts((giftsRes.data as any) || []);
@@ -58,6 +62,7 @@ export default function Home() {
                 if (maleRes.success) setMaleAvatars((maleRes.data as any) || []);
                 if (femaleRes.success) setFemaleAvatars((femaleRes.data as any) || []);
                 if (levelsRes.success) setLevels((levelsRes.data as any) || []);
+                if (avatarReqRes.success) setAvatarRequests((avatarReqRes.data as any)?.requests || (avatarReqRes as any)?.data || []);
 
             } catch (error) {
                 toast.error("Failed to load dashboard data");
@@ -334,6 +339,58 @@ export default function Home() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Avatar Verification Requests Section */}
+            <Card className="glass-card">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                        <User className="h-4 w-4 text-purple-400" />
+                        Pending Avatar Verification Requests
+                        <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30">
+                            {avatarRequests.length} Pending
+                        </span>
+                    </CardTitle>
+                    <Link href="/avatar-requests" className="text-xs text-primary hover:underline flex items-center gap-1">
+                        View All <ExternalLink className="h-3 w-3" />
+                    </Link>
+                </CardHeader>
+                <CardContent>
+                    {avatarRequests.length === 0 ? (
+                        <p className="text-sm text-slate-500 py-4 text-center">No pending avatar requests from verified hosts.</p>
+                    ) : (
+                        <div className="space-y-3">
+                            {avatarRequests.slice(0, 5).map((req: any) => (
+                                <div key={req._id} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50 gap-4">
+                                    <div className="space-y-0.5">
+                                        <p className="text-sm font-semibold text-slate-200">{req.hostUserObjId?.name || `Host #${req.hostId}`}</p>
+                                        <p className="text-xs text-slate-400">Host ID: <code className="text-pink-400">{req.hostId}</code></p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-center">
+                                            <p className="text-[10px] text-slate-400">Current</p>
+                                            {req.currentAvatar ? (
+                                                <img src={req.currentAvatar} alt="Current" className="h-10 w-10 rounded-full object-cover border border-slate-600" />
+                                            ) : (
+                                                <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-slate-400">None</div>
+                                            )}
+                                        </div>
+                                        <span className="text-slate-500 font-bold">→</span>
+                                        <div className="text-center">
+                                            <p className="text-[10px] text-purple-400 font-semibold">Requested</p>
+                                            <img src={req.requestedAvatar} alt="Requested" className="h-10 w-10 rounded-full object-cover border-2 border-purple-500 shadow-md shadow-purple-500/20" />
+                                        </div>
+                                    </div>
+                                    <Link href="/avatar-requests">
+                                        <Button size="sm" variant="outline" className="text-xs">
+                                            Review Request
+                                        </Button>
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }
