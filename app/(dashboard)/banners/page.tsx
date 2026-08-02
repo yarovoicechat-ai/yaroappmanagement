@@ -97,11 +97,26 @@ export default function BannersPage() {
     const handleImageUpload = async (file: File) => {
         try {
             setUploading(true);
-            const url = await uploadToCloudinary(file, 'banners');
-            setImagePreview(url);
-            return url;
+            let url = null;
+            try {
+                url = await uploadToCloudinary(file, 'banners');
+            } catch (err) {
+                console.warn('Cloudinary upload fallback to Data URL', err);
+            }
+
+            if (url) {
+                setImagePreview(url);
+                return url;
+            }
+
+            // Fallback to Base64 Data URL if Cloudinary upload is unconfigured or fails
+            return await new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(file);
+            });
         } catch (error: any) {
-            toast.error('Failed to upload image');
+            toast.error('Failed to process image');
             throw error;
         } finally {
             setUploading(false);
@@ -311,40 +326,84 @@ export default function BannersPage() {
 
                             {/* Image Upload */}
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-300">Banner Image</label>
-                                <button
-                                    type="button"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="w-full p-3 border-2 border-dashed border-slate-600 rounded-lg hover:border-primary hover:bg-primary/5 transition-all cursor-pointer flex items-center justify-center gap-2 text-slate-400 hover:text-slate-300"
-                                >
-                                    <Upload size={18} />
-                                    <span>{imageFile ? 'Change Image' : 'Upload Image'}</span>
-                                </button>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-semibold text-slate-300">Banner Image *</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (imagePreview.startsWith('http') && !imageFile) {
+                                                setImagePreview('');
+                                            } else {
+                                                setImageFile(null);
+                                                setImagePreview('');
+                                            }
+                                        }}
+                                        className="text-xs text-primary hover:underline font-medium"
+                                    >
+                                        {imagePreview ? 'Clear Image' : ''}
+                                    </button>
+                                </div>
                                 <input
                                     ref={fileInputRef}
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/png, image/jpeg, image/jpg, image/webp, image/gif"
                                     onChange={handleImageSelect}
                                     className="hidden"
                                 />
-                                {imagePreview && (
-                                    <div className="relative h-32 w-full rounded-lg bg-slate-800 overflow-hidden border border-slate-700">
+                                {imagePreview ? (
+                                    <div className="relative h-36 w-full rounded-xl bg-slate-800 overflow-hidden border border-slate-700 group">
                                         <img
                                             src={imagePreview}
                                             alt="Preview"
                                             className="h-full w-full object-cover"
                                         />
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setImageFile(null);
-                                                setImagePreview('');
-                                                if (fileInputRef.current) fileInputRef.current.value = '';
-                                            }}
-                                            className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 p-1 rounded text-white"
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="bg-slate-900/90 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800"
+                                            >
+                                                Change Image
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setImageFile(null);
+                                                    setImagePreview('');
+                                                    if (fileInputRef.current) fileInputRef.current.value = '';
+                                                }}
+                                                className="bg-rose-600/90 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-rose-700"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <div
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="border-2 border-dashed border-slate-600 hover:border-primary rounded-xl p-5 text-center cursor-pointer transition-all bg-slate-900/40 hover:bg-slate-800/40 flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-slate-300"
                                         >
-                                            <X size={14} />
-                                        </button>
+                                            <Upload size={24} className="text-primary" />
+                                            <div>
+                                                <p className="text-xs font-bold text-slate-200">Click to Choose Image File</p>
+                                                <p className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WEBP, GIF (Max 5MB)</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 my-1">
+                                            <div className="h-[1px] bg-slate-800 flex-1" />
+                                            <span className="text-[10px] font-semibold text-slate-500 uppercase">Or Paste URL</span>
+                                            <div className="h-[1px] bg-slate-800 flex-1" />
+                                        </div>
+                                        <Input
+                                            placeholder="https://image-host.com/my-banner.jpg"
+                                            value={imagePreview}
+                                            onChange={(e) => {
+                                                setImageFile(null);
+                                                setImagePreview(e.target.value);
+                                            }}
+                                            className="text-xs"
+                                        />
                                     </div>
                                 )}
                             </div>
