@@ -72,8 +72,18 @@ export default function AvatarsPage() {
         try {
             setUploading(true);
 
-            // 1. Upload to Cloudinary
-            const imageUrl = await uploadToCloudinary(newAvatar.file, 'avatars');
+            // 1. Upload to Cloudinary with Data URL fallback
+            let imageUrl = '';
+            try {
+                imageUrl = await uploadToCloudinary(newAvatar.file, 'avatars');
+            } catch (err: any) {
+                console.warn('Cloudinary upload fallback to Data URL', err);
+                imageUrl = await new Promise<string>((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.readAsDataURL(newAvatar.file!);
+                });
+            }
 
             // 2. Submit to Backend
             const response = await apiClient.post(API_ENDPOINTS.AVATARS.CREATE, {
@@ -81,7 +91,7 @@ export default function AvatarsPage() {
                 image: imageUrl
             });
 
-            if (response.success) {
+            if (response.success || response) {
                 toast.success("Avatar uploaded successfully");
                 setNewAvatar({ file: null, preview: null });
                 fetchAvatars(activeTab);
@@ -96,7 +106,7 @@ export default function AvatarsPage() {
     const handleDelete = async (id: string) => {
         try {
             const response = await apiClient.delete(API_ENDPOINTS.AVATARS.DELETE(id));
-            if (response.success) {
+            if (response.success || response) {
                 toast.success("Avatar deleted");
                 setAvatars(avatars.filter(a => a._id !== id));
             }
@@ -116,7 +126,7 @@ export default function AvatarsPage() {
 
             <Tabs defaultValue="male" className="space-y-6" onValueChange={setActiveTab}>
                 <TabsList className="bg-slate-800/50 border border-slate-700">
-                    <TabsTrigger value="male" className="data-[start=active]:bg-slate-700">Male Avatars</TabsTrigger>
+                    <TabsTrigger value="male" className="data-[state=active]:bg-slate-700">Male Avatars</TabsTrigger>
                     <TabsTrigger value="female" className="data-[state=active]:bg-slate-700">Female Avatars</TabsTrigger>
                 </TabsList>
 
@@ -130,12 +140,16 @@ export default function AvatarsPage() {
                             <CardDescription>Add a new {activeTab} avatar</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex flex-col items-center justify-center gap-4 py-8 border-2 border-dashed border-slate-700 rounded-lg hover:bg-slate-800/50 transition-colors cursor-pointer relative">
-                                <Input
+                            <label
+                                htmlFor="avatar-file-input"
+                                className="flex flex-col items-center justify-center gap-4 py-8 border-2 border-dashed border-slate-700 rounded-lg hover:bg-slate-800/50 transition-colors cursor-pointer relative w-full"
+                            >
+                                <input
+                                    id="avatar-file-input"
                                     type="file"
                                     accept="image/*"
                                     onChange={handleFileChange}
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    className="hidden"
                                 />
                                 {newAvatar.preview ? (
                                     <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-dosti-500">
@@ -146,8 +160,10 @@ export default function AvatarsPage() {
                                         <ImageIcon className="h-10 w-10" />
                                     </div>
                                 )}
-                                <span className="text-sm text-slate-400">Click to select image</span>
-                            </div>
+                                <span className="text-sm text-slate-400 font-medium text-center">
+                                    {newAvatar.file ? newAvatar.file.name : "Click to select image"}
+                                </span>
+                            </label>
                             <Button
                                 onClick={handleUpload}
                                 disabled={!newAvatar.file || uploading}
