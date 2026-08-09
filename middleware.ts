@@ -5,6 +5,10 @@ const APP_MANAGEMENT_ROUTES = new Set([
     '/', '/settings', '/logs', '/cms', '/bios', '/banners', '/ads',
     '/referrals', '/vip', '/levels', '/gifts', '/frames', '/avatars',
     '/moderation', '/events', '/messages/system', '/messages/activity', '/logout',
+    '/add-new', '/admins', '/agencies', '/avatar-requests', '/bans', '/calls',
+    '/deletions', '/help-support', '/host-management', '/hosts', '/kyc',
+    '/profile', '/recharges', '/reports', '/rooms', '/security', '/sellers',
+    '/tasks', '/users', '/verification', '/withdrawals',
 ]);
 
 function getPublicOrigin(request: NextRequest): string {
@@ -18,7 +22,7 @@ function getPublicOrigin(request: NextRequest): string {
     return request.url;
 }
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
     if (request.nextUrl.pathname === '/login') {
         return NextResponse.next();
     }
