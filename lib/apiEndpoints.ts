@@ -121,4 +121,20 @@ export const API_ENDPOINTS = {
         UPDATE: (id: string) => `/api/admin/levels/${id}`,
         DELETE: (id: string) => `/api/admin/levels/${id}`,
     },
+
+    // Reports Management
+    REPORTS: {
+        LIST: '/api/admin/reports',
+        GET: (id: string) => `/api/admin/reports/${id}`,
+        RESOLVE: (id: string) => `/api/admin/reports/${id}/resolve`,
+        DISMISS: (id: string) => `/api/admin/reports/${id}/dismiss`,
+    },
+
+    // Help & Support Tickets
+    HELP: {
+        LIST: '/api/admin/help',
+        RESOLVE: '/api/admin/help/resolve',
+        REPLY: (id: string) => `/api/admin/help/${id}/reply`,
+    },
 } as const;
+

@@ -31,8 +31,9 @@ export default function HelpSupportPage() {
         setLoading(true);
         try {
             const res = await apiClient.get('/api/admin/help', { search });
-            if (res.data?.success) {
-                setTickets(res.data.data || []);
+            if (res.success || res.data) {
+                const ticketData = Array.isArray(res.data) ? res.data : (res.data?.tickets || res.data?.data || []);
+                setTickets(ticketData);
             }
         } catch (error: any) {
             console.error('Error fetching tickets:', error);
