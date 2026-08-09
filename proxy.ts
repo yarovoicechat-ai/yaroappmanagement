@@ -22,7 +22,7 @@ function getPublicOrigin(request: NextRequest): string {
     return request.url;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     if (request.nextUrl.pathname === '/login') {
         return NextResponse.next();
     }
