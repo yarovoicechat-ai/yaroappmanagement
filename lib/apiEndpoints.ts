@@ -138,4 +138,15 @@ export const API_ENDPOINTS = {
         ACTIVATE: (id: string) => `/api/v1/app-releases/${id}/activate`,
         DELETE: (id: string) => `/api/v1/app-releases/${id}`,
     },
+
+    // App Screens Directory & Security Controls
+    APP_SCREENS: {
+        ALL: '/api/v1/app-screens/all',
+        PUBLIC_CONFIG: '/api/v1/app-screens/public-config',
+        CREATE: '/api/v1/app-screens/create',
+        UPDATE: (id: string) => `/api/v1/app-screens/${id}`,
+        TOGGLE_SCREENSHOT: (id: string) => `/api/v1/app-screens/${id}/toggle-screenshot`,
+        TOGGLE_RECORDING: (id: string) => `/api/v1/app-screens/${id}/toggle-recording`,
+        DELETE: (id: string) => `/api/v1/app-screens/${id}`,
+    },
 } as const;
