@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
     LayoutDashboard, Settings, Menu, X, LogOut, User, Award, Gift,
-    Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight, MessageCircle, type LucideIcon
+    Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight, MessageCircle, Download, type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,6 +35,7 @@ const sidebarSections: SidebarSection[] = [
         title: 'Core Console',
         items: [
             { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+            { name: 'App Releases (APK)', href: '/app-releases', icon: Download },
             { name: 'App Settings', href: '/settings', icon: Settings },
             { name: 'System Logs', href: '/logs', icon: Terminal }
         ]
