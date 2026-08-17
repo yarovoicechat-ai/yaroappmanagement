@@ -31,6 +31,7 @@ jobs:
             npm run build
 
             echo "♻ Restarting PM2..."
-            pm2 reload ${{ secrets.PM2_APP_NAME }}
+            pm2 reload ${{ secrets.PM2_APP_NAME }} || pm2 restart ${{ secrets.PM2_APP_NAME }} || pm2 restart app-management || pm2 restart management || pm2 start npm --name "app-management" -- start -- -p 3003
+            pm2 save
 
             echo "✅ Management Panel Deployment Finished"
