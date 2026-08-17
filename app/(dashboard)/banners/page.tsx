@@ -14,9 +14,9 @@ import {
     TableRow,
 } from "@/components/ui/Table";
 import {
-    Plus, Trash2, ToggleLeft, ToggleRight, Layers, Sliders, Calendar,
+    Plus, Trash2, Layers, Sliders, Calendar,
     Edit, Upload, X, Image as ImageIcon, ExternalLink, Smartphone, Sparkles,
-    CheckCircle2, AlertCircle, Eye, Info
+    CheckCircle2, Eye
 } from "lucide-react";
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/apiClient';
@@ -59,6 +59,9 @@ const APP_PAGE_OPTIONS = [
 export default function BannersPage() {
     const [banners, setBanners] = useState<Banner[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Create Modal state
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Form states for create
@@ -240,6 +243,7 @@ export default function BannersPage() {
                 setStartDate('');
                 setEndDate('');
                 if (fileInputRef.current) fileInputRef.current.value = '';
+                setIsCreateModalOpen(false);
                 fetchBanners();
             }
         } catch (error: any) {
@@ -341,49 +345,250 @@ export default function BannersPage() {
     const activeCount = banners.filter(b => b.isActive).length;
 
     return (
-        <div className="space-y-8 p-1 sm:p-2">
-            {/* Header Section */}
+        <div className="space-y-6 p-1 sm:p-2">
+            {/* Top Bar Header with Title & Action Button */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-600/20 border border-pink-500/30 text-pink-400 shadow-lg shadow-pink-500/10">
-                            <Sparkles size={24} />
-                        </div>
-                        <div>
-                            <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-                                Banners Carousel Management
-                            </h2>
-                            <p className="text-sm font-medium text-slate-400 mt-0.5">
-                                Live dynamic slider banners, priority weighting, schedule rules & instant mobile app sync
-                            </p>
-                        </div>
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-600/20 border border-pink-500/30 text-pink-400 shadow-lg shadow-pink-500/10">
+                        <Sparkles size={24} />
+                    </div>
+                    <div>
+                        <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                            Banners Carousel Management
+                        </h2>
+                        <p className="text-sm font-medium text-slate-400 mt-0.5">
+                            Live dynamic slider banners, priority weighting, schedule rules & instant mobile app sync
+                        </p>
                     </div>
                 </div>
 
+                {/* Top Right Counter & New + Button */}
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-300 text-xs font-semibold">
-                        <Layers size={16} className="text-purple-400" />
+                    <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-300 text-xs font-semibold">
+                        <Layers size={15} className="text-purple-400" />
                         <span>Total: <strong className="text-white">{banners.length}</strong></span>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
-                        <CheckCircle2 size={16} />
+
+                    <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                        <CheckCircle2 size={15} />
                         <span>Active: <strong className="text-emerald-300">{activeCount}</strong></span>
                     </div>
+
+                    {/* Top Right New + Button */}
+                    <Button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="h-10 px-4 rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-bold shadow-lg shadow-purple-500/25 transition-all text-xs flex items-center gap-2 cursor-pointer"
+                    >
+                        <Plus size={18} /> New +
+                    </Button>
                 </div>
             </div>
 
-            <div className="grid gap-8 lg:grid-cols-12">
-                {/* Create Banner Form Column */}
-                <div className="lg:col-span-5 space-y-6">
-                    <Card className="glass-card border-slate-800 bg-slate-950/80 shadow-2xl relative overflow-hidden">
+            {/* Banners List Full Width Table */}
+            <Card className="glass-card border-slate-800 bg-slate-950/80 shadow-2xl overflow-hidden">
+                <CardHeader className="border-b border-slate-800/80 pb-4 bg-slate-900/40 flex flex-row items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-slate-100 text-lg">
+                        <Layers size={20} className="text-purple-400" />
+                        Banners Carousel List
+                    </CardTitle>
+
+                    <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="bg-purple-500/10 text-purple-300 border-purple-500/30 font-semibold px-2.5 py-1 text-xs">
+                            {banners.length} Total Banners
+                        </Badge>
+                        <Button
+                            size="sm"
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 border border-pink-500/30 text-xs font-bold rounded-xl flex items-center gap-1.5"
+                        >
+                            <Plus size={14} /> Add Banner
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-0 overflow-x-auto">
+                    <Table>
+                        <TableHeader className="bg-slate-900/60">
+                            <TableRow className="border-slate-800/80 hover:bg-transparent">
+                                <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider w-14 text-center">Sr No</TableHead>
+                                <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider">Preview</TableHead>
+                                <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider">Title & Tap Action</TableHead>
+                                <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider text-center">Weight</TableHead>
+                                <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider">Schedule</TableHead>
+                                <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider text-center">Status</TableHead>
+                                <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider text-right pr-6">Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="text-center py-12 text-slate-400">
+                                        <div className="flex flex-col items-center justify-center gap-2">
+                                            <Sparkles size={24} className="animate-spin text-pink-400" />
+                                            <span className="text-xs font-semibold text-slate-300">Loading banner carousel data...</span>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : banners.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="text-center py-16 text-slate-400 font-medium">
+                                        <div className="flex flex-col items-center justify-center gap-3">
+                                            <ImageIcon size={36} className="text-slate-600" />
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-300">No Banners Created Yet</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">Click the "New +" button at top right to add your first banner</p>
+                                            </div>
+                                            <Button
+                                                onClick={() => setIsCreateModalOpen(true)}
+                                                className="bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold text-xs rounded-xl px-4 py-2 mt-1"
+                                            >
+                                                <Plus size={15} /> Add First Banner
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                banners.map((banner, index) => (
+                                    <TableRow key={banner._id} className="border-slate-800/60 hover:bg-slate-900/40 transition-colors group">
+                                        {/* Sr No */}
+                                        <TableCell className="text-center font-bold text-xs text-slate-400 py-3.5 pl-4">
+                                            {index + 1}
+                                        </TableCell>
+
+                                        {/* Preview Thumbnail */}
+                                        <TableCell className="py-3.5">
+                                            <div className="h-12 w-24 rounded-xl bg-slate-900 overflow-hidden border border-slate-700/80 shadow-md group-hover:border-slate-500 transition-colors flex items-center justify-center">
+                                                {banner.imageUrl ? (
+                                                    <img
+                                                        src={banner.imageUrl}
+                                                        alt={banner.title}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <ImageIcon size={18} className="text-slate-600" />
+                                                )}
+                                            </div>
+                                        </TableCell>
+
+                                        {/* Title & Action Badges */}
+                                        <TableCell className="py-3.5">
+                                            <div className="space-y-1">
+                                                <p className="font-bold text-slate-100 text-sm">{banner.title}</p>
+                                                {banner.targetType === 'internal' && banner.targetScreen ? (
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">
+                                                        <Smartphone size={11} /> App: {banner.targetScreen}
+                                                    </span>
+                                                ) : banner.linkUrl ? (
+                                                    <a
+                                                        href={banner.linkUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1 text-[11px] font-mono text-pink-400 hover:underline max-w-[220px] truncate"
+                                                    >
+                                                        <ExternalLink size={11} /> {banner.linkUrl}
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-[11px] text-slate-500 italic">No action</span>
+                                                )}
+                                            </div>
+                                        </TableCell>
+
+                                        {/* Weight Priority */}
+                                        <TableCell className="text-center py-3.5">
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs font-mono font-bold text-amber-400 shadow-inner">
+                                                <Sliders size={12} className="text-slate-500" /> {banner.priority}
+                                            </span>
+                                        </TableCell>
+
+                                        {/* Schedule Dates */}
+                                        <TableCell className="py-3.5 text-xs font-medium text-slate-300">
+                                            <div className="space-y-0.5 text-[11px]">
+                                                <div className="flex items-center gap-1 text-slate-400">
+                                                    <Calendar size={12} className="text-slate-500" />
+                                                    <span>From: <strong className="text-slate-200">{banner.startDate ? new Date(banner.startDate).toLocaleDateString() : 'Immediate'}</strong></span>
+                                                </div>
+                                                <div className="flex items-center gap-1 text-slate-400">
+                                                    <Calendar size={12} className="text-slate-500" />
+                                                    <span>To: <strong className="text-slate-200">{banner.endDate ? new Date(banner.endDate).toLocaleDateString() : 'Forever'}</strong></span>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+
+                                        {/* Active/Inactive Toggle Badge */}
+                                        <TableCell className="text-center py-3.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleToggleStatus(banner)}
+                                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-sm ${
+                                                    banner.isActive
+                                                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
+                                                        : 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30'
+                                                }`}
+                                                title={banner.isActive ? "Click to disable" : "Click to enable"}
+                                            >
+                                                {banner.isActive ? (
+                                                    <>
+                                                        <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                                                        Active
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span className="h-2 w-2 rounded-full bg-rose-400" />
+                                                        Disabled
+                                                    </>
+                                                )}
+                                            </button>
+                                        </TableCell>
+
+                                        {/* Actions */}
+                                        <TableCell className="text-right py-3.5 pr-4">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => handleOpenEditModal(banner)}
+                                                    title="Edit Banner"
+                                                    className="h-8 px-2.5 rounded-xl border-slate-700 bg-slate-900 text-blue-400 hover:text-blue-300 hover:border-blue-500 hover:bg-blue-950/40 transition-all"
+                                                >
+                                                    <Edit size={14} />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    onClick={() => handleDeleteBanner(banner._id)}
+                                                    title="Delete Banner"
+                                                    className="h-8 px-2.5 rounded-xl bg-rose-950/60 text-rose-400 border border-rose-800/60 hover:bg-rose-900 hover:text-white transition-all"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+
+            {/* CREATE BANNER POPUP MODAL */}
+            {isCreateModalOpen && (
+                <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <Card className="glass-card border-slate-800 bg-slate-950 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
                         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500" />
-                        <CardHeader className="pb-4">
-                            <CardTitle className="flex items-center gap-2 text-slate-100 text-lg">
-                                <Plus size={20} className="text-pink-400" />
-                                Add New Banner
+                        <CardHeader className="flex flex-row items-center justify-between border-b border-slate-800/80 pb-4">
+                            <CardTitle className="text-slate-100 text-lg flex items-center gap-2">
+                                <Plus size={20} className="text-pink-400" /> Add New Banner
                             </CardTitle>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setIsCreateModalOpen(false)}
+                                className="text-slate-400 hover:text-white hover:bg-slate-800 rounded-full h-8 w-8 p-0"
+                            >
+                                <X size={18} />
+                            </Button>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="pt-5">
                             <form onSubmit={handleCreateBanner} className="space-y-4">
                                 {/* Title */}
                                 <div className="space-y-1.5">
@@ -393,14 +598,14 @@ export default function BannersPage() {
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         required
-                                        className="bg-slate-900/90 border-slate-800 focus:border-pink-500 text-slate-100 placeholder:text-slate-500"
+                                        className="bg-slate-900 border-slate-800 text-slate-100"
                                     />
                                 </div>
 
                                 {/* Image Upload & Preview */}
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Banner Banner Photo *</label>
+                                        <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Banner Photo *</label>
                                         {imagePreview && (
                                             <button
                                                 type="button"
@@ -425,7 +630,7 @@ export default function BannersPage() {
                                     />
 
                                     {imagePreview ? (
-                                        <div className="relative h-40 w-full rounded-2xl bg-slate-900 overflow-hidden border border-slate-700/80 shadow-inner group">
+                                        <div className="relative h-44 w-full rounded-2xl bg-slate-900 overflow-hidden border border-slate-700/80 shadow-inner group">
                                             <img
                                                 src={imagePreview}
                                                 alt="Preview"
@@ -437,7 +642,7 @@ export default function BannersPage() {
                                                     onClick={() => fileInputRef.current?.click()}
                                                     className="px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-600 text-white text-xs font-bold hover:bg-slate-700 transition-all shadow-lg flex items-center gap-1.5"
                                                 >
-                                                    <Upload size={14} /> Change
+                                                    <Upload size={14} /> Change Image
                                                 </button>
                                             </div>
                                         </div>
@@ -469,7 +674,7 @@ export default function BannersPage() {
                                                     setImageFile(null);
                                                     setImagePreview(e.target.value);
                                                 }}
-                                                className="bg-slate-900/90 border-slate-800 text-xs text-slate-200"
+                                                className="bg-slate-900 border-slate-800 text-xs text-slate-200"
                                             />
                                         </div>
                                     )}
@@ -523,7 +728,7 @@ export default function BannersPage() {
                                             placeholder="https://example.com/promo"
                                             value={linkName}
                                             onChange={(e) => setLinkName(e.target.value)}
-                                            className="bg-slate-900/90 border-pink-500/40 text-xs text-pink-200 placeholder:text-slate-500"
+                                            className="bg-slate-900 border-pink-500/40 text-xs text-pink-200"
                                         />
                                     </div>
                                 )}
@@ -537,7 +742,7 @@ export default function BannersPage() {
                                             placeholder="0"
                                             value={priority}
                                             onChange={(e) => setPriority(e.target.value)}
-                                            className="bg-slate-900/90 border-slate-800 text-xs font-mono text-center text-slate-100"
+                                            className="bg-slate-900 border-slate-800 text-xs font-mono text-center text-slate-100 font-bold"
                                         />
                                     </div>
 
@@ -547,7 +752,7 @@ export default function BannersPage() {
                                             type="date"
                                             value={startDate}
                                             onChange={(e) => setStartDate(e.target.value)}
-                                            className="bg-slate-900/90 border-slate-800 text-xs text-slate-200"
+                                            className="bg-slate-900 border-slate-800 text-xs text-slate-200"
                                         />
                                     </div>
 
@@ -557,227 +762,44 @@ export default function BannersPage() {
                                             type="date"
                                             value={endDate}
                                             onChange={(e) => setEndDate(e.target.value)}
-                                            className="bg-slate-900/90 border-slate-800 text-xs text-slate-200"
+                                            className="bg-slate-900 border-slate-800 text-xs text-slate-200"
                                         />
                                     </div>
                                 </div>
 
-                                <Button
-                                    type="submit"
-                                    className="w-full h-11 rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-bold shadow-lg shadow-purple-500/25 transition-all text-sm mt-2"
-                                    disabled={submitting || uploading}
-                                >
-                                    {submitting || uploading ? (
-                                        <span className="flex items-center gap-2">
-                                            <Sparkles size={16} className="animate-spin" /> Processing Upload...
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center gap-2">
-                                            <Plus size={18} /> Publish Banner
-                                        </span>
-                                    )}
-                                </Button>
+                                {/* Modal Footer Actions */}
+                                <div className="flex gap-3 pt-4 border-t border-slate-800">
+                                    <Button
+                                        type="submit"
+                                        className="flex-1 h-11 rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-bold shadow-lg shadow-purple-500/25 text-sm"
+                                        disabled={submitting || uploading}
+                                    >
+                                        {submitting || uploading ? (
+                                            <span className="flex items-center gap-2">
+                                                <Sparkles size={16} className="animate-spin" /> Publishing...
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center gap-2">
+                                                <Plus size={18} /> Publish New Banner
+                                            </span>
+                                        )}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setIsCreateModalOpen(false)}
+                                        className="h-11 px-5 rounded-xl border-slate-700 text-slate-300 hover:bg-slate-800"
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
                             </form>
                         </CardContent>
                     </Card>
-
-                    {/* Interactive Mobile Card Preview */}
-                    <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
-                        <div className="flex items-center justify-between text-xs font-bold text-slate-400">
-                            <span className="flex items-center gap-1.5 text-purple-400">
-                                <Eye size={14} /> Mobile App Preview Card
-                            </span>
-                            <span className="text-[10px] font-mono text-slate-500">Aspect 3:1 Banner</span>
-                        </div>
-
-                        <div className="relative h-28 w-full rounded-2xl bg-slate-950 overflow-hidden border border-slate-700/60 flex items-center justify-center group shadow-xl">
-                            {imagePreview ? (
-                                <img src={imagePreview} alt="Live Preview" className="h-full w-full object-cover" />
-                            ) : (
-                                <div className="text-center p-3 text-slate-500 space-y-1">
-                                    <ImageIcon size={28} className="mx-auto text-slate-600" />
-                                    <p className="text-xs font-semibold">Image Preview Will Appear Here</p>
-                                </div>
-                            )}
-
-                            {title && (
-                                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2.5 flex items-center justify-between">
-                                    <span className="text-xs font-bold text-white truncate max-w-[70%]">{title}</span>
-                                    <span className="text-[10px] font-bold text-pink-400 bg-pink-500/20 px-2 py-0.5 rounded-full border border-pink-500/30">
-                                        Weight: {priority}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
                 </div>
+            )}
 
-                {/* Banners List Table Column */}
-                <div className="lg:col-span-7">
-                    <Card className="glass-card border-slate-800 bg-slate-950/80 shadow-2xl overflow-hidden">
-                        <CardHeader className="border-b border-slate-800/80 pb-4 bg-slate-900/40 flex flex-row items-center justify-between">
-                            <CardTitle className="flex items-center gap-2 text-slate-100 text-lg">
-                                <Layers size={20} className="text-purple-400" />
-                                Banners Carousel List
-                            </CardTitle>
-                            <Badge variant="outline" className="bg-purple-500/10 text-purple-300 border-purple-500/30 font-semibold px-2.5 py-0.5">
-                                {banners.length} Active Items
-                            </Badge>
-                        </CardHeader>
-                        <CardContent className="p-0 overflow-x-auto">
-                            <Table>
-                                <TableHeader className="bg-slate-900/60">
-                                    <TableRow className="border-slate-800/80 hover:bg-transparent">
-                                        <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider w-12 text-center">Preview</TableHead>
-                                        <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider">Title & Action</TableHead>
-                                        <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider text-center">Weight</TableHead>
-                                        <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider">Schedule</TableHead>
-                                        <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider text-center">Status</TableHead>
-                                        <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider text-right pr-6">Action</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {loading ? (
-                                        <TableRow>
-                                            <TableCell colSpan={6} className="text-center py-12 text-slate-400">
-                                                <div className="flex flex-col items-center justify-center gap-2">
-                                                    <Sparkles size={24} className="animate-spin text-pink-400" />
-                                                    <span className="text-xs font-semibold text-slate-300">Loading banner carousel data...</span>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : banners.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={6} className="text-center py-16 text-slate-400 font-medium">
-                                                <div className="flex flex-col items-center justify-center gap-2">
-                                                    <ImageIcon size={32} className="text-slate-600" />
-                                                    <p className="text-sm font-bold text-slate-300">No Banners Created Yet</p>
-                                                    <p className="text-xs text-slate-500">Add your first promotional banner using the form on the left</p>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        banners.map((banner) => (
-                                            <TableRow key={banner._id} className="border-slate-800/60 hover:bg-slate-900/40 transition-colors group">
-                                                {/* Preview Thumbnail */}
-                                                <TableCell className="py-3 pl-4">
-                                                    <div className="h-12 w-20 rounded-xl bg-slate-900 overflow-hidden border border-slate-700/80 shadow-md group-hover:border-slate-500 transition-colors flex items-center justify-center">
-                                                        {banner.imageUrl ? (
-                                                            <img
-                                                                src={banner.imageUrl}
-                                                                alt={banner.title}
-                                                                className="h-full w-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <ImageIcon size={18} className="text-slate-600" />
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-
-                                                {/* Title & Action Badges */}
-                                                <TableCell className="py-3">
-                                                    <div className="space-y-1">
-                                                        <p className="font-bold text-slate-100 text-sm">{banner.title}</p>
-                                                        {banner.targetType === 'internal' && banner.targetScreen ? (
-                                                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">
-                                                                <Smartphone size={11} /> App: {banner.targetScreen}
-                                                            </span>
-                                                        ) : banner.linkUrl ? (
-                                                            <a
-                                                                href={banner.linkUrl}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="inline-flex items-center gap-1 text-[11px] font-mono text-pink-400 hover:underline max-w-[200px] truncate"
-                                                            >
-                                                                <ExternalLink size={11} /> {banner.linkUrl}
-                                                            </a>
-                                                        ) : (
-                                                            <span className="text-[11px] text-slate-500 italic">No action</span>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-
-                                                {/* Weight Priority */}
-                                                <TableCell className="text-center py-3">
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs font-mono font-bold text-amber-400 shadow-inner">
-                                                        <Sliders size={12} className="text-slate-500" /> {banner.priority}
-                                                    </span>
-                                                </TableCell>
-
-                                                {/* Schedule Dates */}
-                                                <TableCell className="py-3 text-xs font-medium text-slate-300">
-                                                    <div className="space-y-0.5 text-[11px]">
-                                                        <div className="flex items-center gap-1 text-slate-400">
-                                                            <Calendar size={12} className="text-slate-500" />
-                                                            <span>From: <strong className="text-slate-200">{banner.startDate ? new Date(banner.startDate).toLocaleDateString() : 'Immediate'}</strong></span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1 text-slate-400">
-                                                            <Calendar size={12} className="text-slate-500" />
-                                                            <span>To: <strong className="text-slate-200">{banner.endDate ? new Date(banner.endDate).toLocaleDateString() : 'Forever'}</strong></span>
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-
-                                                {/* Active/Inactive Toggle Badge */}
-                                                <TableCell className="text-center py-3">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleToggleStatus(banner)}
-                                                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-sm ${
-                                                            banner.isActive
-                                                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
-                                                                : 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30'
-                                                        }`}
-                                                        title={banner.isActive ? "Click to disable" : "Click to enable"}
-                                                    >
-                                                        {banner.isActive ? (
-                                                            <>
-                                                                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                                                                Active
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <span className="h-2 w-2 rounded-full bg-rose-400" />
-                                                                Disabled
-                                                            </>
-                                                        )}
-                                                    </button>
-                                                </TableCell>
-
-                                                {/* Actions */}
-                                                <TableCell className="text-right py-3 pr-4">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => handleOpenEditModal(banner)}
-                                                            title="Edit Banner"
-                                                            className="h-8 px-2.5 rounded-xl border-slate-700 bg-slate-900 text-blue-400 hover:text-blue-300 hover:border-blue-500 hover:bg-blue-950/40 transition-all"
-                                                        >
-                                                            <Edit size={14} />
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="destructive"
-                                                            onClick={() => handleDeleteBanner(banner._id)}
-                                                            title="Delete Banner"
-                                                            className="h-8 px-2.5 rounded-xl bg-rose-950/60 text-rose-400 border border-rose-800/60 hover:bg-rose-900 hover:text-white transition-all"
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-
-            {/* Edit Banner Modal */}
+            {/* EDIT BANNER MODAL */}
             {editingBanner && (
                 <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <Card className="glass-card border-slate-800 bg-slate-950 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
