@@ -13,7 +13,11 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/Table";
-import { Plus, Trash2, ToggleLeft, ToggleRight, Layers, Sliders, Calendar, Edit, Upload, X, Image as ImageIcon } from "lucide-react";
+import {
+    Plus, Trash2, ToggleLeft, ToggleRight, Layers, Sliders, Calendar,
+    Edit, Upload, X, Image as ImageIcon, ExternalLink, Smartphone, Sparkles,
+    CheckCircle2, AlertCircle, Eye, Info
+} from "lucide-react";
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/apiClient';
 import { uploadToCloudinary } from '@/lib/cloudinary';
@@ -51,6 +55,7 @@ const APP_PAGE_OPTIONS = [
     ['CallHistory', 'Call History'], ['Earning', 'Host Earnings'], ['ExchangeCoins', 'Exchange Coins'],
     ['HostApply', 'Become a Host'], ['Setting', 'App Settings'], ['Profile', 'Profile'],
 ] as const;
+
 export default function BannersPage() {
     const [banners, setBanners] = useState<Banner[]>([]);
     const [loading, setLoading] = useState(true);
@@ -333,80 +338,70 @@ export default function BannersPage() {
         }
     };
 
+    const activeCount = banners.filter(b => b.isActive).length;
+
     return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                    Banners Management
-                </h2>
-                <p className="text-muted-foreground mt-1 font-medium font-sans">
-                    Manage promotional banners with upload, edit, and activation controls
-                </p>
+        <div className="space-y-8 p-1 sm:p-2">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
+                <div>
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-600/20 border border-pink-500/30 text-pink-400 shadow-lg shadow-pink-500/10">
+                            <Sparkles size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                                Banners Carousel Management
+                            </h2>
+                            <p className="text-sm font-medium text-slate-400 mt-0.5">
+                                Live dynamic slider banners, priority weighting, schedule rules & instant mobile app sync
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-300 text-xs font-semibold">
+                        <Layers size={16} className="text-purple-400" />
+                        <span>Total: <strong className="text-white">{banners.length}</strong></span>
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                        <CheckCircle2 size={16} />
+                        <span>Active: <strong className="text-emerald-300">{activeCount}</strong></span>
+                    </div>
+                </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
-                {/* Create Banner Form */}
-                <Card className="glass-card md:col-span-1 h-fit">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-slate-200">
-                            <Plus size={20} />
-                            Add New Banner
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleCreateBanner} className="space-y-4">
-                            {/* Title */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-300">Banner Title</label>
-                                <Input
-                                    placeholder="Enter banner title"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    required
-                                />
-                            </div>
-
-                            {/* Image Upload */}
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-semibold text-slate-300">Banner Image *</label>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (imagePreview.startsWith('http') && !imageFile) {
-                                                setImagePreview('');
-                                            } else {
-                                                setImageFile(null);
-                                                setImagePreview('');
-                                            }
-                                        }}
-                                        className="text-xs text-primary hover:underline font-medium"
-                                    >
-                                        {imagePreview ? 'Clear Image' : ''}
-                                    </button>
+            <div className="grid gap-8 lg:grid-cols-12">
+                {/* Create Banner Form Column */}
+                <div className="lg:col-span-5 space-y-6">
+                    <Card className="glass-card border-slate-800 bg-slate-950/80 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500" />
+                        <CardHeader className="pb-4">
+                            <CardTitle className="flex items-center gap-2 text-slate-100 text-lg">
+                                <Plus size={20} className="text-pink-400" />
+                                Add New Banner
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleCreateBanner} className="space-y-4">
+                                {/* Title */}
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Banner Title *</label>
+                                    <Input
+                                        placeholder="e.g. VIP Diamond Recharge Offer"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        required
+                                        className="bg-slate-900/90 border-slate-800 focus:border-pink-500 text-slate-100 placeholder:text-slate-500"
+                                    />
                                 </div>
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/png, image/jpeg, image/jpg, image/webp, image/gif"
-                                    onChange={handleImageSelect}
-                                    className="hidden"
-                                />
-                                {imagePreview ? (
-                                    <div className="relative h-36 w-full rounded-xl bg-slate-800 overflow-hidden border border-slate-700 group">
-                                        <img
-                                            src={imagePreview}
-                                            alt="Preview"
-                                            className="h-full w-full object-cover"
-                                        />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => fileInputRef.current?.click()}
-                                                className="bg-slate-900/90 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800"
-                                            >
-                                                Change Image
-                                            </button>
+
+                                {/* Image Upload & Preview */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Banner Banner Photo *</label>
+                                        {imagePreview && (
                                             <button
                                                 type="button"
                                                 onClick={() => {
@@ -414,246 +409,397 @@ export default function BannersPage() {
                                                     setImagePreview('');
                                                     if (fileInputRef.current) fileInputRef.current.value = '';
                                                 }}
-                                                className="bg-rose-600/90 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-rose-700"
+                                                className="text-xs text-pink-400 hover:text-pink-300 font-semibold flex items-center gap-1"
                                             >
-                                                Remove
+                                                <X size={13} /> Clear
                                             </button>
-                                        </div>
+                                        )}
                                     </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        <div
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="border-2 border-dashed border-slate-600 hover:border-primary rounded-xl p-5 text-center cursor-pointer transition-all bg-slate-900/40 hover:bg-slate-800/40 flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-slate-300"
-                                        >
-                                            <Upload size={24} className="text-primary" />
-                                            <div>
-                                                <p className="text-xs font-bold text-slate-200">Click to Choose Image File</p>
-                                                <p className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WEBP, GIF (Max 5MB)</p>
+
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/png, image/jpeg, image/jpg, image/webp, image/gif"
+                                        onChange={handleImageSelect}
+                                        className="hidden"
+                                    />
+
+                                    {imagePreview ? (
+                                        <div className="relative h-40 w-full rounded-2xl bg-slate-900 overflow-hidden border border-slate-700/80 shadow-inner group">
+                                            <img
+                                                src={imagePreview}
+                                                alt="Preview"
+                                                className="h-full w-full object-cover"
+                                            />
+                                            <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    className="px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-600 text-white text-xs font-bold hover:bg-slate-700 transition-all shadow-lg flex items-center gap-1.5"
+                                                >
+                                                    <Upload size={14} /> Change
+                                                </button>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2 my-1">
-                                            <div className="h-[1px] bg-slate-800 flex-1" />
-                                            <span className="text-[10px] font-semibold text-slate-500 uppercase">Or Paste URL</span>
-                                            <div className="h-[1px] bg-slate-800 flex-1" />
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <div
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="border-2 border-dashed border-slate-800 hover:border-pink-500/60 rounded-2xl p-6 text-center cursor-pointer transition-all bg-slate-900/50 hover:bg-slate-900/80 flex flex-col items-center justify-center gap-2.5 group"
+                                            >
+                                                <div className="p-3 rounded-xl bg-pink-500/10 text-pink-400 group-hover:scale-110 transition-transform">
+                                                    <Upload size={22} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-200">Click to Choose Image File</p>
+                                                    <p className="text-[10px] text-slate-400 mt-1 font-mono">PNG, JPG, WEBP, GIF (Max 5MB)</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 my-2">
+                                                <div className="h-[1px] bg-slate-800 flex-1" />
+                                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Or Web URL</span>
+                                                <div className="h-[1px] bg-slate-800 flex-1" />
+                                            </div>
+
+                                            <Input
+                                                placeholder="https://res.cloudinary.com/.../banner.jpg"
+                                                value={imagePreview}
+                                                onChange={(e) => {
+                                                    setImageFile(null);
+                                                    setImagePreview(e.target.value);
+                                                }}
+                                                className="bg-slate-900/90 border-slate-800 text-xs text-slate-200"
+                                            />
                                         </div>
+                                    )}
+                                </div>
+
+                                {/* On Tap Action */}
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">On Tap Action</label>
+                                    <select
+                                        className="h-10 w-full rounded-xl border border-slate-800 bg-slate-900 px-3 text-xs font-medium text-slate-200 focus:border-pink-500 focus:outline-none"
+                                        value={targetType}
+                                        onChange={(e) => {
+                                            setTargetType(e.target.value as any);
+                                            setTargetScreen('');
+                                            setLinkName('');
+                                        }}
+                                    >
+                                        <option value="none">No Action (Display only)</option>
+                                        <option value="internal">Open App Screen</option>
+                                        <option value="external">Open External Website URL</option>
+                                    </select>
+                                </div>
+
+                                {targetType === 'internal' && (
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1">
+                                            <Smartphone size={13} /> Select App Screen
+                                        </label>
+                                        <select
+                                            required
+                                            className="h-10 w-full rounded-xl border border-cyan-500/40 bg-slate-900 px-3 text-xs font-medium text-cyan-200 focus:border-cyan-400 focus:outline-none"
+                                            value={targetScreen}
+                                            onChange={(e) => setTargetScreen(e.target.value)}
+                                        >
+                                            <option value="">Choose screen page</option>
+                                            {APP_PAGE_OPTIONS.map(([value, label]) => (
+                                                <option key={value} value={value}>{label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                {targetType === 'external' && (
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-pink-400 uppercase tracking-wider flex items-center gap-1">
+                                            <ExternalLink size={13} /> External Website Link
+                                        </label>
                                         <Input
-                                            placeholder="https://image-host.com/my-banner.jpg"
-                                            value={imagePreview}
-                                            onChange={(e) => {
-                                                setImageFile(null);
-                                                setImagePreview(e.target.value);
-                                            }}
-                                            className="text-xs"
+                                            type="url"
+                                            required
+                                            placeholder="https://example.com/promo"
+                                            value={linkName}
+                                            onChange={(e) => setLinkName(e.target.value)}
+                                            className="bg-slate-900/90 border-pink-500/40 text-xs text-pink-200 placeholder:text-slate-500"
                                         />
                                     </div>
                                 )}
-                            </div>
 
-                            {/* Banner Action */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-300">On Tap Action</label>
-                                <select className="h-10 w-full rounded-md border border-slate-700 bg-slate-900 px-3 text-sm" value={targetType} onChange={(e) => { setTargetType(e.target.value as any); setTargetScreen(''); setLinkName(''); }}>
-                                    <option value="none">No action</option>
-                                    <option value="internal">Open app page</option>
-                                    <option value="external">Open website URL</option>
-                                </select>
-                            </div>
-                            {targetType === 'internal' && (
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-300">App Page</label>
-                                    <select required className="h-10 w-full rounded-md border border-slate-700 bg-slate-900 px-3 text-sm" value={targetScreen} onChange={(e) => setTargetScreen(e.target.value)}>
-                                        <option value="">Select app page</option>
-                                        {APP_PAGE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                                    </select>
+                                {/* Priority Weight & Dates */}
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Weight</label>
+                                        <Input
+                                            type="number"
+                                            placeholder="0"
+                                            value={priority}
+                                            onChange={(e) => setPriority(e.target.value)}
+                                            className="bg-slate-900/90 border-slate-800 text-xs font-mono text-center text-slate-100"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Start Date</label>
+                                        <Input
+                                            type="date"
+                                            value={startDate}
+                                            onChange={(e) => setStartDate(e.target.value)}
+                                            className="bg-slate-900/90 border-slate-800 text-xs text-slate-200"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Expiry Date</label>
+                                        <Input
+                                            type="date"
+                                            value={endDate}
+                                            onChange={(e) => setEndDate(e.target.value)}
+                                            className="bg-slate-900/90 border-slate-800 text-xs text-slate-200"
+                                        />
+                                    </div>
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    className="w-full h-11 rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-bold shadow-lg shadow-purple-500/25 transition-all text-sm mt-2"
+                                    disabled={submitting || uploading}
+                                >
+                                    {submitting || uploading ? (
+                                        <span className="flex items-center gap-2">
+                                            <Sparkles size={16} className="animate-spin" /> Processing Upload...
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-2">
+                                            <Plus size={18} /> Publish Banner
+                                        </span>
+                                    )}
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+
+                    {/* Interactive Mobile Card Preview */}
+                    <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-400">
+                            <span className="flex items-center gap-1.5 text-purple-400">
+                                <Eye size={14} /> Mobile App Preview Card
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-500">Aspect 3:1 Banner</span>
+                        </div>
+
+                        <div className="relative h-28 w-full rounded-2xl bg-slate-950 overflow-hidden border border-slate-700/60 flex items-center justify-center group shadow-xl">
+                            {imagePreview ? (
+                                <img src={imagePreview} alt="Live Preview" className="h-full w-full object-cover" />
+                            ) : (
+                                <div className="text-center p-3 text-slate-500 space-y-1">
+                                    <ImageIcon size={28} className="mx-auto text-slate-600" />
+                                    <p className="text-xs font-semibold">Image Preview Will Appear Here</p>
                                 </div>
                             )}
-                            {targetType === 'external' && (
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-300">Website URL</label>
-                                    <Input type="url" required placeholder="https://example.com" value={linkName} onChange={(e) => setLinkName(e.target.value)} />
+
+                            {title && (
+                                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2.5 flex items-center justify-between">
+                                    <span className="text-xs font-bold text-white truncate max-w-[70%]">{title}</span>
+                                    <span className="text-[10px] font-bold text-pink-400 bg-pink-500/20 px-2 py-0.5 rounded-full border border-pink-500/30">
+                                        Weight: {priority}
+                                    </span>
                                 </div>
                             )}
-                            {/* Priority */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-300">Priority Weight</label>
-                                <Input
-                                    type="number"
-                                    placeholder="0"
-                                    value={priority}
-                                    onChange={(e) => setPriority(e.target.value)}
-                                />
-                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                            {/* Dates */}
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-slate-400">Start Date</label>
-                                    <Input
-                                        type="date"
-                                        value={startDate}
-                                        onChange={(e) => setStartDate(e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-slate-400">Expiry Date</label>
-                                    <Input
-                                        type="date"
-                                        value={endDate}
-                                        onChange={(e) => setEndDate(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="w-full font-bold"
-                                disabled={submitting || uploading}
-                            >
-                                {submitting || uploading ? 'Uploading...' : 'Create Banner'}
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
-
-                {/* Banners List Table */}
-                <Card className="glass-card md:col-span-2">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-slate-200">
-                            <Layers size={20} />
-                            Banners List ({banners.length})
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0 overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="font-bold text-slate-300 w-8">Sr No</TableHead>
-                                    <TableHead className="font-bold text-slate-300">Photo</TableHead>
-                                    <TableHead className="font-bold text-slate-300">Title</TableHead>
-                                    <TableHead className="font-bold text-slate-300">Link</TableHead>
-                                    <TableHead className="font-bold text-slate-300 text-center">Active</TableHead>
-                                    <TableHead className="text-right font-bold text-slate-300">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-8 text-slate-400">
-                                            Loading banners...
-                                        </TableCell>
+                {/* Banners List Table Column */}
+                <div className="lg:col-span-7">
+                    <Card className="glass-card border-slate-800 bg-slate-950/80 shadow-2xl overflow-hidden">
+                        <CardHeader className="border-b border-slate-800/80 pb-4 bg-slate-900/40 flex flex-row items-center justify-between">
+                            <CardTitle className="flex items-center gap-2 text-slate-100 text-lg">
+                                <Layers size={20} className="text-purple-400" />
+                                Banners Carousel List
+                            </CardTitle>
+                            <Badge variant="outline" className="bg-purple-500/10 text-purple-300 border-purple-500/30 font-semibold px-2.5 py-0.5">
+                                {banners.length} Active Items
+                            </Badge>
+                        </CardHeader>
+                        <CardContent className="p-0 overflow-x-auto">
+                            <Table>
+                                <TableHeader className="bg-slate-900/60">
+                                    <TableRow className="border-slate-800/80 hover:bg-transparent">
+                                        <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider w-12 text-center">Preview</TableHead>
+                                        <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider">Title & Action</TableHead>
+                                        <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider text-center">Weight</TableHead>
+                                        <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider">Schedule</TableHead>
+                                        <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider text-center">Status</TableHead>
+                                        <TableHead className="font-bold text-slate-400 uppercase text-[10px] tracking-wider text-right pr-6">Action</TableHead>
                                     </TableRow>
-                                ) : banners.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-8 text-slate-400 font-medium">
-                                            No banners created yet
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    banners.map((banner, index) => (
-                                        <TableRow key={banner._id} className="hover:bg-muted/30">
-                                            {/* Sr No */}
-                                            <TableCell className="font-semibold text-slate-300">{index + 1}</TableCell>
-
-                                            {/* Photo */}
-                                            <TableCell>
-                                                <div className="h-12 w-20 rounded bg-slate-800 overflow-hidden border border-slate-700 flex items-center justify-center">
-                                                    {banner.imageUrl ? (
-                                                        <img
-                                                            src={banner.imageUrl}
-                                                            alt={banner.title}
-                                                            className="h-full w-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <ImageIcon size={16} className="text-slate-600" />
-                                                    )}
-                                                </div>
-                                            </TableCell>
-
-                                            {/* Title */}
-                                            <TableCell>
-                                                <p className="font-semibold text-slate-200">{banner.title}</p>
-                                            </TableCell>
-
-                                            {/* Action */}
-                                            <TableCell>
-                                                {banner.targetType === 'internal' && banner.targetScreen ? (
-                                                    <span className="text-xs text-cyan-400 font-semibold">App: {banner.targetScreen}</span>
-                                                ) : banner.linkUrl ? (
-                                                    <p className="text-xs text-primary font-mono truncate max-w-xs" title={banner.linkUrl}>{banner.linkUrl}</p>
-                                                ) : (
-                                                    <span className="text-xs text-slate-500 italic">No action</span>
-                                                )}
-                                            </TableCell>
-                                            {/* Active/Inactive Toggle */}
-                                            <TableCell className="text-center">
-                                                <div className="flex items-center justify-center">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        onClick={() => handleToggleStatus(banner)}
-                                                        className="px-2"
-                                                        title={banner.isActive ? "Click to deactivate" : "Click to activate"}
-                                                    >
-                                                        {banner.isActive ? (
-                                                            <ToggleRight size={22} className="text-emerald-500" />
-                                                        ) : (
-                                                            <ToggleLeft size={22} className="text-slate-600" />
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-
-                                            {/* Actions */}
-                                            <TableCell className="text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() => handleOpenEditModal(banner)}
-                                                        title="Edit banner"
-                                                        className="text-blue-400 hover:text-blue-300 border-blue-400 hover:border-blue-300"
-                                                    >
-                                                        <Edit size={16} />
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="destructive"
-                                                        onClick={() => handleDeleteBanner(banner._id)}
-                                                        title="Delete banner"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </Button>
+                                </TableHeader>
+                                <TableBody>
+                                    {loading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={6} className="text-center py-12 text-slate-400">
+                                                <div className="flex flex-col items-center justify-center gap-2">
+                                                    <Sparkles size={24} className="animate-spin text-pink-400" />
+                                                    <span className="text-xs font-semibold text-slate-300">Loading banner carousel data...</span>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+                                    ) : banners.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={6} className="text-center py-16 text-slate-400 font-medium">
+                                                <div className="flex flex-col items-center justify-center gap-2">
+                                                    <ImageIcon size={32} className="text-slate-600" />
+                                                    <p className="text-sm font-bold text-slate-300">No Banners Created Yet</p>
+                                                    <p className="text-xs text-slate-500">Add your first promotional banner using the form on the left</p>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        banners.map((banner) => (
+                                            <TableRow key={banner._id} className="border-slate-800/60 hover:bg-slate-900/40 transition-colors group">
+                                                {/* Preview Thumbnail */}
+                                                <TableCell className="py-3 pl-4">
+                                                    <div className="h-12 w-20 rounded-xl bg-slate-900 overflow-hidden border border-slate-700/80 shadow-md group-hover:border-slate-500 transition-colors flex items-center justify-center">
+                                                        {banner.imageUrl ? (
+                                                            <img
+                                                                src={banner.imageUrl}
+                                                                alt={banner.title}
+                                                                className="h-full w-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <ImageIcon size={18} className="text-slate-600" />
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+
+                                                {/* Title & Action Badges */}
+                                                <TableCell className="py-3">
+                                                    <div className="space-y-1">
+                                                        <p className="font-bold text-slate-100 text-sm">{banner.title}</p>
+                                                        {banner.targetType === 'internal' && banner.targetScreen ? (
+                                                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">
+                                                                <Smartphone size={11} /> App: {banner.targetScreen}
+                                                            </span>
+                                                        ) : banner.linkUrl ? (
+                                                            <a
+                                                                href={banner.linkUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex items-center gap-1 text-[11px] font-mono text-pink-400 hover:underline max-w-[200px] truncate"
+                                                            >
+                                                                <ExternalLink size={11} /> {banner.linkUrl}
+                                                            </a>
+                                                        ) : (
+                                                            <span className="text-[11px] text-slate-500 italic">No action</span>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+
+                                                {/* Weight Priority */}
+                                                <TableCell className="text-center py-3">
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs font-mono font-bold text-amber-400 shadow-inner">
+                                                        <Sliders size={12} className="text-slate-500" /> {banner.priority}
+                                                    </span>
+                                                </TableCell>
+
+                                                {/* Schedule Dates */}
+                                                <TableCell className="py-3 text-xs font-medium text-slate-300">
+                                                    <div className="space-y-0.5 text-[11px]">
+                                                        <div className="flex items-center gap-1 text-slate-400">
+                                                            <Calendar size={12} className="text-slate-500" />
+                                                            <span>From: <strong className="text-slate-200">{banner.startDate ? new Date(banner.startDate).toLocaleDateString() : 'Immediate'}</strong></span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1 text-slate-400">
+                                                            <Calendar size={12} className="text-slate-500" />
+                                                            <span>To: <strong className="text-slate-200">{banner.endDate ? new Date(banner.endDate).toLocaleDateString() : 'Forever'}</strong></span>
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+
+                                                {/* Active/Inactive Toggle Badge */}
+                                                <TableCell className="text-center py-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleToggleStatus(banner)}
+                                                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-sm ${
+                                                            banner.isActive
+                                                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
+                                                                : 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30'
+                                                        }`}
+                                                        title={banner.isActive ? "Click to disable" : "Click to enable"}
+                                                    >
+                                                        {banner.isActive ? (
+                                                            <>
+                                                                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                                                                Active
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span className="h-2 w-2 rounded-full bg-rose-400" />
+                                                                Disabled
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </TableCell>
+
+                                                {/* Actions */}
+                                                <TableCell className="text-right py-3 pr-4">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => handleOpenEditModal(banner)}
+                                                            title="Edit Banner"
+                                                            className="h-8 px-2.5 rounded-xl border-slate-700 bg-slate-900 text-blue-400 hover:text-blue-300 hover:border-blue-500 hover:bg-blue-950/40 transition-all"
+                                                        >
+                                                            <Edit size={14} />
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="destructive"
+                                                            onClick={() => handleDeleteBanner(banner._id)}
+                                                            title="Delete Banner"
+                                                            className="h-8 px-2.5 rounded-xl bg-rose-950/60 text-rose-400 border border-rose-800/60 hover:bg-rose-900 hover:text-white transition-all"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
 
             {/* Edit Banner Modal */}
             {editingBanner && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <Card className="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                            <CardTitle className="text-slate-200">Edit Banner</CardTitle>
+                <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <Card className="glass-card border-slate-800 bg-slate-950 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+                        <CardHeader className="flex flex-row items-center justify-between border-b border-slate-800/80 pb-4">
+                            <CardTitle className="text-slate-100 text-lg flex items-center gap-2">
+                                <Edit size={18} className="text-blue-400" /> Edit Banner Settings
+                            </CardTitle>
                             <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => setEditingBanner(null)}
+                                className="text-slate-400 hover:text-white hover:bg-slate-800 rounded-full h-8 w-8 p-0"
                             >
-                                <X size={20} />
+                                <X size={18} />
                             </Button>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="pt-5">
                             <form onSubmit={handleUpdateBanner} className="space-y-4">
                                 {/* Title */}
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-300">Banner Title</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Banner Title *</label>
                                     <Input
                                         placeholder="Enter banner title"
                                         value={editingBanner.title}
@@ -662,19 +808,20 @@ export default function BannersPage() {
                                             title: e.target.value
                                         })}
                                         required
+                                        className="bg-slate-900 border-slate-800 text-slate-100"
                                     />
                                 </div>
 
                                 {/* Image */}
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-300">Banner Image</label>
+                                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Banner Image</label>
                                     <button
                                         type="button"
                                         onClick={() => editFileInputRef.current?.click()}
-                                        className="w-full p-3 border-2 border-dashed border-slate-600 rounded-lg hover:border-primary hover:bg-primary/5 transition-all cursor-pointer flex items-center justify-center gap-2 text-slate-400 hover:text-slate-300"
+                                        className="w-full p-3 border-2 border-dashed border-slate-700/80 rounded-xl hover:border-blue-500 hover:bg-blue-500/5 transition-all cursor-pointer flex items-center justify-center gap-2 text-slate-300 font-semibold text-xs"
                                     >
-                                        <Upload size={18} />
-                                        <span>{editImageFile ? 'Change Image' : 'Update Image'}</span>
+                                        <Upload size={16} className="text-blue-400" />
+                                        <span>{editImageFile ? 'Change Selected File' : 'Click to Upload New Image File'}</span>
                                     </button>
                                     <input
                                         ref={editFileInputRef}
@@ -684,7 +831,7 @@ export default function BannersPage() {
                                         className="hidden"
                                     />
                                     {editImagePreview && (
-                                        <div className="relative h-40 w-full rounded-lg bg-slate-800 overflow-hidden border border-slate-700">
+                                        <div className="relative h-44 w-full rounded-2xl bg-slate-900 overflow-hidden border border-slate-700/80 shadow-md">
                                             <img
                                                 src={editImagePreview}
                                                 alt="Preview"
@@ -698,9 +845,9 @@ export default function BannersPage() {
                                                         setEditImagePreview(editingBanner.imageUrl);
                                                         if (editFileInputRef.current) editFileInputRef.current.value = '';
                                                     }}
-                                                    className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 p-1 rounded text-white"
+                                                    className="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 px-3 py-1 rounded-xl text-xs font-bold text-white shadow-lg flex items-center gap-1"
                                                 >
-                                                    <X size={14} />
+                                                    <X size={14} /> Revert
                                                 </button>
                                             )}
                                         </div>
@@ -708,47 +855,68 @@ export default function BannersPage() {
                                 </div>
 
                                 {/* Banner Action */}
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-300">On Tap Action</label>
-                                    <select className="h-10 w-full rounded-md border border-slate-700 bg-slate-900 px-3 text-sm" value={editingBanner.targetType} onChange={(e) => setEditingBanner({ ...editingBanner, targetType: e.target.value as any, targetScreen: '', linkUrl: '' })}>
-                                        <option value="none">No action</option>
-                                        <option value="internal">Open app page</option>
-                                        <option value="external">Open website URL</option>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">On Tap Action</label>
+                                    <select
+                                        className="h-10 w-full rounded-xl border border-slate-800 bg-slate-900 px-3 text-xs font-medium text-slate-200 focus:border-blue-500"
+                                        value={editingBanner.targetType}
+                                        onChange={(e) => setEditingBanner({ ...editingBanner, targetType: e.target.value as any, targetScreen: '', linkUrl: '' })}
+                                    >
+                                        <option value="none">No Action</option>
+                                        <option value="internal">Open App Screen</option>
+                                        <option value="external">Open External Website URL</option>
                                     </select>
                                 </div>
+
                                 {editingBanner.targetType === 'internal' && (
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-300">App Page</label>
-                                        <select required className="h-10 w-full rounded-md border border-slate-700 bg-slate-900 px-3 text-sm" value={editingBanner.targetScreen} onChange={(e) => setEditingBanner({ ...editingBanner, targetScreen: e.target.value })}>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-cyan-400 uppercase tracking-wider">App Page Screen</label>
+                                        <select
+                                            required
+                                            className="h-10 w-full rounded-xl border border-cyan-500/40 bg-slate-900 px-3 text-xs font-medium text-cyan-200"
+                                            value={editingBanner.targetScreen}
+                                            onChange={(e) => setEditingBanner({ ...editingBanner, targetScreen: e.target.value })}
+                                        >
                                             <option value="">Select app page</option>
-                                            {APP_PAGE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                                            {APP_PAGE_OPTIONS.map(([value, label]) => (
+                                                <option key={value} value={value}>{label}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 )}
+
                                 {editingBanner.targetType === 'external' && (
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-300">Website URL</label>
-                                        <Input type="url" required placeholder="https://example.com" value={editingBanner.linkUrl} onChange={(e) => setEditingBanner({ ...editingBanner, linkUrl: e.target.value })} />
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-pink-400 uppercase tracking-wider">Website URL</label>
+                                        <Input
+                                            type="url"
+                                            required
+                                            placeholder="https://example.com"
+                                            value={editingBanner.linkUrl}
+                                            onChange={(e) => setEditingBanner({ ...editingBanner, linkUrl: e.target.value })}
+                                            className="bg-slate-900 border-pink-500/40 text-xs text-pink-200"
+                                        />
                                     </div>
                                 )}
-                                {/* Priority */}
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-300">Priority Weight</label>
-                                    <Input
-                                        type="number"
-                                        placeholder="0"
-                                        value={editingBanner.priority}
-                                        onChange={(e) => setEditingBanner({
-                                            ...editingBanner,
-                                            priority: e.target.value
-                                        })}
-                                    />
-                                </div>
 
-                                {/* Dates */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-300">Start Date</label>
+                                {/* Priority & Dates */}
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Priority Weight</label>
+                                        <Input
+                                            type="number"
+                                            placeholder="0"
+                                            value={editingBanner.priority}
+                                            onChange={(e) => setEditingBanner({
+                                                ...editingBanner,
+                                                priority: e.target.value
+                                            })}
+                                            className="bg-slate-900 border-slate-800 text-xs text-center font-mono text-amber-400 font-bold"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Start Date</label>
                                         <Input
                                             type="date"
                                             value={editingBanner.startDate}
@@ -756,10 +924,12 @@ export default function BannersPage() {
                                                 ...editingBanner,
                                                 startDate: e.target.value
                                             })}
+                                            className="bg-slate-900 border-slate-800 text-xs text-slate-200"
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-300">Expiry Date</label>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Expiry Date</label>
                                         <Input
                                             type="date"
                                             value={editingBanner.endDate}
@@ -767,23 +937,25 @@ export default function BannersPage() {
                                                 ...editingBanner,
                                                 endDate: e.target.value
                                             })}
+                                            className="bg-slate-900 border-slate-800 text-xs text-slate-200"
                                         />
                                     </div>
                                 </div>
 
-                                {/* Actions */}
-                                <div className="flex gap-3 pt-4">
+                                {/* Modal Footer Actions */}
+                                <div className="flex gap-3 pt-4 border-t border-slate-800">
                                     <Button
                                         type="submit"
-                                        className="flex-1"
+                                        className="flex-1 h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/20 text-sm"
                                         disabled={editSubmitting || uploading}
                                     >
-                                        {editSubmitting || uploading ? 'Updating...' : 'Update Banner'}
+                                        {editSubmitting || uploading ? 'Updating Changes...' : 'Save Banner Updates'}
                                     </Button>
                                     <Button
                                         type="button"
                                         variant="outline"
                                         onClick={() => setEditingBanner(null)}
+                                        className="h-11 px-5 rounded-xl border-slate-700 text-slate-300 hover:bg-slate-800"
                                     >
                                         Cancel
                                     </Button>
