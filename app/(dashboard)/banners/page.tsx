@@ -94,6 +94,38 @@ export default function BannersPage() {
         }
     };
 
+    const compressBase64Image = (base64Str: string, maxWidth = 1000, maxHeight = 500, quality = 0.7): Promise<string> => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+                if (height > maxHeight) {
+                    width = Math.round((width * maxHeight) / height);
+                    height = maxHeight;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                } else {
+                    resolve(base64Str);
+                }
+            };
+            img.onerror = () => resolve(base64Str);
+            img.src = base64Str;
+        });
+    };
+
     const handleImageUpload = async (file: File) => {
         try {
             setUploading(true);
@@ -109,12 +141,14 @@ export default function BannersPage() {
                 return url;
             }
 
-            // Fallback to Base64 Data URL if Cloudinary upload is unconfigured or fails
-            return await new Promise<string>((resolve) => {
+            // Fallback to compressed Base64 Data URL if Cloudinary upload fails
+            const rawBase64 = await new Promise<string>((resolve) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result as string);
                 reader.readAsDataURL(file);
             });
+            const compressed = await compressBase64Image(rawBase64);
+            return compressed;
         } catch (error: any) {
             toast.error('Failed to process image');
             throw error;
@@ -163,6 +197,10 @@ export default function BannersPage() {
         }
         if (!imageFile && !imagePreview) {
             toast.error('Banner image is required');
+            return;
+        }
+        if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+            toast.error('Expiry date cannot be before start date');
             return;
         }
 
@@ -227,6 +265,10 @@ export default function BannersPage() {
         if (!editingBanner) return;
         if (!editingBanner.title) {
             toast.error('Title is required');
+            return;
+        }
+        if (editingBanner.startDate && editingBanner.endDate && new Date(editingBanner.endDate) < new Date(editingBanner.startDate)) {
+            toast.error('Expiry date cannot be before start date');
             return;
         }
 
