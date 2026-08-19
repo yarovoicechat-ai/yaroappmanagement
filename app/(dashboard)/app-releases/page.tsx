@@ -41,8 +41,10 @@ export default function AppReleasesPage() {
 
   // Form State
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [versionName, setVersionName] = useState('1.7.6');
-  const [versionCode, setVersionCode] = useState('176');
+  const [directUrl, setDirectUrl] = useState('');
+  const [uploadTab, setUploadTab] = useState<'file' | 'url'>('file');
+  const [versionName, setVersionName] = useState('1.8.3');
+  const [versionCode, setVersionCode] = useState('22');
   const [releaseNotes, setReleaseNotes] = useState('');
   const [setAsActive, setSetAsActive] = useState(true);
 
@@ -94,12 +96,16 @@ export default function AppReleasesPage() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) {
-      setStatusMsg({ type: 'error', text: 'Select an APK or AAB file to upload.' });
+    if (uploadTab === 'file' && !selectedFile) {
+      setStatusMsg({ type: 'error', text: 'Select an APK or AAB build file to upload.' });
+      return;
+    }
+    if (uploadTab === 'url' && !directUrl.trim()) {
+      setStatusMsg({ type: 'error', text: 'Enter a valid direct download URL (e.g. AWS S3, Cloudinary, CDN link).' });
       return;
     }
     if (!versionName.trim()) {
-      setStatusMsg({ type: 'error', text: 'Version name (e.g. 1.7.6) is required.' });
+      setStatusMsg({ type: 'error', text: 'Version name (e.g. 1.8.3) is required.' });
       return;
     }
 
@@ -109,7 +115,12 @@ export default function AppReleasesPage() {
 
     try {
       const formData = new FormData();
-      formData.append('buildFile', selectedFile);
+      if (selectedFile) {
+        formData.append('buildFile', selectedFile);
+      }
+      if (directUrl.trim()) {
+        formData.append('directUrl', directUrl.trim());
+      }
       formData.append('versionName', versionName.trim());
       formData.append('versionCode', versionCode);
       formData.append('releaseNotes', releaseNotes);
@@ -124,15 +135,16 @@ export default function AppReleasesPage() {
       setUploadProgress(100);
 
       if (res && res.success) {
-        setStatusMsg({ type: 'success', text: `Build v${versionName} uploaded successfully!` });
+        setStatusMsg({ type: 'success', text: `Build v${versionName} deployed successfully!` });
         setSelectedFile(null);
+        setDirectUrl('');
         setReleaseNotes('');
         await fetchReleases();
       } else {
-        setStatusMsg({ type: 'error', text: res?.message || 'Failed to upload build.' });
+        setStatusMsg({ type: 'error', text: res?.message || 'Failed to deploy build.' });
       }
     } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.message || 'Error uploading build file.' });
+      setStatusMsg({ type: 'error', text: err.message || 'Error deploying build file.' });
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -276,36 +288,76 @@ export default function AppReleasesPage() {
 
         {/* Upload Build Form Card */}
         <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Upload className="w-5 h-5 text-indigo-400" />
-            Upload New APK / AAB Build
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Upload className="w-5 h-5 text-indigo-400" />
+              Upload & Deploy New Build
+            </h2>
+
+            <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+              <button
+                type="button"
+                onClick={() => setUploadTab('file')}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
+                  uploadTab === 'file' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                File Upload
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadTab('url')}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
+                  uploadTab === 'url' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Direct URL
+              </button>
+            </div>
+          </div>
 
           <form onSubmit={handleUpload} className="space-y-4">
-            {/* File Dropzone */}
-            <div className="border-2 border-dashed border-slate-700 hover:border-indigo-500/50 rounded-xl p-5 text-center transition cursor-pointer bg-slate-950/40 relative">
-              <input
-                type="file"
-                accept=".apk,.aab"
-                onChange={handleFileChange}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              />
-              <div className="flex flex-col items-center gap-2">
-                {selectedFile ? (
-                  <>
-                    <FileCheck className="w-10 h-10 text-emerald-400" />
-                    <span className="text-sm font-medium text-slate-200">{selectedFile.name}</span>
-                    <span className="text-xs text-slate-400">({(selectedFile.size / (1024 * 1024)).toFixed(1)} MB)</span>
-                  </>
-                ) : (
-                  <>
-                    <HardDrive className="w-10 h-10 text-indigo-400/80" />
-                    <span className="text-sm font-medium text-slate-200">Click or drag & drop APK or AAB build here</span>
-                    <span className="text-xs text-slate-400">Supports .apk and .aab up to 250MB</span>
-                  </>
-                )}
+            {uploadTab === 'file' ? (
+              /* File Dropzone */
+              <div className="border-2 border-dashed border-slate-700 hover:border-indigo-500/50 rounded-xl p-5 text-center transition cursor-pointer bg-slate-950/40 relative">
+                <input
+                  type="file"
+                  accept=".apk,.aab"
+                  onChange={handleFileChange}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                />
+                <div className="flex flex-col items-center gap-2">
+                  {selectedFile ? (
+                    <>
+                      <FileCheck className="w-10 h-10 text-emerald-400" />
+                      <span className="text-sm font-medium text-slate-200">{selectedFile.name}</span>
+                      <span className="text-xs text-slate-400">({(selectedFile.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                    </>
+                  ) : (
+                    <>
+                      <HardDrive className="w-10 h-10 text-indigo-400/80" />
+                      <span className="text-sm font-medium text-slate-200">Click or drag & drop APK or AAB build here</span>
+                      <span className="text-xs text-slate-400">Supports .apk and .aab up to 250MB</span>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : (
+              /* Direct URL Input */
+              <div className="space-y-2 bg-slate-950/40 p-4 rounded-xl border border-slate-800">
+                <label className="block text-xs font-semibold text-slate-300">Direct Download Link / CDN URL</label>
+                <input
+                  type="url"
+                  placeholder="https://cdn.mithichat.live/builds/app-release.apk"
+                  value={directUrl}
+                  onChange={(e) => setDirectUrl(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-indigo-500 font-mono"
+                />
+                <p className="text-xs text-slate-400">
+                  Enter a direct HTTPS link to your build. Bypasses file size limits!
+                </p>
+              </div>
+            )}
 
             {/* Version Input Fields */}
             <div className="grid grid-cols-2 gap-3">
