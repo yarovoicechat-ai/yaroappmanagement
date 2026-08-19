@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
     LayoutDashboard, Settings, Menu, X, LogOut, User, Award, Gift,
-    Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight, MessageCircle, Download, ShieldCheck, type LucideIcon
+    Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight, MessageCircle, Download, ShieldCheck, Share2, Smartphone, type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -47,7 +47,8 @@ const sidebarSections: SidebarSection[] = [
             { name: 'CMS Editor', href: '/cms', icon: FileText },
             { name: 'Banners', href: '/banners', icon: Layers },
             { name: 'Ads', href: '/ads', icon: Layers },
-            { name: 'Referrals', href: '/referrals', icon: Users },
+            { name: 'Referrals', href: '/referrals', icon: Share2 },
+            { name: 'Device Limits & Bans', href: '/bans/device', icon: Smartphone },
             { name: 'VIP Program', href: '/vip', icon: Crown },
             { name: 'Levels', href: '/levels', icon: Award },
             { name: 'Gifts', href: '/gifts', icon: Gift },
