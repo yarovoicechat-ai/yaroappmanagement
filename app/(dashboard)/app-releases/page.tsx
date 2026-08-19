@@ -115,13 +115,12 @@ export default function AppReleasesPage() {
       formData.append('releaseNotes', releaseNotes);
       formData.append('setAsActive', String(setAsActive));
 
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => (prev < 90 ? prev + 15 : prev));
-      }, 300);
+      const res = await apiClient.uploadFile<AppRelease>(
+        API_ENDPOINTS.APP_RELEASES.UPLOAD,
+        formData,
+        (percent) => setUploadProgress(percent)
+      );
 
-      const res = await apiClient.uploadFile<AppRelease>(API_ENDPOINTS.APP_RELEASES.UPLOAD, formData);
-
-      clearInterval(progressInterval);
       setUploadProgress(100);
 
       if (res && res.success) {
