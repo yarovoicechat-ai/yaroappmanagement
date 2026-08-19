@@ -146,6 +146,21 @@ export default function SettingsPage() {
             <Toggle label="System digest" help="Periodic system digest." checked={settings.systemDigest} onChange={value => setSettings({ ...settings, systemDigest: value })} />
           </CardContent>
         </Card>
+
+        <Card className="glass-card">
+          <CardHeader><CardTitle className="flex gap-2"><Shield className="h-5 w-5" />Onboarding Rewards & Device Limits</CardTitle></CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <Field label="Welcome Bonus (Diamonds 💎)" help="Granted to new user on mandatory profile completion.">
+              <Input type="number" min="0" value={settings.welcomeRewardDiamonds ?? 100} onChange={e => numberField('welcomeRewardDiamonds', e.target.value)} />
+            </Field>
+            <Field label="Referral Reward (Diamonds 💎)" help="Granted to referrer when referee claims code.">
+              <Input type="number" min="0" value={settings.referralRewardDiamonds ?? 50} onChange={e => numberField('referralRewardDiamonds', e.target.value)} />
+            </Field>
+            <Field label="Max Accounts Allowed Per Device" help="Default registration limit per physical device ID (default: 1).">
+              <Input type="number" min="1" value={settings.defaultMaxAccountsPerDevice ?? 1} onChange={e => numberField('defaultMaxAccountsPerDevice', e.target.value)} />
+            </Field>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="border-amber-500/20 bg-amber-500/5">

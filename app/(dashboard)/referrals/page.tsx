@@ -1,293 +1,241 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import React, { useState, useEffect } from 'react';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/Table";
-import { Plus, Trash2, Gift, TrendingUp, Users, Calendar, Coins } from "lucide-react";
-import { toast } from 'sonner';
+    Share2, Copy, Check, Search, Users, Gift, Calendar, RefreshCw, Trophy
+} from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export default function ReferralsPage() {
-    const [stats, setStats] = useState<any>(null);
-    const [promoCodes, setPromoCodes] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+interface TopReferrer {
+    userId: number;
+    name: string;
+    email?: string;
+    role: string;
+    image?: string;
+    referralCode?: string;
+    totalReferrals: number;
+    diamonds: number;
+}
 
-    // Form states
-    const [code, setCode] = useState('');
-    const [rewardCoins, setRewardCoins] = useState('');
-    const [usageLimit, setUsageLimit] = useState('100');
-    const [expiresAt, setExpiresAt] = useState('');
-    const [submitting, setSubmitting] = useState(false);
+interface ReferralLog {
+    _id: string;
+    referrer: {
+        userId: number;
+        name: string;
+        email?: string;
+        referralCode?: string;
+    };
+    referee: {
+        userId: number;
+        name: string;
+        email?: string;
+        createdAt?: string;
+    };
+    referralCode: string;
+    referrerReward: number;
+    refereeReward: number;
+    status: string;
+    claimedAt: string;
+}
 
-    useEffect(() => {
-        fetchReferralData();
-    }, []);
+export default function ReferralAnalyticsPage() {
+    const [loading, setLoading] = useState<boolean>(true);
+    const [totalReferrals, setTotalReferrals] = useState<number>(0);
+    const [totalDiamondsGranted, setTotalDiamondsGranted] = useState<number>(0);
+    const [topReferrers, setTopReferrers] = useState<TopReferrer[]>([]);
+    const [referralLogs, setReferralLogs] = useState<ReferralLog[]>([]);
+    const [searchTerm, setSearchTerm] = useState<string>('');
 
     const fetchReferralData = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const [statsRes, codesRes] = await Promise.all([
-                apiClient.get('/api/admin/referrals/stats'),
-                apiClient.get('/api/admin/referrals/promo-codes')
-            ]);
-
-            if (statsRes.success) setStats(statsRes.data);
-            if (codesRes.success) setPromoCodes(codesRes.data || []);
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to fetch referral program data');
+            const res = await apiClient.get<any>('/api/admin/referrals');
+            if (res && res.success && res.data) {
+                setTotalReferrals(res.data.totalReferrals || 0);
+                setTotalDiamondsGranted(res.data.totalDiamondsGranted || 0);
+                setTopReferrers(res.data.topReferrers || []);
+                setReferralLogs(res.data.referralLogs || []);
+            }
+        } catch (error) {
+            console.error('Failed to load management referral analytics:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleCreateCode = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!code || !rewardCoins) {
-            toast.error('Code and reward value are required');
-            return;
-        }
+    useEffect(() => {
+        fetchReferralData();
+    }, []);
 
-        try {
-            setSubmitting(true);
-            const response = await apiClient.post('/api/admin/referrals/promo-code', {
-                code,
-                rewardCoins,
-                usageLimit,
-                expiresAt: expiresAt || undefined
-            });
-
-            if (response.success) {
-                toast.success('Promo Code generated successfully');
-                setCode('');
-                setRewardCoins('');
-                setUsageLimit('100');
-                setExpiresAt('');
-                fetchReferralData();
-            }
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to create promo code');
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const handleDeleteCode = async (codeId: string) => {
-        if (!confirm('Are you sure you want to delete this promo code?')) return;
-        try {
-            const response = await apiClient.delete(`/api/admin/referrals/promo-code/${codeId}`);
-            if (response.success) {
-                toast.success('Promo code deleted successfully');
-                fetchReferralData();
-            }
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to delete promo code');
-        }
-    };
+    const filteredLogs = referralLogs.filter(log => {
+        const term = searchTerm.toLowerCase();
+        return (
+            log.referralCode?.toLowerCase().includes(term) ||
+            log.referrer?.name?.toLowerCase().includes(term) ||
+            log.referee?.name?.toLowerCase().includes(term) ||
+            String(log.referrer?.userId || '').includes(term) ||
+            String(log.referee?.userId || '').includes(term)
+        );
+    });
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Referrals & Coupons</h2>
-                <p className="text-muted-foreground mt-1 font-medium font-sans">Manage referral payouts, conversion analytics, and promo codes</p>
+        <div className="space-y-6 pb-12">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                <div>
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <Share2 className="w-7 h-7 text-amber-500" />
+                        Referral Rewards & Analytics
+                    </h1>
+                    <p className="text-sm text-slate-400 mt-1">
+                        Track who invited whom, total invites count, and total diamonds earned per user
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={fetchReferralData}
+                        className="px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 rounded-lg text-sm flex items-center gap-2 transition"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </button>
+                </div>
             </div>
 
-            {/* Quick stats cards */}
-            <div className="grid gap-4 md:grid-cols-3">
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-bold text-slate-300">Total Referrals Link Users</CardTitle>
-                        <Users className="h-4 w-4 text-primary" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-black text-slate-100">{stats?.totalReferrals || 0}</div>
-                        <p className="text-xs text-muted-foreground mt-1 font-semibold">Joined via referral code</p>
-                    </CardContent>
-                </Card>
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-bold text-slate-300">Converted VIP/Paying Users</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-emerald-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-black text-slate-100">{stats?.convertedVIPs || 0}</div>
-                        <p className="text-xs text-muted-foreground mt-1 font-semibold">Active high-paying accounts</p>
-                    </CardContent>
-                </Card>
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-bold text-slate-300">Total Referral Payouts</CardTitle>
-                        <Coins className="h-4 w-4 text-yellow-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-black text-slate-100">${stats?.totalReferralPayouts || 0}</div>
-                        <p className="text-xs text-muted-foreground mt-1 font-semibold">Coins cash commission payouts</p>
-                    </CardContent>
-                </Card>
+            {/* KPI Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-5 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <div className="text-xs text-slate-400 flex items-center justify-between uppercase font-semibold">
+                        Total Successful Referrals <Users className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div className="text-3xl font-bold text-white mt-2">{totalReferrals}</div>
+                </div>
+
+                <div className="p-5 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <div className="text-xs text-slate-400 flex items-center justify-between uppercase font-semibold">
+                        Total Diamonds Awarded <Gift className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <div className="text-3xl font-bold text-amber-400 mt-2">{totalDiamondsGranted} 💎</div>
+                </div>
             </div>
 
-            {/* Graphs / Coupon lists */}
-            <div className="grid gap-6 md:grid-cols-3">
-                <Card className="glass-card md:col-span-2">
-                    <CardHeader>
-                        <CardTitle className="text-slate-200">Referrals Analytics (Daily)</CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[280px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats?.analytics || []}>
-                                <defs>
-                                    <linearGradient id="invitesGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                                <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} />
-                                <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
-                                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
-                                <Area type="monotone" dataKey="invites" stroke="#8b5cf6" fillOpacity={1} fill="url(#invitesGrad)" name="Total Invites" />
-                                <Area type="monotone" dataKey="conversions" stroke="#10b981" fillOpacity={0} name="VIP Conversions" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
-
-                {/* Create Promo Code form */}
-                <Card className="glass-card md:col-span-1">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-slate-200">
-                            <Plus size={20} />
-                            Generate Promo Code
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleCreateCode} className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-300">Promo Code</label>
-                                <Input
-                                    placeholder="e.g. WELCOME50"
-                                    value={code}
-                                    onChange={(e) => setCode(e.target.value)}
-                                    required
-                                    className="uppercase font-mono"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-300">Coins Reward Value</label>
-                                <Input
-                                    type="number"
-                                    placeholder="50"
-                                    value={rewardCoins}
-                                    onChange={(e) => setRewardCoins(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-300">Max Usage Limit</label>
-                                <Input
-                                    type="number"
-                                    placeholder="100"
-                                    value={usageLimit}
-                                    onChange={(e) => setUsageLimit(e.target.value)}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-300">Expiration Date</label>
-                                <Input
-                                    type="date"
-                                    value={expiresAt}
-                                    onChange={(e) => setExpiresAt(e.target.value)}
-                                />
-                            </div>
-                            <Button type="submit" className="w-full font-bold" disabled={submitting}>
-                                {submitting ? 'Creating...' : 'Create Promo Code'}
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Promo Codes list */}
-            <Card className="glass-card">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-slate-200">
-                        <Gift size={20} />
-                        Promo Coupons List
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="font-bold text-slate-300">Code</TableHead>
-                                <TableHead className="font-bold text-slate-300">Coins Gift Value</TableHead>
-                                <TableHead className="font-bold text-slate-300">Usage Stats</TableHead>
-                                <TableHead className="font-bold text-slate-300">Expiry Date</TableHead>
-                                <TableHead className="font-bold text-slate-300">Status</TableHead>
-                                <TableHead className="text-right font-bold text-slate-300">Action</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
+            {/* Top Referrers Leaderboard */}
+            <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-6">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-amber-400" />
+                    Top Inviter Leaderboard
+                </h3>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-slate-300">
+                        <thead className="bg-slate-950 text-xs font-semibold text-slate-400 uppercase border-b border-slate-800">
+                            <tr>
+                                <th className="p-3">Rank</th>
+                                <th className="p-3">User ID</th>
+                                <th className="p-3">User Name</th>
+                                <th className="p-3">Referral Code</th>
+                                <th className="p-3">Role</th>
+                                <th className="p-3 text-right">Total Invites</th>
+                                <th className="p-3 text-right">Current Diamonds</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60">
                             {loading ? (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-8 text-slate-400">Loading coupons...</TableCell>
-                                </TableRow>
-                            ) : promoCodes.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-8 text-slate-400 font-medium">No promo codes configured</TableCell>
-                                </TableRow>
+                                <tr>
+                                    <td colSpan={7} className="p-8 text-center text-slate-500">
+                                        Loading leaderboard...
+                                    </td>
+                                </tr>
+                            ) : topReferrers.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="p-8 text-center text-slate-500">
+                                        No active referrers found.
+                                    </td>
+                                </tr>
                             ) : (
-                                promoCodes.map((promo) => (
-                                    <TableRow key={promo._id} className="hover:bg-muted/30">
-                                        <TableCell className="font-mono font-bold text-primary">{promo.code}</TableCell>
-                                        <TableCell className="font-semibold text-slate-300">
-                                            <div className="flex items-center gap-1">
-                                                <Coins size={14} className="text-yellow-500" />
-                                                <span>{promo.rewardCoins} coins</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="font-semibold text-slate-300">
-                                            {promo.usageCount} / {promo.usageLimit} uses
-                                        </TableCell>
-                                        <TableCell className="font-semibold text-slate-400 text-xs">
-                                            {promo.expiresAt ? (
-                                                <div className="flex items-center gap-1">
-                                                    <Calendar size={12} />
-                                                    <span>{new Date(promo.expiresAt).toLocaleDateString()}</span>
-                                                </div>
-                                            ) : 'No Expiry'}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={promo.isActive && (!promo.expiresAt || new Date(promo.expiresAt) > new Date()) ? "success" : "destructive"}>
-                                                {promo.isActive && (!promo.expiresAt || new Date(promo.expiresAt) > new Date()) ? 'Active' : 'Expired/Disabled'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Button
-                                                size="sm"
-                                                variant="destructive"
-                                                onClick={() => handleDeleteCode(promo._id)}
-                                            >
-                                                <Trash2 size={16} />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
+                                topReferrers.map((user, idx) => (
+                                    <tr key={user.userId} className="hover:bg-slate-800/40 transition">
+                                        <td className="p-3 font-bold text-amber-400">#{idx + 1}</td>
+                                        <td className="p-3 font-mono text-xs">{user.userId}</td>
+                                        <td className="p-3 font-semibold text-white">{user.name || 'User'}</td>
+                                        <td className="p-3 font-mono font-bold text-cyan-400">{user.referralCode || `MC${user.userId}`}</td>
+                                        <td className="p-3 capitalize text-slate-400">{user.role}</td>
+                                        <td className="p-3 text-right font-bold text-emerald-400">{user.totalReferrals}</td>
+                                        <td className="p-3 text-right font-bold text-amber-400">{user.diamonds} 💎</td>
+                                    </tr>
                                 ))
                             )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Detailed Referral Claims Log Table */}
+            <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-6 space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <Users className="w-5 h-5 text-cyan-400" />
+                        Referral Claims Activity Log
+                    </h3>
+                    <div className="relative max-w-sm w-full">
+                        <Search className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+                        <input
+                            type="text"
+                            placeholder="Search code, inviter name, referee..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                        />
+                    </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-slate-300">
+                        <thead className="bg-slate-950 text-xs font-semibold text-slate-400 uppercase border-b border-slate-800">
+                            <tr>
+                                <th className="p-3">Referrer (Inviter)</th>
+                                <th className="p-3">Referee (New User)</th>
+                                <th className="p-3">Referral Code</th>
+                                <th className="p-3 text-right">Referrer Reward</th>
+                                <th className="p-3 text-right">Claimed Date</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} className="p-8 text-center text-slate-500">
+                                        Loading referral activity...
+                                    </td>
+                                </tr>
+                            ) : filteredLogs.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="p-8 text-center text-slate-500">
+                                        No referral logs found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredLogs.map((log) => (
+                                    <tr key={log._id} className="hover:bg-slate-800/40 transition">
+                                        <td className="p-3">
+                                            <div className="font-semibold text-white">{log.referrer?.name || 'User'}</div>
+                                            <div className="text-xs text-slate-500 font-mono">ID: {log.referrer?.userId}</div>
+                                        </td>
+                                        <td className="p-3">
+                                            <div className="font-semibold text-emerald-400">{log.referee?.name || 'New User'}</div>
+                                            <div className="text-xs text-slate-500 font-mono">ID: {log.referee?.userId}</div>
+                                        </td>
+                                        <td className="p-3 font-mono font-bold text-amber-400">{log.referralCode}</td>
+                                        <td className="p-3 text-right font-bold text-emerald-400">+{log.referrerReward || 50} 💎</td>
+                                        <td className="p-3 text-right text-xs text-slate-400">
+                                            {log.claimedAt ? new Date(log.claimedAt).toLocaleString() : 'N/A'}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 }
