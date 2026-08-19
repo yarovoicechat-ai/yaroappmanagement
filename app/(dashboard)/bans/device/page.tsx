@@ -227,6 +227,12 @@ export default function DeviceBansPage() {
                                         {searchedData.deviceId ? searchedData.deviceId.slice(0, 16) + '...' : 'Not Recorded'}
                                     </span>
                                 </div>
+                                <div className="flex justify-between py-1 border-b border-slate-800">
+                                    <span className="text-slate-400">Device IP Address:</span>
+                                    <span className="font-mono text-xs text-amber-300 font-bold">
+                                        {searchedData.ipAddress || searchedData.user?.ipAddress || searchedData.user?.lastIp || 'Not Recorded'}
+                                    </span>
+                                </div>
                                 <div className="flex justify-between py-1">
                                     <span className="text-slate-400">Accounts on Device:</span>
                                     <span className="font-bold text-emerald-400">{searchedData.totalAccountsCount} Registered</span>

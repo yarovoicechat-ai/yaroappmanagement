@@ -44,7 +44,8 @@ const sidebarSections: SidebarSection[] = [
     {
         title: 'Referral Management',
         items: [
-            { name: 'Referral Analytics & Rewards', href: '/referrals', icon: Share2 }
+            { name: 'User Refer & Earn', href: '/referrals', icon: Share2 },
+            { name: 'Admin & Staff Referrals', href: '/referrals/links', icon: Users }
         ]
     },
     {
