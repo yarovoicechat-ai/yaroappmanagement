@@ -42,13 +42,24 @@ const sidebarSections: SidebarSection[] = [
         ]
     },
     {
+        title: 'Referral Management',
+        items: [
+            { name: 'Referral Analytics & Rewards', href: '/referrals', icon: Share2 }
+        ]
+    },
+    {
+        title: 'Device & Security Control',
+        items: [
+            { name: 'Device Limits & Bans', href: '/bans/device', icon: Smartphone },
+            { name: 'ID & Account Bans', href: '/bans/id', icon: ShieldCheck }
+        ]
+    },
+    {
         title: 'App Content & Economy',
         items: [
             { name: 'CMS Editor', href: '/cms', icon: FileText },
             { name: 'Banners', href: '/banners', icon: Layers },
             { name: 'Ads', href: '/ads', icon: Layers },
-            { name: 'Referrals', href: '/referrals', icon: Share2 },
-            { name: 'Device Limits & Bans', href: '/bans/device', icon: Smartphone },
             { name: 'VIP Program', href: '/vip', icon: Crown },
             { name: 'Levels', href: '/levels', icon: Award },
             { name: 'Gifts', href: '/gifts', icon: Gift },
