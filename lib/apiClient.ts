@@ -2,9 +2,7 @@
 
 const getApiBaseUrl = () => {
     if (typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
-        const localEnv = process.env.NEXT_PUBLIC_LOCAL_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
-        if (localEnv) return localEnv.replace(/\/+$/, '').replace(/\/api$/i, '');
-        // Default to production API if no local override set
+        return process.env.NEXT_PUBLIC_LOCAL_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
     }
     const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.mithichat.live';
     return configuredBaseUrl.replace(/\/+$/, '').replace(/\/api$/i, '');
