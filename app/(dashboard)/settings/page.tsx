@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Switch } from '@/components/ui/Switch';
-import { Save, PhoneCall, Gift, Radio, ShieldCheck, WalletCards, Settings } from 'lucide-react';
+import { Save, PhoneCall, Gift, Radio, Shield, ShieldCheck, WalletCards, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/apiClient';
 
@@ -23,6 +23,9 @@ interface AppSettings {
   emailAlerts: boolean;
   userNotifications: boolean;
   systemDigest: boolean;
+  welcomeRewardDiamonds?: number;
+  referralRewardDiamonds?: number;
+  defaultMaxAccountsPerDevice?: number;
 }
 
 const defaults: AppSettings = {
@@ -39,6 +42,9 @@ const defaults: AppSettings = {
   emailAlerts: true,
   userNotifications: true,
   systemDigest: true,
+  welcomeRewardDiamonds: 100,
+  referralRewardDiamonds: 50,
+  defaultMaxAccountsPerDevice: 1,
 };
 
 export default function SettingsPage() {
