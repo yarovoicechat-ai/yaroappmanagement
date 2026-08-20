@@ -426,7 +426,7 @@ export default function AppReleasesPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={uploading || !selectedFile}
+              disabled={uploading || (uploadTab === 'file' ? !selectedFile : !directUrl.trim())}
               className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-medium rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20"
             >
               {uploading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}

@@ -227,7 +227,7 @@ class ApiClient {
             };
 
             xhr.onerror = () => {
-                reject(new Error(`Network error uploading file to ${baseUrl}. Check if server is running or if CORS / Nginx limits are restricting large 70MB+ uploads.`));
+                reject(new Error(`Upload failed: Connection reset by server (${baseUrl}). This occurs when uploading large APK files (70MB+) if Nginx 'client_max_body_size' is restricted (default 1M/10M) on api.mithichat.live. Please update Nginx client_max_body_size to 300M or use the Direct URL tab.`));
             };
 
             xhr.send(formData);
