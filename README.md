@@ -1,6 +1,6 @@
-# Meethi Chat Management Panel
+# Voice Call Club Management Panel
 
-Separate Next.js app for `management.mithichat.live`.
+Separate Next.js app for `management.voicecallclub.com`.
 
 This panel is intentionally limited to app configuration work:
 

@@ -69,7 +69,7 @@ export default function FramesPage() {
                     ...frame,
                     image: frame.image?.startsWith('http')
                         ? frame.image
-                        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.mithichat.live'}${frame.image?.startsWith('/') ? '' : '/'}${frame.image}`
+                        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.voicecallclub.com'}${frame.image?.startsWith('/') ? '' : '/'}${frame.image}`
                 }));
                 setFrames(updatedFrames);
             }

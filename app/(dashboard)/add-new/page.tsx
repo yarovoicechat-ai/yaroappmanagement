@@ -99,7 +99,7 @@ export default function AddNewEntityPage() {
                                     <label className="text-sm font-semibold text-slate-300">Email Address</label>
                                     <Input
                                         type="email"
-                                        placeholder="e.g. testing@mithichat.com"
+                                        placeholder="e.g. testing@voicecallclub.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required

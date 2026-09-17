@@ -184,7 +184,7 @@ export default function IdBansPage() {
                     setVerifiedUser({
                         userId: cleanedId,
                         name: `Pre-Registered Account #${cleanedId}`,
-                        email: `user_${cleanedId}@mithichat.com`,
+                        email: `user_${cleanedId}@voicecallclub.com`,
                         isBlocked: false,
                         isMock: true
                     });
