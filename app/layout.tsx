@@ -14,12 +14,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="font-sans bg-background text-foreground">
+    <html lang="en" suppressHydrationWarning data-panel-theme="management" data-font="modern" data-density="comfortable" data-shadow="soft" data-canvas="white">
+      <body className="app-body bg-background text-foreground">
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
-          enableSystem
+          defaultTheme="light"
+          forcedTheme="light"
+          enableSystem={false}
           disableTransitionOnChange
         >
           <Providers>

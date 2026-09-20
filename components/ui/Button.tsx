@@ -4,19 +4,19 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-    "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+    "inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius)] text-sm font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
     {
         variants: {
             variant: {
-                default: "bg-dosti-600 text-slate-50 hover:bg-dosti-600/90 shadow-lg shadow-dosti-600/20",
+                default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/15",
                 destructive:
-                    "bg-red-500 text-slate-50 hover:bg-red-500/90",
+                    "bg-destructive text-destructive-foreground hover:bg-destructive/90",
                 outline:
-                    "border border-slate-700 bg-transparent hover:bg-slate-800 text-slate-100",
+                    "border border-border bg-white text-foreground hover:border-primary/30 hover:bg-accent hover:text-accent-foreground",
                 secondary:
-                    "bg-slate-800 text-slate-50 hover:bg-slate-800/80",
-                ghost: "hover:bg-slate-800/50 hover:text-slate-100 text-slate-300",
-                link: "text-dosti-400 underline-offset-4 hover:underline",
+                    "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                ghost: "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                link: "text-primary underline-offset-4 hover:underline",
             },
             size: {
                 default: "h-10 px-4 py-2",
