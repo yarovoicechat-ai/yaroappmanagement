@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
     LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift,
     Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
-    MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders,
+    MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell,
     type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -37,6 +37,7 @@ const sidebarSections: SidebarSection[] = [
         items: [
             { name: 'Dashboard', href: '/', icon: LayoutDashboard },
             { name: 'App Releases (APK)', href: '/app-releases', icon: Download },
+            { name: 'Feature Flags', href: '/feature-flags', icon: Sliders },
             { name: 'Screen Security & Code', href: '/screen-security', icon: ShieldCheck },
             { name: 'App Settings', href: '/settings', icon: Settings },
             { name: 'System Logs', href: '/logs', icon: Terminal }
@@ -73,6 +74,7 @@ const sidebarSections: SidebarSection[] = [
     {
         title: 'Events & Messaging',
         items: [
+            { name: 'Campaign Center', href: '/notifications/campaigns', icon: Bell },
             { name: 'Events', href: '/events', icon: FileText },
             { name: 'System Messages', href: '/messages/system', icon: MessageCircle },
             { name: 'Activity Messages', href: '/messages/activity', icon: MessageCircle }
