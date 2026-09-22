@@ -1,6 +1,6 @@
-# Voice Call Club Management Panel
+# Yaro App Management Panel
 
-Separate Next.js app for `management.voicecallclub.com`.
+Separate Next.js app for `management.yaroapp.in`.
 
 This panel is intentionally limited to app configuration work:
 

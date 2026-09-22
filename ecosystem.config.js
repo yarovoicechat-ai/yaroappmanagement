@@ -1,12 +1,12 @@
 module.exports = {
   apps: [
     {
-      name: 'app-management',
+      name: 'yaro-management',
       cwd: '/root/apps/app-management',
       script: 'npm',
       args: 'start',
       env: {
-        PORT: 3003,
+        PORT: 3102,
         NODE_ENV: 'production'
       }
     }

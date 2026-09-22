@@ -45,7 +45,7 @@ export default function AvatarsPage() {
                     ...avatar,
                     url: avatar.avatarUrl.startsWith('http')
                         ? avatar.avatarUrl
-                        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.voicecallclub.com'}${avatar.avatarUrl.startsWith('/') ? '' : '/'}${avatar.avatarUrl}`
+                        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yaroapp.in'}${avatar.avatarUrl.startsWith('/') ? '' : '/'}${avatar.avatarUrl}`
                 }));
                 setAvatars(updatedAvatars);
             }

@@ -6,7 +6,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'api.voicecallclub.com',
+        hostname: 'api.yaroapp.in',
+      },
+      {
+        protocol: 'https',
+        hostname: 'yaroapp.in',
       },
     ],
   },

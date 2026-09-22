@@ -53,7 +53,7 @@ export default function SystemMessagesPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-300">Message Title</label>
                             <Input
-                                placeholder="e.g. Voice Call Club System Update"
+                                placeholder="e.g. Yaro System Update"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 required

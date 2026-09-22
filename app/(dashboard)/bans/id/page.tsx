@@ -184,7 +184,7 @@ export default function IdBansPage() {
                     setVerifiedUser({
                         userId: cleanedId,
                         name: `Pre-Registered Account #${cleanedId}`,
-                        email: `user_${cleanedId}@voicecallclub.com`,
+                        email: `user_${cleanedId}@yaroapp.in`,
                         isBlocked: false,
                         isMock: true
                     });

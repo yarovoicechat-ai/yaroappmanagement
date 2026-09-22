@@ -2,9 +2,9 @@
 
 const getApiBaseUrl = () => {
     if (typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
-        return process.env.NEXT_PUBLIC_LOCAL_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+        return process.env.NEXT_PUBLIC_LOCAL_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3101';
     }
-    const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.voicecallclub.com';
+    const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yaroapp.in';
     return configuredBaseUrl.replace(/\/+$/, '').replace(/\/api$/i, '');
 };
 
@@ -227,7 +227,7 @@ class ApiClient {
             };
 
             xhr.onerror = () => {
-                reject(new Error(`Upload failed: Connection reset by server (${baseUrl}). This occurs when uploading large APK files (70MB+) if Nginx 'client_max_body_size' is restricted (default 1M/10M) on api.voicecallclub.com. Please update Nginx client_max_body_size to 300M or use the Direct URL tab.`));
+                reject(new Error(`Upload failed: Connection reset by server (${baseUrl}). This occurs when uploading large APK files (70MB+) if Nginx 'client_max_body_size' is restricted (default 1M/10M) on api.yaroapp.in. Please update Nginx client_max_body_size to 300M or use the Direct URL tab.`));
             };
 
             xhr.send(formData);
