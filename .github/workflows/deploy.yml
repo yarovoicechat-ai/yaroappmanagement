@@ -1,37 +1,56 @@
-name: 🚀 Deploy Management Panel
+﻿name: YaroAppManagement Production Deploy
 
 on:
   push:
     branches:
       - main
 
+concurrency:
+  group: yaro-management-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
+    name: Build & Deploy YaroAppManagement
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to Server
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Management Panel
+        run: npm run build
+
+      - name: Deploy to Contabo
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.PORT }}
-
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script_stop: true
           script: |
-            cd ${{ secrets.PROJECT_PATH }}
+            set -euo pipefail
 
-            echo "📥 Pulling latest code..."
-            git pull origin main
+            echo "========================================"
+            echo "   YARO MANAGEMENT PRODUCTION DEPLOY"
+            echo "========================================"
+            echo "GitHub Commit: ${{ github.sha }}"
+            echo "GitHub Branch: ${{ github.ref_name }}"
+            echo "Deployment started: $(date)"
 
-            echo "📦 Installing dependencies..."
-            npm install
+            /root/deployments/yaro-management/deploy-yaro-management.sh
 
-            echo "🔨 Building..."
-            npm run build
-
-            echo "♻ Restarting PM2..."
-            pm2 reload ${{ secrets.PM2_APP_NAME }} || pm2 restart ${{ secrets.PM2_APP_NAME }} || pm2 restart app-management || pm2 restart management || pm2 start npm --name "app-management" -- start -- -p 3003
-            pm2 save
-
-            echo "✅ Management Panel Deployment Finished"
+            echo "========================================"
+            echo "       DEPLOYMENT COMPLETED"
+            echo "========================================"
+            echo "Deployment finished: $(date)"
