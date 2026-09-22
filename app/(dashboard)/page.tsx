@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import {
     Gift, Layers, Award, User, Crown, FileText,
-    Settings, TrendingUp, Activity, LucideIcon,
-    Image, ToggleLeft, ToggleRight, CheckCircle, XCircle, ExternalLink,
-    Coins, Clock, Phone
+    Settings, TrendingUp, LucideIcon,
+    Image, CheckCircle, XCircle, ExternalLink,
+    Coins, Clock, Phone, Sparkles, ArrowUpRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiClient } from '@/lib/apiClient';
@@ -21,6 +21,7 @@ export type StatsCardProps = {
     subtitle: string;
     icon: LucideIcon;
     color: string;
+    gradient: string;
     href: string;
 };
 
@@ -39,7 +40,6 @@ export default function Home() {
     const [maleAvatars, setMaleAvatars] = useState<any[]>([]);
     const [femaleAvatars, setFemaleAvatars] = useState<any[]>([]);
     const [levels, setLevels] = useState<any[]>([]);
-
     const [avatarRequests, setAvatarRequests] = useState<any[]>([]);
 
     useEffect(() => {
@@ -87,31 +87,35 @@ export default function Home() {
             value: levels.length,
             subtitle: `${permanentLevels.length} permanent · ${promoLevels.length} promo`,
             icon: Award,
-            color: 'text-purple-400',
+            color: 'text-violet-400 border-violet-500/30 bg-violet-500/10',
+            gradient: 'from-violet-500/15 to-transparent',
             href: '/levels',
         },
         {
             title: 'Total Gifts',
             value: gifts.length,
-            subtitle: `${activeGifts} active`,
+            subtitle: `${activeGifts} active catalogue`,
             icon: Gift,
-            color: 'text-rose-400',
+            color: 'text-rose-400 border-rose-500/30 bg-rose-500/10',
+            gradient: 'from-rose-500/15 to-transparent',
             href: '/gifts',
         },
         {
             title: 'Total Banners',
             value: banners.length,
-            subtitle: `${activeBanners} live`,
+            subtitle: `${activeBanners} live campaigns`,
             icon: Layers,
-            color: 'text-blue-400',
+            color: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10',
+            gradient: 'from-cyan-500/15 to-transparent',
             href: '/banners',
         },
         {
             title: 'Total Frames',
             value: frames.length,
-            subtitle: 'Profile frames',
+            subtitle: 'Avatar overlay frames',
             icon: Award,
-            color: 'text-amber-400',
+            color: 'text-amber-400 border-amber-500/30 bg-amber-500/10',
+            gradient: 'from-amber-500/15 to-transparent',
             href: '/frames',
         },
         {
@@ -119,40 +123,46 @@ export default function Home() {
             value: totalAvatars,
             subtitle: `${maleAvatars.length} male · ${femaleAvatars.length} female`,
             icon: User,
-            color: 'text-emerald-400',
+            color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
+            gradient: 'from-emerald-500/15 to-transparent',
             href: '/avatars',
         },
     ];
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
+            <div className="flex items-center justify-center min-h-[70vh]">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                    <p className="text-slate-400 text-sm">Loading config panel...</p>
+                    <div className="h-10 w-10 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
+                    <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Synchronizing Console...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 pb-12">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                        Config Dashboard
-                    </h2>
-                    <p className="text-muted-foreground mt-1">Manage engagement assets & app configuration</p>
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-cyan-400" />
+                        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                            Config Dashboard
+                        </h1>
+                    </div>
+                    <p className="text-slate-400 text-xs sm:text-sm mt-1">
+                        Live control center for economy assets, level progression, and content configuration.
+                    </p>
                 </div>
-                <div className="flex items-center gap-2 bg-secondary/50 p-2 rounded-lg border border-border">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Assets Live</span>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 shadow-sm shadow-emerald-500/10 w-fit">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider">Asset Pipeline Active</span>
                 </div>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
                 {statsCards.map((card) => (
                     <StatsCard key={card.title} {...card} />
                 ))}
@@ -162,64 +172,64 @@ export default function Home() {
             <div className="grid gap-4 md:grid-cols-3">
                 <QuickAccessCard
                     title="CMS Editor"
-                    description="Edit app content & text strings"
+                    description="Edit app policies, terms, FAQs & content strings"
                     icon={FileText}
                     href="/cms"
-                    color="from-violet-500/20 to-violet-600/5"
-                    iconColor="text-violet-400"
+                    color="from-violet-500/15 to-indigo-500/5 hover:border-violet-500/40"
+                    iconColor="text-violet-400 bg-violet-500/10 border-violet-500/30"
                 />
                 <QuickAccessCard
-                    title="Settings"
-                    description="Configure app-wide settings"
+                    title="Console Settings"
+                    description="Configure platform parameters and system toggles"
                     icon={Settings}
                     href="/settings"
-                    color="from-slate-500/20 to-slate-600/5"
-                    iconColor="text-slate-400"
+                    color="from-cyan-500/15 to-blue-500/5 hover:border-cyan-500/40"
+                    iconColor="text-cyan-400 bg-cyan-500/10 border-cyan-500/30"
                 />
                 <QuickAccessCard
                     title="VIP Program"
-                    description="Manage VIP tiers & benefits"
+                    description="Configure exclusive privilege tiers & host perks"
                     icon={Crown}
                     href="/vip"
-                    color="from-amber-500/20 to-amber-600/5"
-                    iconColor="text-amber-400"
+                    color="from-amber-500/15 to-orange-500/5 hover:border-amber-500/40"
+                    iconColor="text-amber-400 bg-amber-500/10 border-amber-500/30"
                 />
             </div>
 
             {/* Asset Overview Section */}
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2">
                 {/* Host Levels Overview */}
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-base font-semibold flex items-center gap-2">
-                            <Award className="h-4 w-4 text-purple-400" />
+                <Card className="rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-xl shadow-black/40">
+                    <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-white/5">
+                        <CardTitle className="text-base font-bold flex items-center gap-2 text-white">
+                            <Award className="h-4 w-4 text-violet-400" />
                             Host Levels Overview
                         </CardTitle>
-                        <Link href="/levels" className="text-xs text-primary hover:underline flex items-center gap-1">
-                            Manage <ExternalLink className="h-3 w-3" />
+                        <Link href="/levels" className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors">
+                            Manage Levels <ArrowUpRight className="h-3.5 w-3.5" />
                         </Link>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-4">
                         {levels.length === 0 ? (
-                            <p className="text-sm text-slate-500 py-4 text-center">No levels configured yet.</p>
+                            <p className="text-sm text-slate-500 py-6 text-center">No levels configured yet.</p>
                         ) : (
-                            <div className="space-y-2">
+                            <div className="space-y-2.5">
                                 {levels.slice(0, 6).map((l: any, i: number) => (
-                                    <div key={i} className="flex items-center gap-3 py-1.5 border-b border-slate-800/50 last:border-0">
-                                        <div className="h-8 w-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                                            <Award className="h-4 w-4 text-purple-400" />
+                                    <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                                        <div className="h-9 w-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+                                            <Award className="h-4 w-4 text-violet-400" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-200 truncate">
+                                            <p className="text-xs sm:text-sm font-semibold text-slate-200 truncate">
                                                 {l.expiresAt ? '⏳ ' : ''}{l.name}
                                             </p>
-                                            <div className="flex items-center gap-2 text-xs text-slate-500">
-                                                <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" /> {l.minCalls} calls</span>
-                                                <span>·</span>
-                                                <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {l.minMinutes} mins</span>
+                                            <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
+                                                <span className="flex items-center gap-1"><Phone className="h-3 w-3 text-slate-500" /> {l.minCalls} calls</span>
+                                                <span>•</span>
+                                                <span className="flex items-center gap-1"><Clock className="h-3 w-3 text-slate-500" /> {l.minMinutes} mins</span>
                                             </div>
                                         </div>
-                                        <div className="shrink-0 flex items-center gap-1 text-xs font-bold text-yellow-500">
+                                        <div className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs font-bold text-amber-400 shadow-sm">
                                             <Coins className="h-3 w-3" />
                                             {l.coinPerMinute}/min
                                         </div>
@@ -231,17 +241,17 @@ export default function Home() {
                 </Card>
 
                 {/* Recent Gifts */}
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Card className="rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-xl shadow-black/40">
+                    <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-white/5">
+                        <CardTitle className="text-base font-bold flex items-center gap-2 text-white">
                             <Gift className="h-4 w-4 text-rose-400" />
-                            Gifts Overview
+                            Gifts Catalogue
                         </CardTitle>
-                        <Link href="/gifts" className="text-xs text-primary hover:underline flex items-center gap-1">
-                            Manage <ExternalLink className="h-3 w-3" />
+                        <Link href="/gifts" className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors">
+                            Manage Gifts <ArrowUpRight className="h-3.5 w-3.5" />
                         </Link>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-4">
                         <AssetList
                             items={gifts.slice(0, 6).map((g: any) => ({
                                 name: g.name || 'Gift',
@@ -249,50 +259,47 @@ export default function Home() {
                                 image: g.image,
                                 type: `${g.price || 0} coins`,
                             }))}
-                            emptyText="No gifts found. Add one!"
+                            emptyText="No gifts found in catalogue."
                         />
                     </CardContent>
                 </Card>
 
                 {/* Recent Banners */}
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-base font-semibold flex items-center gap-2">
-                            <Layers className="h-4 w-4 text-blue-400" />
-                            Banners Overview
+                <Card className="rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-xl shadow-black/40">
+                    <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-white/5">
+                        <CardTitle className="text-base font-bold flex items-center gap-2 text-white">
+                            <Layers className="h-4 w-4 text-cyan-400" />
+                            Marketing Banners
                         </CardTitle>
-                        <Link href="/banners" className="text-xs text-primary hover:underline flex items-center gap-1">
-                            Manage <ExternalLink className="h-3 w-3" />
+                        <Link href="/banners" className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors">
+                            Manage Banners <ArrowUpRight className="h-3.5 w-3.5" />
                         </Link>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-4">
                         <AssetList
                             items={banners.slice(0, 6).map((b: any) => ({
                                 name: b.title || b.name || 'Banner',
                                 status: b.isActive !== false,
                                 image: b.image,
-                                type: b.type || 'Banner',
+                                type: b.type || 'In-App Display',
                             }))}
-                            emptyText="No banners found. Add one!"
+                            emptyText="No banners active."
                         />
                     </CardContent>
                 </Card>
-            </div>
 
-            {/* Frames & Avatars row */}
-            <div className="grid gap-4 md:grid-cols-2">
-                {/* Frames */}
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-base font-semibold flex items-center gap-2">
+                {/* Frames Overview */}
+                <Card className="rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-xl shadow-black/40">
+                    <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-white/5">
+                        <CardTitle className="text-base font-bold flex items-center gap-2 text-white">
                             <Award className="h-4 w-4 text-amber-400" />
-                            Frames Overview
+                            Profile Frames
                         </CardTitle>
-                        <Link href="/frames" className="text-xs text-primary hover:underline flex items-center gap-1">
-                            Manage <ExternalLink className="h-3 w-3" />
+                        <Link href="/frames" className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors">
+                            Manage Frames <ArrowUpRight className="h-3.5 w-3.5" />
                         </Link>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-4">
                         <AssetList
                             items={frames.slice(0, 6).map((f: any) => ({
                                 name: f.name || f.level || 'Frame',
@@ -300,88 +307,56 @@ export default function Home() {
                                 image: f.image,
                                 type: `Level ${f.level || '—'}`,
                             }))}
-                            emptyText="No frames found. Add one!"
+                            emptyText="No frames registered."
                         />
-                    </CardContent>
-                </Card>
-
-                {/* Avatars */}
-                <Card className="glass-card">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-base font-semibold flex items-center gap-2">
-                            <User className="h-4 w-4 text-emerald-400" />
-                            Avatars Overview
-                        </CardTitle>
-                        <Link href="/avatars" className="text-xs text-primary hover:underline flex items-center gap-1">
-                            Manage <ExternalLink className="h-3 w-3" />
-                        </Link>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center gap-6 py-2">
-                            <div className="flex flex-col items-center gap-1">
-                                <p className="text-2xl font-bold text-slate-200">{maleAvatars.length}</p>
-                                <p className="text-xs text-slate-500 font-medium">Male Avatars</p>
-                            </div>
-                            <div className="h-10 w-px bg-slate-700" />
-                            <div className="flex flex-col items-center gap-1">
-                                <p className="text-2xl font-bold text-slate-200">{femaleAvatars.length}</p>
-                                <p className="text-xs text-slate-500 font-medium">Female Avatars</p>
-                            </div>
-                            <div className="h-10 w-px bg-slate-700" />
-                            <div className="flex flex-col items-center gap-1">
-                                <p className="text-2xl font-bold text-primary">{totalAvatars}</p>
-                                <p className="text-xs text-slate-500 font-medium">Total</p>
-                            </div>
-                        </div>
-                        {totalAvatars === 0 && (
-                            <p className="text-sm text-slate-500 py-4 text-center">No avatars found. Add some!</p>
-                        )}
                     </CardContent>
                 </Card>
             </div>
 
             {/* Avatar Verification Requests Section */}
-            <Card className="glass-card">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-base font-semibold flex items-center gap-2">
-                        <User className="h-4 w-4 text-purple-400" />
-                        Pending Avatar Verification Requests
-                        <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30">
+            <Card className="rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/40">
+                <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-white/5">
+                    <div className="flex items-center gap-2.5">
+                        <User className="h-4 w-4 text-violet-400" />
+                        <CardTitle className="text-base font-bold text-white">
+                            Pending Avatar Verification Requests
+                        </CardTitle>
+                        <span className="px-2.5 py-0.5 text-xs rounded-full bg-violet-500/20 text-violet-300 font-bold border border-violet-500/30">
                             {avatarRequests.length} Pending
                         </span>
-                    </CardTitle>
-                    <Link href="/avatar-requests" className="text-xs text-primary hover:underline flex items-center gap-1">
-                        View All <ExternalLink className="h-3 w-3" />
+                    </div>
+                    <Link href="/avatar-requests" className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors">
+                        View All Requests <ArrowUpRight className="h-3.5 w-3.5" />
                     </Link>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-4">
                     {avatarRequests.length === 0 ? (
-                        <p className="text-sm text-slate-500 py-4 text-center">No pending avatar requests from verified hosts.</p>
+                        <p className="text-sm text-slate-500 py-6 text-center">No pending avatar verification requests from hosts.</p>
                     ) : (
                         <div className="space-y-3">
                             {avatarRequests.slice(0, 5).map((req: any) => (
-                                <div key={req._id} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50 gap-4">
+                                <div key={req._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 gap-4 transition-all">
                                     <div className="space-y-0.5">
-                                        <p className="text-sm font-semibold text-slate-200">{req.hostUserObjId?.name || `Host #${req.hostId}`}</p>
-                                        <p className="text-xs text-slate-400">Host ID: <code className="text-pink-400">{req.hostId}</code></p>
+                                        <p className="text-sm font-semibold text-white">{req.hostUserObjId?.name || `Host #${req.hostId}`}</p>
+                                        <p className="text-xs text-slate-400">Host ID: <code className="text-cyan-400 font-mono">{req.hostId}</code></p>
                                     </div>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-4">
                                         <div className="text-center">
-                                            <p className="text-[10px] text-slate-400">Current</p>
+                                            <p className="text-[10px] uppercase font-bold text-slate-500">Current</p>
                                             {req.currentAvatar ? (
-                                                <img src={req.currentAvatar} alt="Current" className="h-10 w-10 rounded-full object-cover border border-slate-600" />
+                                                <img src={req.currentAvatar} alt="Current" className="h-11 w-11 rounded-full object-cover border border-white/10 mt-1" />
                                             ) : (
-                                                <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-slate-400">None</div>
+                                                <div className="h-11 w-11 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-[10px] text-slate-500 mt-1">None</div>
                                             )}
                                         </div>
-                                        <span className="text-slate-500 font-bold">→</span>
+                                        <span className="text-slate-600 font-bold">→</span>
                                         <div className="text-center">
-                                            <p className="text-[10px] text-purple-400 font-semibold">Requested</p>
-                                            <img src={req.requestedAvatar} alt="Requested" className="h-10 w-10 rounded-full object-cover border-2 border-purple-500 shadow-md shadow-purple-500/20" />
+                                            <p className="text-[10px] uppercase font-bold text-cyan-400">Requested</p>
+                                            <img src={req.requestedAvatar} alt="Requested" className="h-11 w-11 rounded-full object-cover border-2 border-cyan-400 shadow-md shadow-cyan-500/20 mt-1" />
                                         </div>
                                     </div>
                                     <Link href="/avatar-requests">
-                                        <Button size="sm" variant="outline" className="text-xs">
+                                        <Button size="sm" variant="outline" className="text-xs w-full sm:w-auto">
                                             Review Request
                                         </Button>
                                     </Link>
@@ -395,27 +370,24 @@ export default function Home() {
     );
 }
 
-function StatsCard({ title, value, subtitle, icon: Icon, color, href }: StatsCardProps) {
+function StatsCard({ title, value, subtitle, icon: Icon, color, gradient, href }: StatsCardProps) {
     return (
         <Link href={href}>
-            <Card glass className="relative overflow-hidden group cursor-pointer hover:border-primary/30 transition-all duration-200">
-                <div className="absolute right-0 top-0 h-24 w-24 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full transition-transform group-hover:scale-110" />
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                        {title}
-                    </CardTitle>
-                    <div className={cn("p-2 rounded-lg bg-secondary/50 border border-border group-hover:border-primary/30 transition-colors", color)}>
+            <div className={`relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 bg-gradient-to-br ${gradient} p-4 backdrop-blur-xl shadow-xl shadow-black/30 hover:border-white/20 hover:scale-[1.02] transition-all duration-300 group cursor-pointer`}>
+                <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</p>
+                    <div className={`p-2 rounded-xl border ${color} shadow-inner`}>
                         <Icon className="h-4 w-4" />
                     </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold text-foreground">{value}</div>
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        {subtitle}
+                </div>
+                <div className="mt-3">
+                    <p className="text-2xl font-black text-white tracking-tight">{value}</p>
+                    <p className="text-[11px] font-medium text-slate-400 mt-1 flex items-center gap-1">
+                        <TrendingUp className="h-3 w-3 text-cyan-400 shrink-0" />
+                        <span className="truncate">{subtitle}</span>
                     </p>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </Link>
     );
 }
@@ -432,59 +404,57 @@ function QuickAccessCard({
 }) {
     return (
         <Link href={href}>
-            <Card className={cn(
-                "group cursor-pointer border border-border hover:border-primary/40 transition-all duration-200 overflow-hidden relative bg-gradient-to-br",
+            <div className={cn(
+                "group cursor-pointer rounded-2xl border border-white/10 bg-slate-900/60 bg-gradient-to-br backdrop-blur-xl p-5 shadow-xl shadow-black/30 hover:scale-[1.01] transition-all duration-300 flex items-center gap-4",
                 color
             )}>
-                <CardContent className="p-5 flex items-center gap-4">
-                    <div className={cn("p-3 rounded-xl bg-slate-800/60 border border-slate-700/50", iconColor)}>
-                        <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">{title}</p>
-                        <p className="text-xs text-slate-500 truncate mt-0.5">{description}</p>
-                    </div>
-                    <ExternalLink className="h-4 w-4 text-slate-600 group-hover:text-primary transition-colors shrink-0" />
-                </CardContent>
-            </Card>
+                <div className={cn("p-3 rounded-xl border shadow-inner shrink-0", iconColor)}>
+                    <Icon className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">{title}</p>
+                    <p className="text-xs text-slate-400 truncate mt-0.5">{description}</p>
+                </div>
+                <ArrowUpRight className="h-4 w-4 text-slate-600 group-hover:text-cyan-400 transition-colors shrink-0" />
+            </div>
         </Link>
     );
 }
 
 function AssetList({ items, emptyText }: { items: AssetItem[]; emptyText: string }) {
     if (!items || items.length === 0) {
-        return <p className="text-sm text-slate-500 py-4 text-center">{emptyText}</p>;
+        return <p className="text-sm text-slate-500 py-6 text-center">{emptyText}</p>;
     }
 
     return (
         <div className="space-y-2">
             {items.map((item, i) => (
-                <div key={i} className="flex items-center gap-3 py-1.5 border-b border-slate-800/50 last:border-0">
+                <div key={i} className="flex items-center gap-3 p-2 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
                     {item.image ? (
                         <img
                             src={item.image}
                             alt={item.name}
-                            className="h-8 w-8 rounded-lg object-cover border border-slate-700"
+                            className="h-9 w-9 rounded-xl object-cover border border-white/10 shrink-0"
                             onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = 'none';
                             }}
                         />
                     ) : (
-                        <div className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center">
-                            <Image className="h-4 w-4 text-slate-600" />
+                        <div className="h-9 w-9 rounded-xl bg-slate-800 border border-white/10 flex items-center justify-center shrink-0">
+                            <Image className="h-4 w-4 text-slate-500" />
                         </div>
                     )}
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-200 truncate">{item.name}</p>
-                        {item.type && <p className="text-xs text-slate-500">{item.type}</p>}
+                        <p className="text-xs sm:text-sm font-semibold text-slate-200 truncate">{item.name}</p>
+                        {item.type && <p className="text-[11px] text-slate-500 mt-0.5">{item.type}</p>}
                     </div>
                     <div className="shrink-0">
                         {item.status ? (
-                            <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-[11px] text-emerald-400 font-semibold">
                                 <CheckCircle className="h-3 w-3" /> Active
                             </span>
                         ) : (
-                            <span className="flex items-center gap-1 text-xs text-slate-500 font-medium">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-[11px] text-slate-500 font-semibold">
                                 <XCircle className="h-3 w-3" /> Off
                             </span>
                         )}

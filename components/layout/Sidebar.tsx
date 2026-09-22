@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
-    LayoutDashboard, Settings, Menu, X, LogOut, User, Award, Gift,
-    Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight, MessageCircle, Download, ShieldCheck, Share2, Smartphone, type LucideIcon
+    LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift,
+    Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
+    MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders,
+    type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -29,7 +31,6 @@ interface SidebarSection {
     items: SidebarItem[];
 }
 
-// Configured specifically for app-management: configuration, logs, and assets
 const sidebarSections: SidebarSection[] = [
     {
         title: 'Core Console',
@@ -64,8 +65,8 @@ const sidebarSections: SidebarSection[] = [
             { name: 'VIP Program', href: '/vip', icon: Crown },
             { name: 'Levels', href: '/levels', icon: Award },
             { name: 'Gifts', href: '/gifts', icon: Gift },
-            { name: 'Frames', href: '/frames', icon: Award },
-            { name: 'Avatars', href: '/avatars', icon: User },
+            { name: 'Frames', href: '/frames', icon: Sliders },
+            { name: 'Avatars', href: '/avatars', icon: Award },
             { name: 'Content Moderation', href: '/moderation', icon: Settings }
         ]
     },
@@ -78,6 +79,7 @@ const sidebarSections: SidebarSection[] = [
         ]
     }
 ];
+
 export default function Sidebar() {
     const { user, logout } = useAuth();
     const pathname = usePathname();
@@ -108,10 +110,10 @@ export default function Sidebar() {
             {/* Mobile Toggle Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-slate-800 text-slate-100 md:hidden hover:bg-slate-700 transition-colors shadow-lg border border-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                className="fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-900/90 text-white md:hidden hover:bg-slate-800 transition-all shadow-xl border border-white/10 backdrop-blur-xl"
                 aria-label="Toggle Sidebar"
             >
-                {isOpen ? <X size={24} /> : <Menu size={24} />}
+                {isOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
             {/* Mobile Overlay */}
@@ -122,7 +124,7 @@ export default function Sidebar() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
+                        className="fixed inset-0 z-30 bg-black/80 backdrop-blur-md md:hidden"
                         onClick={() => setIsOpen(false)}
                     />
                 )}
@@ -131,27 +133,43 @@ export default function Sidebar() {
             {/* Sidebar Container */}
             <aside
                 className={cn(
-                    "app-sidebar fixed inset-y-0 left-0 z-40 flex h-screen w-64 flex-col border-r pt-20 transition-transform duration-300 md:relative md:translate-x-0 md:pt-8",
+                    "fixed inset-y-0 left-0 z-40 flex h-screen w-72 flex-col border-r border-white/10 bg-[#070a13]/95 backdrop-blur-2xl transition-transform duration-300 md:relative md:translate-x-0 shadow-2xl shadow-black/80",
                     !isOpen && isMobile ? "-translate-x-full" : "translate-x-0"
                 )}
             >
-                <div className="panel-brand mb-6 mt-4 flex items-center gap-3 px-6 md:mt-0">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-                        <Smartphone className="h-5 w-5" />
-                    </span>
-                    <div>
-                        <h1 className="text-base font-black leading-none tracking-tight text-foreground">App Studio</h1>
-                        <p className="mt-1 text-[9px] font-bold uppercase tracking-[.18em] text-primary">Management Panel</p>
+                {/* Brand Header */}
+                <div className="p-5 border-b border-white/10">
+                    <div className="flex items-center gap-3.5">
+                        <div className="relative">
+                            <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-violet-500 p-[1.5px] shadow-lg shadow-cyan-500/25">
+                                <div className="h-full w-full rounded-[14px] bg-[#0c101d] flex items-center justify-center">
+                                    <Smartphone className="h-5 w-5 text-cyan-400" />
+                                </div>
+                            </div>
+                            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-[#070a13] shadow-sm animate-pulse" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h1 className="text-base font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                                App Studio
+                            </h1>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                                <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-cyan-400/90">
+                                    Management Console
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <nav className="panel-nav flex-1 space-y-4 overflow-y-auto px-4 pb-6">
+                {/* Navigation Sections */}
+                <nav className="flex-1 space-y-5 overflow-y-auto px-3.5 py-4 custom-scrollbar">
                     {sidebarSections.map((section, idx) => (
                         <div key={idx} className="space-y-1">
-                            <h3 className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            <h3 className="px-3 text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase">
                                 {section.title}
                             </h3>
-                            <div className="space-y-0.5">
+                            <div className="space-y-1 pt-1">
                                 {section.items.map((item) => {
                                     const hasSubmenu = !!item.submenu;
                                     const isExpanded = !!expandedMenus[item.name];
@@ -163,14 +181,17 @@ export default function Sidebar() {
                                                 <button
                                                     onClick={() => toggleMenu(item.name)}
                                                     className={cn(
-                                                        "w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 text-sm font-semibold"
+                                                        "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium",
+                                                        isExpanded
+                                                            ? "text-white bg-white/[0.06] shadow-sm"
+                                                            : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
                                                     )}
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        <item.icon size={18} className="text-slate-500" />
+                                                        <item.icon size={18} className={cn(isExpanded ? "text-cyan-400" : "text-slate-500")} />
                                                         <span>{item.name}</span>
                                                     </div>
-                                                    {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                                    {isExpanded ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-500" />}
                                                 </button>
 
                                                 <AnimatePresence initial={false}>
@@ -180,7 +201,7 @@ export default function Sidebar() {
                                                             animate={{ height: 'auto', opacity: 1 }}
                                                             exit={{ height: 0, opacity: 0 }}
                                                             transition={{ duration: 0.2 }}
-                                                            className="overflow-hidden pl-9 space-y-0.5"
+                                                            className="overflow-hidden pl-7 pr-1 space-y-1 pt-1 border-l border-white/5 ml-4"
                                                         >
                                                             {item.submenu?.map((sub) => {
                                                                 const isSubActive = pathname === sub.href;
@@ -192,10 +213,10 @@ export default function Sidebar() {
                                                                             if (window.innerWidth < 768) setIsOpen(false);
                                                                         }}
                                                                         className={cn(
-                                                                            "block px-4 py-2 text-xs font-semibold rounded-lg transition-colors",
+                                                                            "block px-3 py-2 text-xs font-medium rounded-lg transition-all",
                                                                             isSubActive
-                                                                                ? "text-primary bg-primary/10 border border-primary/20"
-                                                                                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/30"
+                                                                                ? "text-cyan-300 bg-cyan-500/15 border border-cyan-500/30 shadow-sm shadow-cyan-500/10"
+                                                                                : "text-slate-400 hover:text-white hover:bg-white/[0.05]"
                                                                         )}
                                                                     >
                                                                         {sub.name}
@@ -217,13 +238,13 @@ export default function Sidebar() {
                                                 if (window.innerWidth < 768) setIsOpen(false);
                                             }}
                                             className={cn(
-                                                "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group text-sm font-semibold",
+                                                "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group text-sm font-medium",
                                                 isActive
-                                                    ? "text-primary bg-primary/10 border border-primary/20"
-                                                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                                                    ? "text-white bg-gradient-to-r from-cyan-500/20 via-indigo-600/20 to-transparent border-l-2 border-cyan-400 shadow-md shadow-cyan-950/30"
+                                                    : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
                                             )}
                                         >
-                                            <item.icon size={18} className={cn(isActive ? "text-primary" : "text-slate-500 group-hover:text-slate-400")} />
+                                            <item.icon size={18} className={cn(isActive ? "text-cyan-400" : "text-slate-500 group-hover:text-slate-300 transition-colors")} />
                                             <span>{item.name}</span>
                                         </Link>
                                     );
@@ -233,26 +254,32 @@ export default function Sidebar() {
                     ))}
                 </nav>
 
-                <div className="p-4 mt-auto border-t border-slate-800 space-y-4">
-                    <button
-                        onClick={logout}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors group text-sm font-semibold"
-                    >
-                        <LogOut size={18} className="text-slate-500 group-hover:text-rose-400" />
-                        <span>Sign Out</span>
-                    </button>
-
-                    <div className="panel-profile flex items-center justify-between gap-3 rounded-xl border p-3">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="h-8 w-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-xs font-bold text-primary">
-                                {user?.name?.[0]?.toUpperCase() || 'A'}
+                {/* Footer User Profile & Theme */}
+                <div className="p-3.5 mt-auto border-t border-white/10 bg-black/20 space-y-2.5">
+                    <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-900/60 p-2.5 backdrop-blur-xl transition-all">
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                            <div className="h-9 w-9 rounded-xl border border-cyan-500/30 bg-cyan-500/10 flex items-center justify-center text-xs font-bold text-cyan-300 shrink-0 shadow-inner">
+                                {user?.name?.[0]?.toUpperCase() || 'M'}
                             </div>
                             <div className="overflow-hidden">
-                                <p className="text-[10px] text-slate-500 font-bold truncate">Logged in as</p>
-                                <p className="text-xs font-bold text-slate-200 truncate w-24">{user?.name || 'Admin'}</p>
+                                <p className="text-[9px] font-black uppercase tracking-wider text-cyan-400">
+                                    Manager
+                                </p>
+                                <p className="text-xs font-bold text-white truncate max-w-[100px]">
+                                    {user?.name || 'Manager'}
+                                </p>
                             </div>
                         </div>
-                        <ThemeToggle />
+                        <div className="flex items-center gap-1">
+                            <ThemeToggle />
+                            <button
+                                onClick={logout}
+                                title="Sign Out"
+                                className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                            >
+                                <LogOut size={16} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </aside>
