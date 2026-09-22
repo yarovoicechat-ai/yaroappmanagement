@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Loader2, SlidersHorizontal } from 'lucide-react';
 
 export default function LoginPage() {
-    const [username, setUsername] = useState('admin');
-    const [password, setPassword] = useState('admin');
+    const [username, setUsername] = useState('yaroapp@gmail.com');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const { login } = useAuth();
     const [isSigningIn, setIsSigningIn] = useState(false);
@@ -20,8 +20,8 @@ export default function LoginPage() {
         setIsSigningIn(true);
         try {
             await login(username, password);
-        } catch (err) {
-            setError('Invalid credentials');
+        } catch (err: any) {
+            setError(err?.message || 'Invalid credentials');
             setIsSigningIn(false);
         }
     };
