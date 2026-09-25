@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import Image from 'next/image';
 import { Loader2, Smartphone, Lock, Mail, ArrowRight, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -57,10 +58,8 @@ export default function LoginPage() {
 
                 <Card className="bg-[#0d1222]/85 border-white/10 backdrop-blur-2xl shadow-2xl shadow-black/80 rounded-3xl overflow-hidden">
                     <CardHeader className="text-center pb-2 pt-6">
-                        <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-violet-600 p-[1px] shadow-lg shadow-cyan-500/25">
-                            <div className="flex h-full w-full items-center justify-center rounded-[15px] bg-[#070a13]">
-                                <Smartphone className="h-5 w-5 text-cyan-400" />
-                            </div>
+                        <div className="relative mx-auto mb-3 h-16 w-16 overflow-hidden rounded-2xl border-2 border-pink-500/40 bg-slate-950 shadow-[0_0_24px_rgba(236,72,153,0.35)] p-0.5">
+                            <Image src="/logo.png" alt="Yaro Logo" width={64} height={64} className="rounded-[14px] object-cover" priority />
                         </div>
                         <CardTitle className="text-xl font-bold text-white tracking-tight">
                             Console Access

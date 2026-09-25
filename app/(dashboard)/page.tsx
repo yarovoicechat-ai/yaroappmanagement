@@ -7,7 +7,7 @@ import {
     Gift, Layers, Award, User, Crown, FileText,
     Settings, TrendingUp, LucideIcon,
     Image, CheckCircle, XCircle, ExternalLink,
-    Coins, Clock, Phone, Sparkles, ArrowUpRight
+    Coins, Clock, Phone, Sparkles, ArrowUpRight, ShoppingBag
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiClient } from '@/lib/apiClient';
@@ -169,7 +169,15 @@ export default function Home() {
             </div>
 
             {/* Quick Access Grid */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <QuickAccessCard
+                    title="Store & Items"
+                    description="Unique IDs, Bubbles, Themes, Tassels, Mic Waves, Frames, VIP"
+                    icon={ShoppingBag}
+                    href="/store"
+                    color="from-pink-500/20 via-rose-500/10 to-transparent hover:border-pink-500/40"
+                    iconColor="text-pink-400 bg-pink-500/10 border-pink-500/30 shadow-[0_0_12px_rgba(236,72,153,0.25)]"
+                />
                 <QuickAccessCard
                     title="CMS Editor"
                     description="Edit app policies, terms, FAQs & content strings"

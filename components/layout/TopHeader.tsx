@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Search, Terminal, Settings, Download, User, LogOut, Smartphone, Command } from 'lucide-react';
+import { Search, Terminal, Settings, Download, User, LogOut, Smartphone, Command, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TopHeader() {
@@ -24,22 +24,20 @@ export default function TopHeader() {
       {/* Left Section: Search & Quick Scope */}
       <div className="flex items-center gap-3 md:gap-5 flex-1 max-w-xl">
         <div className="flex items-center gap-2 md:hidden">
-          <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-500 p-[1px]">
-            <div className="h-full w-full rounded-[11px] bg-slate-950 flex items-center justify-center">
-              <Smartphone className="h-4 w-4 text-cyan-400" />
-            </div>
+          <div className="h-9 w-9 rounded-xl p-[1px] bg-gradient-to-tr from-pink-500 to-purple-600 shadow-md">
+            <img src="/logo.png" alt="Yaro" className="h-full w-full rounded-[10px] object-cover" />
           </div>
         </div>
 
         <form onSubmit={handleSearchSubmit} className="relative w-full">
           <div className="relative flex items-center group">
-            <Search className="absolute left-3.5 h-4 w-4 text-slate-500 group-focus-within:text-cyan-400 transition-colors" />
+            <Search className="absolute left-3.5 h-4 w-4 text-slate-500 group-focus-within:text-pink-400 transition-colors" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search assets, economy, configurations..."
-              className="w-full rounded-xl border border-white/10 bg-slate-900/60 pl-10 pr-16 py-2 text-xs text-slate-200 placeholder-slate-500 backdrop-blur-md shadow-inner transition-all focus:border-cyan-500/50 focus:bg-slate-900/90 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+              placeholder="Search store items, assets, virtual goods, economy..."
+              className="w-full rounded-xl border border-white/10 bg-slate-900/60 pl-10 pr-16 py-2 text-xs text-slate-200 placeholder-slate-500 backdrop-blur-md shadow-inner transition-all focus:border-pink-500/50 focus:bg-slate-900/90 focus:outline-none focus:ring-2 focus:ring-pink-500/20"
             />
             <div className="absolute right-2.5 hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-slate-400">
               <Command className="h-2.5 w-2.5" />
@@ -51,14 +49,24 @@ export default function TopHeader() {
 
       {/* Right Section: Quick Links & Profile */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Store Management Shortcut */}
+        <Link
+          href="/store"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-pink-500/30 bg-pink-500/10 text-pink-300 text-xs font-semibold hover:bg-pink-500/20 transition-all shadow-sm shadow-pink-500/10"
+          title="Virtual Store Catalog"
+        >
+          <ShoppingBag className="w-3.5 h-3.5 text-pink-400" />
+          <span>Store</span>
+        </Link>
+
         {/* App Releases Shortcut */}
         <Link
           href="/app-releases"
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-xs font-semibold hover:bg-cyan-500/20 transition-all shadow-sm shadow-cyan-500/10"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs font-semibold hover:bg-emerald-500/20 transition-all shadow-sm shadow-emerald-500/10"
           title="App Releases"
         >
-          <Download className="w-3.5 h-3.5" />
-          <span>v1.0.8 Live</span>
+          <Download className="w-3.5 h-3.5 text-emerald-400" />
+          <span>v0.0.2 Live</span>
         </Link>
 
         {/* System Logs Shortcut */}

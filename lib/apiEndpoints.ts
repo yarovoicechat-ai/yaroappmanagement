@@ -149,4 +149,14 @@ export const API_ENDPOINTS = {
         TOGGLE_RECORDING: (id: string) => `/api/v1/app-screens/${id}/toggle-recording`,
         DELETE: (id: string) => `/api/v1/app-screens/${id}`,
     },
+    // Store Management (Unique IDs, Chat Bubbles, Mic Waves, Themes, Frames, Entry, Tassels, VIP)
+    STORE: {
+        ITEMS: '/api/store/items',
+        ITEM: (id: string) => `/api/store/items/${id}`,
+        CREATE: '/api/store/items',
+        UPDATE: (id: string) => `/api/store/items/${id}`,
+        DELETE: (id: string) => `/api/store/items/${id}`,
+        TOGGLE: (id: string) => `/api/store/items/${id}/toggle`,
+        RESET: '/api/store/reset-catalog',
+    },
 } as const;

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
     LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift,
     Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
-    MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell,
+    MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell, ShoppingBag,
     type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -61,6 +61,7 @@ const sidebarSections: SidebarSection[] = [
         title: 'App Content & Economy',
         items: [
             { name: 'CMS Editor', href: '/cms', icon: FileText },
+            { name: 'Store Management', href: '/store', icon: ShoppingBag },
             { name: 'Banners', href: '/banners', icon: Layers },
             { name: 'Ads', href: '/ads', icon: Layers },
             { name: 'VIP Program', href: '/vip', icon: Crown },
@@ -140,24 +141,26 @@ export default function Sidebar() {
                 )}
             >
                 {/* Brand Header */}
-                <div className="p-5 border-b border-white/10">
-                    <div className="flex items-center gap-3.5">
+                <div className="p-4 border-b border-pink-500/20 bg-gradient-to-r from-pink-500/10 via-purple-500/5 to-transparent">
+                    <div className="flex items-center gap-3">
                         <div className="relative">
-                            <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-violet-500 p-[1.5px] shadow-lg shadow-cyan-500/25">
-                                <div className="h-full w-full rounded-[14px] bg-[#0c101d] flex items-center justify-center">
-                                    <Smartphone className="h-5 w-5 text-cyan-400" />
-                                </div>
+                            <div className="h-12 w-12 rounded-2xl p-[1.5px] bg-gradient-to-tr from-pink-500 via-purple-500 to-cyan-400 shadow-lg shadow-pink-500/30">
+                                <img
+                                    src="/logo.png"
+                                    alt="Yaro Logo"
+                                    className="h-full w-full rounded-[14px] object-cover"
+                                />
                             </div>
-                            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-[#070a13] shadow-sm animate-pulse" />
+                            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-[#070a13] shadow-sm animate-pulse" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h1 className="text-base font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-                                App Studio
+                            <h1 className="text-lg font-black tracking-tight bg-gradient-to-r from-pink-400 via-purple-300 to-white bg-clip-text text-transparent">
+                                Yaro Studio
                             </h1>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-                                <p className="text-[10px] font-bold tracking-[0.16em] uppercase text-cyan-400/90">
-                                    Management Console
+                                <span className="h-1.5 w-1.5 rounded-full bg-pink-400 animate-ping" />
+                                <p className="text-[10px] font-black tracking-[0.16em] uppercase text-pink-400">
+                                    App Operations
                                 </p>
                             </div>
                         </div>
@@ -242,11 +245,11 @@ export default function Sidebar() {
                                             className={cn(
                                                 "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group text-sm font-medium",
                                                 isActive
-                                                    ? "text-white bg-gradient-to-r from-cyan-500/20 via-indigo-600/20 to-transparent border-l-2 border-cyan-400 shadow-md shadow-cyan-950/30"
+                                                    ? "text-white bg-gradient-to-r from-pink-500/20 via-purple-600/20 to-transparent border-l-2 border-pink-400 shadow-md shadow-pink-950/30"
                                                     : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
                                             )}
                                         >
-                                            <item.icon size={18} className={cn(isActive ? "text-cyan-400" : "text-slate-500 group-hover:text-slate-300 transition-colors")} />
+                                            <item.icon size={18} className={cn(isActive ? "text-pink-400" : "text-slate-500 group-hover:text-slate-300 transition-colors")} />
                                             <span>{item.name}</span>
                                         </Link>
                                     );
