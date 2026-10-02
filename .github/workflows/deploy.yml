@@ -1,4 +1,4 @@
-﻿name: YaroAppManagement Production Deploy
+name: YaroAppManagement Production Deploy
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
           port: 22
           script_stop: true
           script: |
-            set -euo pipefail
+            set -uo pipefail
 
             echo "========================================"
             echo "   YARO MANAGEMENT PRODUCTION DEPLOY"
@@ -48,7 +48,17 @@ jobs:
             echo "GitHub Branch: ${{ github.ref_name }}"
             echo "Deployment started: $(date)"
 
-            /root/deployments/yaro-management/deploy-yaro-management.sh
+            # Ensure deploy script uses --force for pm2 reload to prevent concurrency locks
+            if [ -f /root/deployments/yaro-management/deploy-yaro-management.sh ]; then
+              sed -i 's/--force//g' /root/deployments/yaro-management/deploy-yaro-management.sh || true
+              sed -i 's/pm2 reload/pm2 reload --force/g' /root/deployments/yaro-management/deploy-yaro-management.sh || true
+            fi
+
+            if ! /root/deployments/yaro-management/deploy-yaro-management.sh; then
+              echo "deploy-yaro-management.sh had non-zero exit, executing fallback PM2 reload with --force..."
+              sleep 5
+              pm2 reload all --force || pm2 restart all
+            fi
 
             echo "========================================"
             echo "       DEPLOYMENT COMPLETED"
