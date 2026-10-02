@@ -12,20 +12,19 @@ import {
   Eye,
   RefreshCw,
   Search,
-  Filter,
-  DollarSign,
   Crown,
   Layers,
   Zap,
-  Tag,
+  Tag as TagIcon,
   Radio,
   Car,
   Palette,
-  Check,
-  Flame,
   Diamond,
   UploadCloud,
   FileImage,
+  Award,
+  Bookmark,
+  Volume2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/apiClient';
@@ -33,15 +32,17 @@ import { API_ENDPOINTS } from '@/lib/apiEndpoints';
 
 export type StoreCategory =
   | 'All'
-  | 'Unique ID'
-  | 'Chat Bubble'
-  | 'Mic Wave'
-  | 'Frames'
   | 'Entry'
+  | 'Frames'
+  | 'Mic Wave'
+  | 'Chat Bubble'
+  | 'Unique ID'
   | 'Theme'
   | 'Tassel'
   | 'VIP'
-  | 'King of Kings';
+  | 'King of Kings'
+  | 'Badge'
+  | 'Tag';
 
 export interface StoreItem {
   _id: string;
@@ -68,17 +69,123 @@ const durationPrice = (item: StoreItem, days: number) =>
   item.priceOptions?.find(option => option.days === days)?.diamonds ??
   Math.max(0, Math.round(item.price * (({ 3: 0.15, 7: 0.3, 15: 0.55, 30: 1 } as Record<number, number>)[days] || 1)));
 
-const CATEGORIES: { label: StoreCategory; icon: any; color: string }[] = [
-  { label: 'All', icon: ShoppingBag, color: 'text-pink-400' },
-  { label: 'Unique ID', icon: Tag, color: 'text-amber-400' },
-  { label: 'Chat Bubble', icon: Zap, color: 'text-cyan-400' },
-  { label: 'Mic Wave', icon: Radio, color: 'text-emerald-400' },
-  { label: 'Frames', icon: Sparkles, color: 'text-rose-400' },
-  { label: 'Entry', icon: Car, color: 'text-orange-400' },
-  { label: 'Theme', icon: Palette, color: 'text-purple-400' },
-  { label: 'Tassel', icon: Layers, color: 'text-amber-300' },
-  { label: 'VIP', icon: Crown, color: 'text-yellow-400' },
-  { label: 'King of Kings', icon: Crown, color: 'text-amber-300' },
+export const CATEGORIES: {
+  label: StoreCategory;
+  hindi: string;
+  desc: string;
+  icon: any;
+  color: string;
+  bgGradient: string;
+  borderColor: string;
+}[] = [
+  {
+    label: 'All',
+    hindi: 'सभी आइटम्स',
+    desc: 'संपूर्ण स्टोर कैटलॉग',
+    icon: ShoppingBag,
+    color: 'text-pink-400',
+    bgGradient: 'from-pink-500/20 to-purple-600/10',
+    borderColor: 'border-pink-500/30',
+  },
+  {
+    label: 'Entry',
+    hindi: 'सवारी / अराइवल',
+    desc: 'सुपरकार, ड्रैगन, वीआईपी एंट्री',
+    icon: Car,
+    color: 'text-orange-400',
+    bgGradient: 'from-orange-500/20 to-amber-500/10',
+    borderColor: 'border-orange-500/40',
+  },
+  {
+    label: 'Frames',
+    hindi: 'अवतार फ़्रेम',
+    desc: 'प्रोफ़ाइल एनिमेटेड फ़्रेम',
+    icon: Sparkles,
+    color: 'text-rose-400',
+    bgGradient: 'from-rose-500/20 to-pink-500/10',
+    borderColor: 'border-rose-500/40',
+  },
+  {
+    label: 'Mic Wave',
+    hindi: 'माइक वेव',
+    desc: 'स्पीकिंग पल्सिंग वेव ऑरा',
+    icon: Radio,
+    color: 'text-emerald-400',
+    bgGradient: 'from-emerald-500/20 to-teal-500/10',
+    borderColor: 'border-emerald-500/40',
+  },
+  {
+    label: 'Chat Bubble',
+    hindi: 'चैट बबल',
+    desc: 'पार्टी चैट स्पीच बॉक्स',
+    icon: Zap,
+    color: 'text-cyan-400',
+    bgGradient: 'from-cyan-500/20 to-blue-500/10',
+    borderColor: 'border-cyan-500/40',
+  },
+  {
+    label: 'Unique ID',
+    hindi: 'वीआईपी आईडी',
+    desc: 'शॉर्ट लकी नंबर (88888, 777777)',
+    icon: TagIcon,
+    color: 'text-amber-400',
+    bgGradient: 'from-amber-500/20 to-yellow-500/10',
+    borderColor: 'border-amber-500/40',
+  },
+  {
+    label: 'Theme',
+    hindi: 'रूम वॉलपेपर',
+    desc: 'लक्ज़री वॉइस रूम बैकग्राउंड',
+    icon: Palette,
+    color: 'text-purple-400',
+    bgGradient: 'from-purple-500/20 to-indigo-500/10',
+    borderColor: 'border-purple-500/40',
+  },
+  {
+    label: 'Tassel',
+    hindi: 'सीट टैसल',
+    desc: 'सिल्क रिबन और सीट पेंडेंट',
+    icon: Layers,
+    color: 'text-yellow-400',
+    bgGradient: 'from-yellow-500/20 to-amber-500/10',
+    borderColor: 'border-yellow-500/40',
+  },
+  {
+    label: 'VIP',
+    hindi: 'वीआईपी क्राउन',
+    desc: 'डेली डायमंड्स और प्रिविलेज',
+    icon: Crown,
+    color: 'text-pink-400',
+    bgGradient: 'from-pink-500/20 to-purple-500/10',
+    borderColor: 'border-pink-500/40',
+  },
+  {
+    label: 'King of Kings',
+    hindi: 'किंग ऑफ किंग्स',
+    desc: 'सुप्रीम नोबिलिटी और इम्यूनिटी',
+    icon: Crown,
+    color: 'text-amber-300',
+    bgGradient: 'from-amber-500/25 to-rose-500/15',
+    borderColor: 'border-amber-400/50',
+  },
+  {
+    label: 'Badge',
+    hindi: 'प्रोफ़ाइल बैज',
+    desc: 'अचीवमेंट और लेवल बैज',
+    icon: Award,
+    color: 'text-blue-400',
+    bgGradient: 'from-blue-500/20 to-indigo-500/10',
+    borderColor: 'border-blue-500/40',
+  },
+  {
+    label: 'Tag',
+    hindi: 'नेम टैग',
+    desc: 'यूज़रनेम के साथ दिखने वाला टैग',
+    icon: Bookmark,
+    color: 'text-teal-400',
+    bgGradient: 'from-teal-500/20 to-emerald-500/10',
+    borderColor: 'border-teal-500/40',
+  },
 ];
 
 export default function StoreManagementPage() {
@@ -123,9 +230,16 @@ export default function StoreManagementPage() {
     // Chat Bubble specific
     bubbleTextColor: '#FFFFFF',
     bubbleBorderColor: '#06B6D4',
-    // VIP specific
+    // Theme specific
+    themeAtmosphere: 'Futuristic Cyberpunk',
+    // Tassel specific
+    tasselMaterial: 'Imperial Gold Silk',
+    // VIP & King of Kings specific
     dailyAllowance: 500,
     metadataBenefits: '',
+    // Badge & Tag specific
+    badgeTitle: 'LEGEND',
+    tagName: 'VIP STAR',
   });
 
   const fetchStoreItems = async () => {
@@ -184,11 +298,23 @@ export default function StoreManagementPage() {
     } else if (cat === 'Tassel') {
       defaultPrice = 4000;
       defaultDesc = 'Silk ribbon profile tassel badge';
-      defaultColor = '#F59E0B';
-    } else if (cat === 'VIP' || cat === 'King of Kings') {
+      defaultColor = '#EAB308';
+    } else if (cat === 'VIP') {
       defaultPrice = 25000;
       defaultDesc = 'Elite VIP crown membership & daily diamonds';
-      defaultColor = '#EAB308';
+      defaultColor = '#EC4899';
+    } else if (cat === 'King of Kings') {
+      defaultPrice = 50000;
+      defaultDesc = 'Supreme King of Kings imperial nobility privileges';
+      defaultColor = '#FBBF24';
+    } else if (cat === 'Badge') {
+      defaultPrice = 3000;
+      defaultDesc = 'Shiny achievement prestige badge';
+      defaultColor = '#3B82F6';
+    } else if (cat === 'Tag') {
+      defaultPrice = 1800;
+      defaultDesc = 'Custom luxury name tag next to your nickname';
+      defaultColor = '#14B8A6';
     }
 
     setFormData({
@@ -217,8 +343,14 @@ export default function StoreManagementPage() {
       wavePulseStyle: 'Multi Wave',
       bubbleTextColor: '#FFFFFF',
       bubbleBorderColor: '#06B6D4',
-      dailyAllowance: 500,
-      metadataBenefits: '',
+      themeAtmosphere: 'Futuristic Cyberpunk',
+      tasselMaterial: 'Imperial Gold Silk',
+      dailyAllowance: cat === 'King of Kings' ? 2500 : 500,
+      metadataBenefits: cat === 'King of Kings' 
+        ? 'Anti-kick immunity\n3D Supercar room arrival\nExclusive Imperial crest\nDaily 2500 diamond allowance' 
+        : 'Anti-kick protection\nExclusive VIP crown badge\nFree monthly frames\nDaily 500 diamond allowance',
+      badgeTitle: 'LEGEND',
+      tagName: 'VIP STAR',
     });
     setIsModalOpen(true);
   };
@@ -251,10 +383,47 @@ export default function StoreManagementPage() {
       wavePulseStyle: item.metadata?.wavePulseStyle || 'Multi Wave',
       bubbleTextColor: item.metadata?.bubbleTextColor || '#FFFFFF',
       bubbleBorderColor: item.metadata?.bubbleBorderColor || '#06B6D4',
+      themeAtmosphere: item.metadata?.themeAtmosphere || 'Futuristic Cyberpunk',
+      tasselMaterial: item.metadata?.tasselMaterial || 'Imperial Gold Silk',
       dailyAllowance: item.metadata?.dailyAllowance || 500,
       metadataBenefits: Array.isArray(item.metadata?.benefits) ? item.metadata.benefits.join('\n') : '',
+      badgeTitle: item.metadata?.badgeTitle || 'LEGEND',
+      tagName: item.metadata?.tagName || 'VIP STAR',
     });
     setIsModalOpen(true);
+  };
+
+  const handleCategorySwitch = (newCat: StoreCategory) => {
+    if (newCat === 'All') return;
+    let newPrice = formData.price30Days;
+    let newDesc = formData.desc;
+    let newColor = formData.previewColor;
+
+    if (!editingItem) {
+      if (newCat === 'Entry') { newPrice = 15000; newDesc = 'Luxury room arrival ride animation'; newColor = '#FF2A85'; }
+      else if (newCat === 'Frames') { newPrice = 3500; newDesc = 'Exclusive animated avatar profile frame'; newColor = '#F43F5E'; }
+      else if (newCat === 'Mic Wave') { newPrice = 2000; newDesc = 'Dynamic microphone pulsing wave aura'; newColor = '#10B981'; }
+      else if (newCat === 'Chat Bubble') { newPrice = 1500; newDesc = 'Special glowing chat message bubble'; newColor = '#06B6D4'; }
+      else if (newCat === 'Unique ID') { newPrice = 10000; newDesc = 'Rare sovereign short profile ID'; newColor = '#F59E0B'; }
+      else if (newCat === 'Theme') { newPrice = 5000; newDesc = 'Custom luxury voice room wallpaper & atmosphere'; newColor = '#8B5CF6'; }
+      else if (newCat === 'Tassel') { newPrice = 4000; newDesc = 'Silk ribbon profile tassel badge'; newColor = '#EAB308'; }
+      else if (newCat === 'VIP') { newPrice = 25000; newDesc = 'Elite VIP crown membership & daily diamonds'; newColor = '#EC4899'; }
+      else if (newCat === 'King of Kings') { newPrice = 50000; newDesc = 'Supreme King of Kings imperial nobility privileges'; newColor = '#FBBF24'; }
+      else if (newCat === 'Badge') { newPrice = 3000; newDesc = 'Shiny achievement prestige badge'; newColor = '#3B82F6'; }
+      else if (newCat === 'Tag') { newPrice = 1800; newDesc = 'Custom luxury name tag next to your nickname'; newColor = '#14B8A6'; }
+    }
+
+    setFormData({
+      ...formData,
+      category: newCat,
+      price: newPrice,
+      price3Days: Math.round(newPrice * 0.15),
+      price7Days: Math.round(newPrice * 0.3),
+      price15Days: Math.round(newPrice * 0.55),
+      price30Days: newPrice,
+      desc: newDesc,
+      previewColor: newColor,
+    });
   };
 
   const handleSaveItem = async (e: React.FormEvent) => {
@@ -293,8 +462,12 @@ export default function StoreManagementPage() {
         bubbleTextColor: formData.bubbleTextColor,
         bubbleBorderColor: formData.bubbleBorderColor,
         wavePulseStyle: formData.wavePulseStyle,
+        themeAtmosphere: formData.themeAtmosphere,
+        tasselMaterial: formData.tasselMaterial,
         dailyAllowance: Number(formData.dailyAllowance) || 0,
         benefits: formData.metadataBenefits.split(/\n|,/).map(value => value.trim()).filter(Boolean),
+        badgeTitle: formData.badgeTitle,
+        tagName: formData.tagName,
       },
     };
 
@@ -430,7 +603,6 @@ export default function StoreManagementPage() {
     return matchCategory && matchSearch;
   });
 
-  // Category counts
   const totalActive = items.filter(i => i.isActive).length;
   const totalSales = items.reduce((acc, curr) => acc + (curr.salesCount || 0), 0);
 
@@ -456,7 +628,7 @@ export default function StoreManagementPage() {
                 </span>
               </div>
               <p className="text-slate-400 text-sm mt-1 max-w-xl">
-                Configure virtual goods, unique sovereign IDs, animated mic waves, avatar frames, room themes, chat bubbles, and VIP packages directly published to the Yaro app.
+                Configure virtual goods, entry rides, frames, mic waves, chat bubbles, sovereign IDs, room themes, tassels, and VIP passes directly published to the Yaro app.
               </p>
             </div>
           </div>
@@ -481,90 +653,36 @@ export default function StoreManagementPage() {
           </div>
         </div>
 
-        {/* Quick Add Bar for All Categories */}
+        {/* Quick Add Bar for All 11 Categories (Sabhi Chije Add Karne K Option) */}
         <div className="mt-6 pt-5 border-t border-white/10">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-pink-400" />
-              <span>Direct Add By Category (Sabhi Chije Yahan Se Add Karein)</span>
+              <span>Direct Add Options (Sabhi Chije Yahan Se 1-Click Me Add Karein)</span>
             </p>
             <span className="text-[11px] text-pink-400 font-semibold hidden sm:inline">
-              1-Click Instant Modal
+              1-Click Direct Modal
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
-            <button
-              type="button"
-              onClick={() => handleOpenAddModal('Entry')}
-              className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gradient-to-b from-orange-500/15 to-orange-500/5 hover:from-orange-500/30 hover:to-orange-500/15 text-orange-300 border border-orange-500/30 hover:border-orange-500/60 transition shadow-sm text-center group"
-            >
-              <Car className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform mb-1" />
-              <span className="text-[11px] font-bold">+ Entry (सवारी)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleOpenAddModal('Frames')}
-              className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gradient-to-b from-rose-500/15 to-rose-500/5 hover:from-rose-500/30 hover:to-rose-500/15 text-rose-300 border border-rose-500/30 hover:border-rose-500/60 transition shadow-sm text-center group"
-            >
-              <Sparkles className="w-5 h-5 text-rose-400 group-hover:scale-110 transition-transform mb-1" />
-              <span className="text-[11px] font-bold">+ Frame (फ़्रेम)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleOpenAddModal('Mic Wave')}
-              className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gradient-to-b from-emerald-500/15 to-emerald-500/5 hover:from-emerald-500/30 hover:to-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/60 transition shadow-sm text-center group"
-            >
-              <Radio className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform mb-1" />
-              <span className="text-[11px] font-bold">+ Mic Wave</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleOpenAddModal('Chat Bubble')}
-              className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gradient-to-b from-cyan-500/15 to-cyan-500/5 hover:from-cyan-500/30 hover:to-cyan-500/15 text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/60 transition shadow-sm text-center group"
-            >
-              <Zap className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform mb-1" />
-              <span className="text-[11px] font-bold">+ Chat Bubble</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleOpenAddModal('Unique ID')}
-              className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gradient-to-b from-amber-500/15 to-amber-500/5 hover:from-amber-500/30 hover:to-amber-500/15 text-amber-300 border border-amber-500/30 hover:border-amber-500/60 transition shadow-sm text-center group"
-            >
-              <Tag className="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform mb-1" />
-              <span className="text-[11px] font-bold">+ Unique ID</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleOpenAddModal('Theme')}
-              className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gradient-to-b from-purple-500/15 to-purple-500/5 hover:from-purple-500/30 hover:to-purple-500/15 text-purple-300 border border-purple-500/30 hover:border-purple-500/60 transition shadow-sm text-center group"
-            >
-              <Palette className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform mb-1" />
-              <span className="text-[11px] font-bold">+ Room Theme</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleOpenAddModal('Tassel')}
-              className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gradient-to-b from-yellow-500/15 to-yellow-500/5 hover:from-yellow-500/30 hover:to-yellow-500/15 text-yellow-300 border border-yellow-500/30 hover:border-yellow-500/60 transition shadow-sm text-center group"
-            >
-              <Layers className="w-5 h-5 text-yellow-400 group-hover:scale-110 transition-transform mb-1" />
-              <span className="text-[11px] font-bold">+ Tassel (टैसल)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleOpenAddModal('VIP')}
-              className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gradient-to-b from-pink-500/15 to-pink-500/5 hover:from-pink-500/30 hover:to-pink-500/15 text-pink-300 border border-pink-500/30 hover:border-pink-500/60 transition shadow-sm text-center group"
-            >
-              <Crown className="w-5 h-5 text-pink-400 group-hover:scale-110 transition-transform mb-1" />
-              <span className="text-[11px] font-bold">+ VIP Crown</span>
-            </button>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11 gap-2">
+            {CATEGORIES.filter(c => c.label !== 'All').map(cat => {
+              const IconComp = cat.icon;
+              return (
+                <button
+                  key={cat.label}
+                  type="button"
+                  onClick={() => handleOpenAddModal(cat.label)}
+                  className={`flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gradient-to-b ${cat.bgGradient} hover:brightness-125 border ${cat.borderColor} transition shadow-sm text-center group`}
+                >
+                  <IconComp className={`w-5 h-5 ${cat.color} group-hover:scale-110 transition-transform mb-1`} />
+                  <span className="text-[11px] font-bold text-white whitespace-nowrap">+ {cat.label}</span>
+                  <span className="text-[9px] text-slate-400 font-medium truncate max-w-full">
+                    {cat.hindi}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -580,7 +698,7 @@ export default function StoreManagementPage() {
           </div>
           <div className="bg-slate-900/60 rounded-2xl p-4 border border-white/5 backdrop-blur-md">
             <p className="text-xs font-medium text-slate-400">Store Categories</p>
-                <p className="text-2xl font-black text-pink-400 mt-1">{CATEGORIES.length - 1} Available</p>
+            <p className="text-2xl font-black text-pink-400 mt-1">{CATEGORIES.length - 1} Available</p>
           </div>
           <div className="bg-slate-900/60 rounded-2xl p-4 border border-white/5 backdrop-blur-md">
             <p className="text-xs font-medium text-slate-400">Total Purchases</p>
@@ -878,7 +996,11 @@ export default function StoreManagementPage() {
                         }}
                       >
                         <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden border-2 border-white/20">
-                          <Crown className="w-10 h-10 text-amber-400" />
+                          {selectedItem.imageUrl ? (
+                            <img src={selectedItem.imageUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Crown className="w-10 h-10 text-amber-400" />
+                          )}
                         </div>
                       </div>
                       <p className="text-white text-xs font-bold mt-2">Avatar Frame</p>
@@ -889,7 +1011,7 @@ export default function StoreManagementPage() {
                     <div className="w-full bg-black/60 rounded-2xl p-4 border border-amber-400/30 text-center">
                       <Car className="w-10 h-10 text-amber-400 mx-auto animate-bounce mb-1" />
                       <p className="text-amber-300 font-extrabold text-xs uppercase tracking-wider">
-                        {selectedItem.metadata?.banner || 'His Excellency Enters'}
+                        {selectedItem.metadata?.banner || '👑 His Excellency Enters'}
                       </p>
                       <p className="text-white font-bold text-sm mt-1">{selectedItem.name}</p>
                     </div>
@@ -898,111 +1020,160 @@ export default function StoreManagementPage() {
                   {(selectedItem.category === 'VIP' || selectedItem.category === 'King of Kings') && (
                     <div className="w-full bg-black/50 backdrop-blur-md rounded-2xl p-4 border border-purple-400/40 text-center">
                       <Crown className="w-10 h-10 text-yellow-400 mx-auto mb-1 animate-pulse" />
-                      <p className="text-purple-300 font-black text-sm">{selectedItem.name}</p>
-                      <p className="text-white text-[11px] mt-1">Daily Diamonds + Royalty Crown</p>
+                      <p className="text-yellow-300 font-black text-xs uppercase tracking-wider">
+                        {selectedItem.name}
+                      </p>
+                      <p className="text-slate-300 text-[10px] mt-1">Exclusive Noble Status & Immunity</p>
                     </div>
                   )}
 
                   {selectedItem.category === 'Theme' && (
-                    <div className="w-full text-center">
-                      <Palette className="w-10 h-10 text-white/80 mx-auto mb-2" />
-                      <p className="text-white font-black text-sm">{selectedItem.name}</p>
-                      <p className="text-slate-300 text-xs">Custom Room Background</p>
+                    <div className="w-full bg-black/50 backdrop-blur-md rounded-2xl p-4 border border-purple-400/40 text-center">
+                      <Palette className="w-10 h-10 text-purple-400 mx-auto mb-1" />
+                      <p className="text-purple-200 font-black text-xs uppercase tracking-wider">
+                        {selectedItem.name}
+                      </p>
+                      <p className="text-slate-300 text-[10px] mt-1">Voice Room Luxury Wallpaper</p>
                     </div>
                   )}
 
                   {selectedItem.category === 'Tassel' && (
-                    <div className="w-full text-center">
-                      <Layers className="w-10 h-10 text-amber-300 mx-auto mb-2" />
-                      <p className="text-white font-black text-sm">{selectedItem.name}</p>
-                      <p className="text-slate-300 text-xs">Profile Silk Tassel Badge</p>
+                    <div className="w-full bg-black/50 backdrop-blur-md rounded-2xl p-4 border border-yellow-400/40 text-center">
+                      <Layers className="w-10 h-10 text-yellow-400 mx-auto mb-1" />
+                      <p className="text-yellow-200 font-black text-xs uppercase tracking-wider">
+                        {selectedItem.name}
+                      </p>
+                      <p className="text-slate-300 text-[10px] mt-1">Silk Ribbon Seat Ornament</p>
+                    </div>
+                  )}
+
+                  {selectedItem.category === 'Badge' && (
+                    <div className="w-full bg-black/50 backdrop-blur-md rounded-2xl p-4 border border-blue-400/40 text-center">
+                      <Award className="w-10 h-10 text-blue-400 mx-auto mb-1 animate-pulse" />
+                      <p className="text-blue-200 font-black text-xs uppercase tracking-wider">
+                        {selectedItem.name}
+                      </p>
+                      <p className="text-slate-300 text-[10px] mt-1">Prestige Achievement Badge</p>
+                    </div>
+                  )}
+
+                  {selectedItem.category === 'Tag' && (
+                    <div className="w-full bg-black/50 backdrop-blur-md rounded-2xl p-4 border border-teal-400/40 text-center">
+                      <Bookmark className="w-10 h-10 text-teal-400 mx-auto mb-1" />
+                      <p className="text-teal-200 font-black text-xs uppercase tracking-wider">
+                        {selectedItem.name}
+                      </p>
+                      <p className="text-slate-300 text-[10px] mt-1">Chat Nickname Prestige Tag</p>
                     </div>
                   )}
                 </div>
 
                 {/* Details Breakdown */}
                 <div className="space-y-3">
-                  <div>
-                    <h4 className="text-base font-bold text-white">{selectedItem.name}</h4>
-                    <p className="text-xs text-slate-400 mt-1">{selectedItem.desc}</p>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400">Selected Item</span>
+                    <span className="text-white font-bold">{selectedItem.name}</span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
-                    <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
-                      <span className="text-slate-400 block text-[10px]">Price in Diamonds</span>
-                      <span className="text-amber-400 font-black text-sm flex items-center gap-1 mt-0.5">
-                        💎 {selectedItem.price.toLocaleString()}
-                      </span>
-                    </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400">Category</span>
+                    <span className="text-pink-400 font-bold">{selectedItem.category}</span>
+                  </div>
 
-                    <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
-                      <span className="text-slate-400 block text-[10px]">Duration / Validity</span>
-                      <span className="text-white font-bold text-sm mt-0.5 block">
-                        {selectedItem.validity}
-                      </span>
-                    </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400">Duration Pricing</span>
+                    <span className="text-amber-400 font-black">
+                      30 Days • {durationPrice(selectedItem, 30).toLocaleString()} 💎
+                    </span>
+                  </div>
 
-                    <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
-                      <span className="text-slate-400 block text-[10px]">Category</span>
-                      <span className="text-pink-400 font-bold text-sm mt-0.5 block">
-                        {selectedItem.category}
-                      </span>
-                    </div>
-
-                    <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
-                      <span className="text-slate-400 block text-[10px]">Catalog Status</span>
-                      <span className={`font-bold text-sm mt-0.5 block ${selectedItem.isActive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {selectedItem.isActive ? 'Active on App' : 'Disabled'}
-                      </span>
-                    </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400">Publish Status</span>
+                    <span
+                      className={`font-semibold ${
+                        selectedItem.isActive ? 'text-emerald-400' : 'text-slate-500'
+                      }`}
+                    >
+                      {selectedItem.isActive ? 'Published to Mobile App' : 'Draft / Inactive'}
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-2">
-                  <button
-                    onClick={() => handleOpenEditModal(selectedItem)}
-                    className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition border border-slate-700 flex items-center justify-center gap-1.5"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                    <span>Edit Specifications</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleToggleStatus(selectedItem)}
-                    className={`px-4 py-2.5 rounded-xl font-bold text-xs transition border ${
-                      selectedItem.isActive
-                        ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
-                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                    }`}
-                  >
-                    {selectedItem.isActive ? 'Deactivate' : 'Activate'}
-                  </button>
-                </div>
+                {/* Quick Edit CTA */}
+                <button
+                  onClick={() => handleOpenEditModal(selectedItem)}
+                  className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center gap-2 border border-slate-700 transition"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-pink-400" />
+                  <span>Edit {selectedItem.name}</span>
+                </button>
               </div>
             ) : (
-              <div className="py-12 text-center text-slate-500 text-xs">
-                Select an item from the catalog to view its live simulated preview.
+              <div className="mt-8 text-center text-slate-500 py-12">
+                <ShoppingBag className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-xs">Click on any store item from the list to preview</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Add / Edit Store Item Modal */}
+      {/* Add / Edit Item Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-xl rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-              <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-pink-500" />
-                <span>{editingItem ? 'Edit Store Item' : 'Add New Store Item'}</span>
-              </h3>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-pink-500/20 border border-pink-500/40 flex items-center justify-center text-pink-400">
+                  <ShoppingBag className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">
+                    {editingItem ? `Edit: ${editingItem.name}` : 'Add New Item to Store Catalog'}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Category select karein aur sabhi details fill karke direct mobile app me publish karein
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-1 rounded-lg text-slate-400 hover:text-white transition"
               >
                 ✕
               </button>
+            </div>
+
+            {/* Visual Category Switcher Grid inside Modal */}
+            <div className="mt-5 p-3 rounded-2xl bg-slate-950/60 border border-slate-800">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                Select Item Category (Kisko Add Karna Hai Choose Karein) *
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {CATEGORIES.filter(c => c.label !== 'All').map(cat => {
+                  const IconComp = cat.icon;
+                  const isSelected = formData.category === cat.label;
+                  return (
+                    <button
+                      key={cat.label}
+                      type="button"
+                      onClick={() => handleCategorySwitch(cat.label)}
+                      className={`flex flex-col items-center justify-center p-2 rounded-xl transition text-center border ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border-pink-400 shadow-md shadow-pink-500/20'
+                          : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:bg-slate-800'
+                      }`}
+                    >
+                      <IconComp className={`w-4 h-4 mb-1 ${isSelected ? 'text-white' : cat.color}`} />
+                      <span className="text-[11px] font-bold leading-tight">{cat.label}</span>
+                      <span className={`text-[9px] truncate max-w-full ${isSelected ? 'text-white/80' : 'text-slate-500'}`}>
+                        {cat.hindi}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <form onSubmit={handleSaveItem} className="space-y-4 mt-6">
@@ -1013,17 +1184,33 @@ export default function StoreManagementPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. 88888 (Fortune Gold), Cyber Neon Wave"
+                  placeholder={
+                    formData.category === 'Entry' ? 'e.g. Royal Phantom Supercar, Golden Dragon Ride' :
+                    formData.category === 'Frames' ? 'e.g. Imperial Gold Crown Frame, Neon Sakura' :
+                    formData.category === 'Mic Wave' ? 'e.g. Cyber Neon Wave, Golden Pulse Aura' :
+                    formData.category === 'Chat Bubble' ? 'e.g. Golden Glow Bubble, Magma Flame' :
+                    formData.category === 'Unique ID' ? 'e.g. 88888 (Fortune Gold), 777777 (Jackpot)' :
+                    formData.category === 'Theme' ? 'e.g. Cyberpunk Neon City, Imperial Palace' :
+                    formData.category === 'Tassel' ? 'e.g. Imperial Gold Silk Tassel, Ruby Lotus' :
+                    formData.category === 'VIP' ? 'e.g. SVIP 1-Month Pass, VIP Gold Tier' :
+                    formData.category === 'King of Kings' ? 'e.g. King of Kings Supreme Pass' :
+                    formData.category === 'Badge' ? 'e.g. Legendary Master Badge, Top Donor' :
+                    'e.g. Imperial Majesty Tag, Cyber Hero'
+                  }
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500"
                 />
               </div>
 
+              {/* 4-Tier Diamond Pricing */}
               <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <Diamond className="h-4 w-4 text-cyan-400" />
-                  <p className="text-xs font-bold text-cyan-300">Duration-wise diamond pricing</p>
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Diamond className="h-4 w-4 text-cyan-400" />
+                    <p className="text-xs font-bold text-cyan-300">Duration-wise Diamond Pricing (3, 7, 15, 30 Days)</p>
+                  </div>
+                  <span className="text-[10px] text-cyan-400/80">Auto-calculated or custom</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {([
@@ -1033,7 +1220,7 @@ export default function StoreManagementPage() {
                     [30, 'price30Days'],
                   ] as const).map(([days, key]) => (
                     <div key={days}>
-                      <label className="mb-1 block text-[11px] text-slate-400">{days} Days</label>
+                      <label className="mb-1 block text-[11px] text-slate-400">{days} Days 💎</label>
                       <input
                         type="number"
                         min="0"
@@ -1050,40 +1237,16 @@ export default function StoreManagementPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                    Category *
+                    Category (Confirmed) *
                   </label>
                   <select
                     value={formData.category}
-                    onChange={e => {
-                      const newCat = e.target.value as StoreCategory;
-                      let newPrice = formData.price30Days;
-                      let newDesc = formData.desc;
-                      if (!editingItem) {
-                        if (newCat === 'Entry') { newPrice = 15000; newDesc = 'Luxury room arrival ride animation'; }
-                        else if (newCat === 'Frames') { newPrice = 3500; newDesc = 'Exclusive animated avatar profile frame'; }
-                        else if (newCat === 'Mic Wave') { newPrice = 2000; newDesc = 'Dynamic microphone pulsing wave aura'; }
-                        else if (newCat === 'Chat Bubble') { newPrice = 1500; newDesc = 'Special glowing chat message bubble'; }
-                        else if (newCat === 'Unique ID') { newPrice = 10000; newDesc = 'Rare sovereign short profile ID'; }
-                        else if (newCat === 'Theme') { newPrice = 5000; newDesc = 'Custom luxury voice room wallpaper & atmosphere'; }
-                        else if (newCat === 'Tassel') { newPrice = 4000; newDesc = 'Silk ribbon profile tassel badge'; }
-                        else if (newCat === 'VIP' || newCat === 'King of Kings') { newPrice = 25000; newDesc = 'Elite VIP crown membership & daily diamonds'; }
-                      }
-                      setFormData({
-                        ...formData,
-                        category: newCat,
-                        price: newPrice,
-                        price3Days: Math.round(newPrice * 0.15),
-                        price7Days: Math.round(newPrice * 0.3),
-                        price15Days: Math.round(newPrice * 0.55),
-                        price30Days: newPrice,
-                        desc: newDesc,
-                      });
-                    }}
+                    onChange={e => handleCategorySwitch(e.target.value as StoreCategory)}
                     className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-pink-500"
                   >
                     {CATEGORIES.filter(c => c.label !== 'All').map(c => (
                       <option key={c.label} value={c.label}>
-                        {c.label}
+                        {c.label} ({c.hindi})
                       </option>
                     ))}
                   </select>
@@ -1091,14 +1254,24 @@ export default function StoreManagementPage() {
 
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                    30-Day Price (Diamonds) *
+                    Base 30-Day Diamonds *
                   </label>
                   <input
                     type="number"
                     min="0"
                     required
                     value={formData.price30Days}
-                    onChange={e => setFormData({ ...formData, price30Days: Number(e.target.value), price: Number(e.target.value) })}
+                    onChange={e => {
+                      const newP = Number(e.target.value);
+                      setFormData({
+                        ...formData,
+                        price30Days: newP,
+                        price: newP,
+                        price3Days: Math.round(newP * 0.15),
+                        price7Days: Math.round(newP * 0.3),
+                        price15Days: Math.round(newP * 0.55),
+                      });
+                    }}
                     className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-pink-500"
                   />
                 </div>
@@ -1138,6 +1311,7 @@ export default function StoreManagementPage() {
                     <option value="LIMITED">LIMITED ⏳</option>
                     <option value="SALE">SALE 🏷️</option>
                     <option value="VIP">VIP 👑</option>
+                    <option value="EXCLUSIVE">EXCLUSIVE 💎</option>
                   </select>
                 </div>
               </div>
@@ -1165,7 +1339,7 @@ export default function StoreManagementPage() {
 
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                    Status
+                    Publish Status
                   </label>
                   <label className="flex items-center gap-2 mt-2 cursor-pointer">
                     <input
@@ -1179,7 +1353,8 @@ export default function StoreManagementPage() {
                 </div>
               </div>
 
-              {/* Category-Specific Fields */}
+              {/* Category-Specific Form Sections */}
+              {/* 1. ENTRY EFFECT */}
               {formData.category === 'Entry' && (
                 <div className="p-4 rounded-2xl bg-orange-500/10 border border-orange-500/25 space-y-4">
                   <div className="flex items-center gap-2">
@@ -1264,6 +1439,7 @@ export default function StoreManagementPage() {
                 </div>
               )}
 
+              {/* 2. FRAMES */}
               {formData.category === 'Frames' && (
                 <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/25 space-y-3">
                   <div className="flex items-center justify-between">
@@ -1311,6 +1487,7 @@ export default function StoreManagementPage() {
                 </div>
               )}
 
+              {/* 3. MIC WAVE */}
               {formData.category === 'Mic Wave' && (
                 <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 space-y-3">
                   <div className="flex items-center gap-2">
@@ -1357,6 +1534,7 @@ export default function StoreManagementPage() {
                 </div>
               )}
 
+              {/* 4. CHAT BUBBLE */}
               {formData.category === 'Chat Bubble' && (
                 <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 space-y-3">
                   <div className="flex items-center gap-2">
@@ -1397,10 +1575,11 @@ export default function StoreManagementPage() {
                 </div>
               )}
 
+              {/* 5. UNIQUE ID */}
               {formData.category === 'Unique ID' && (
                 <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-3">
                   <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-amber-400" />
+                    <TagIcon className="w-4 h-4 text-amber-400" />
                     <p className="text-xs font-bold text-amber-400">Sovereign Unique ID Specifications</p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -1428,35 +1607,65 @@ export default function StoreManagementPage() {
                 </div>
               )}
 
+              {/* 6. THEME */}
               {formData.category === 'Theme' && (
-                <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 space-y-2">
+                <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 space-y-3">
                   <div className="flex items-center gap-2">
                     <Palette className="w-4 h-4 text-purple-400" />
-                    <p className="text-xs font-bold text-purple-400">Custom Room Theme / Background Wallpaper</p>
+                    <p className="text-xs font-bold text-purple-400">Room Theme Atmosphere Preset</p>
                   </div>
-                  <p className="text-[11px] text-slate-400">
+                  <div>
+                    <label className="text-[11px] text-slate-300 block mb-1">Atmosphere Preset</label>
+                    <select
+                      value={formData.themeAtmosphere}
+                      onChange={e => setFormData({ ...formData, themeAtmosphere: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-900 border border-purple-500/30 rounded-xl text-xs text-white"
+                    >
+                      <option value="Futuristic Cyberpunk">Futuristic Cyberpunk City</option>
+                      <option value="Imperial Palace">Imperial Golden Palace</option>
+                      <option value="Sakura Blossom">Sakura Blossom Spring</option>
+                      <option value="Deep Space Galaxy">Deep Space Galaxy & Nebula</option>
+                      <option value="Tropical Sunset">Tropical Sunset Beach</option>
+                      <option value="Casino Royale">Velvet VIP Casino Royale</option>
+                    </select>
+                  </div>
+                  <p className="text-[10px] text-slate-400">
                     Upload room wallpaper in &quot;Bahar Jo Image Dikhe&quot; and optional background animated effects in &quot;Item Animation File&quot;.
                   </p>
                 </div>
               )}
 
+              {/* 7. TASSEL */}
               {formData.category === 'Tassel' && (
-                <div className="p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/25 space-y-2">
+                <div className="p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/25 space-y-3">
                   <div className="flex items-center gap-2">
                     <Layers className="w-4 h-4 text-yellow-400" />
-                    <p className="text-xs font-bold text-yellow-400">Profile Tassel Silk Ribbon Badge</p>
+                    <p className="text-xs font-bold text-yellow-400">Profile Tassel Silk Ribbon Settings</p>
                   </div>
-                  <p className="text-[11px] text-slate-400">
-                    Upload tassel preview photo in &quot;Bahar Jo Image Dikhe&quot; and optional SVGA ribbon swaying effect in &quot;Item Animation File&quot;.
-                  </p>
+                  <div>
+                    <label className="text-[11px] text-slate-300 block mb-1">Tassel Material / Style</label>
+                    <select
+                      value={formData.tasselMaterial}
+                      onChange={e => setFormData({ ...formData, tasselMaterial: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-900 border border-yellow-500/30 rounded-xl text-xs text-white"
+                    >
+                      <option value="Imperial Gold Silk">Imperial Gold Silk Tassel</option>
+                      <option value="Ruby Crystal Lotus">Ruby Crystal Lotus Tassel</option>
+                      <option value="Emerald Jade Phoenix">Emerald Jade Phoenix Tassel</option>
+                      <option value="Cyberpunk Neon LED">Cyberpunk Neon LED Tassel</option>
+                      <option value="Diamond Chandelier">Diamond Chandelier Tassel</option>
+                      <option value="Sacred Silver Bell">Sacred Silver Bell Tassel</option>
+                    </select>
+                  </div>
                 </div>
               )}
 
+              {/* 8. VIP & KING OF KINGS */}
               {(formData.category === 'VIP' || formData.category === 'King of Kings') && (
                 <div className="p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/25 space-y-3">
                   <div className="flex items-center gap-2">
                     <Crown className="w-4 h-4 text-yellow-400" />
-                    <p className="text-xs font-bold text-yellow-400">VIP / King of Kings Privileges</p>
+                    <p className="text-xs font-bold text-yellow-400">VIP / King of Kings Privileges & Allowance</p>
                   </div>
 
                   <div>
@@ -1487,6 +1696,47 @@ export default function StoreManagementPage() {
                 </div>
               )}
 
+              {/* 9. BADGE */}
+              {formData.category === 'Badge' && (
+                <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/25 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-4 h-4 text-blue-400" />
+                    <p className="text-xs font-bold text-blue-400">Profile Prestige Badge Settings</p>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-300 block mb-1">Badge Display Title</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. LEGEND, TOP DONOR, GOD OF WAR"
+                      value={formData.badgeTitle}
+                      onChange={e => setFormData({ ...formData, badgeTitle: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-900 border border-blue-500/30 rounded-xl text-xs text-blue-300 font-bold"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* 10. TAG */}
+              {formData.category === 'Tag' && (
+                <div className="p-4 rounded-2xl bg-teal-500/10 border border-teal-500/25 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Bookmark className="w-4 h-4 text-teal-400" />
+                    <p className="text-xs font-bold text-teal-400">Chat Nickname Prestige Tag Settings</p>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-300 block mb-1">Tag Display Text</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. VIP STAR, ROYAL KING, SWEET HEART"
+                      value={formData.tagName}
+                      onChange={e => setFormData({ ...formData, tagName: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-900 border border-teal-500/30 rounded-xl text-xs text-teal-300 font-bold"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* File Upload Sections for All Items */}
               <div className="grid gap-4 sm:grid-cols-2">
                 {/* Bahar Jo Image Dikhe (Preview Image) */}
                 <div className="rounded-2xl border border-pink-500/30 bg-slate-800/80 p-4">
@@ -1501,7 +1751,7 @@ export default function StoreManagementPage() {
                     <span className="text-xs font-semibold text-white">
                       {uploadingField === 'imageUrl' ? 'Uploading Image...' : 'Choose Preview Image'}
                     </span>
-                    <span className="text-[10px] text-slate-400">PNG, JPG, WEBP (Choose file)</span>
+                    <span className="text-[10px] text-slate-400">PNG, JPG, WEBP, GIF (Choose file)</span>
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp,image/gif"
@@ -1587,7 +1837,7 @@ export default function StoreManagementPage() {
                   type="submit"
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-bold shadow-lg shadow-pink-500/25 transition"
                 >
-                  {editingItem ? 'Save Changes' : 'Create Item'}
+                  {editingItem ? 'Save Changes' : 'Create Item & Publish'}
                 </button>
               </div>
             </form>

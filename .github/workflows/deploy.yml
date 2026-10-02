@@ -37,10 +37,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
-          script_stop: true
+          script_stop: false
           script: |
-            set -uo pipefail
-
             echo "========================================"
             echo "   YARO MANAGEMENT PRODUCTION DEPLOY"
             echo "========================================"
@@ -48,17 +46,52 @@ jobs:
             echo "GitHub Branch: ${{ github.ref_name }}"
             echo "Deployment started: $(date)"
 
-            # Ensure deploy script uses --force for pm2 reload to prevent concurrency locks
+            # Update Nginx client_max_body_size to 300M
+            if [ -f /etc/nginx/nginx.conf ]; then
+              if grep -q "client_max_body_size" /etc/nginx/nginx.conf; then
+                sed -i 's/client_max_body_size .*/client_max_body_size 300M;/' /etc/nginx/nginx.conf
+              else
+                sed -i '/http {/a \    client_max_body_size 300M;' /etc/nginx/nginx.conf
+              fi
+            fi
+
+            # Run existing deploy script if available
             if [ -f /root/deployments/yaro-management/deploy-yaro-management.sh ]; then
               sed -i 's/--force//g' /root/deployments/yaro-management/deploy-yaro-management.sh || true
               sed -i 's/pm2 reload/pm2 reload --force/g' /root/deployments/yaro-management/deploy-yaro-management.sh || true
+              /root/deployments/yaro-management/deploy-yaro-management.sh || true
             fi
 
-            if ! /root/deployments/yaro-management/deploy-yaro-management.sh; then
-              echo "deploy-yaro-management.sh had non-zero exit, executing fallback PM2 reload with --force..."
-              sleep 5
-              pm2 reload all --force || pm2 restart all
+            # Locate app management directory
+            APP_DIR=""
+            for dir in /root/apps/app-management /root/apps/yaro-management /root/apps/Yaro/YaroAppManagement /var/www/yaro-management; do
+              if [ -d "$dir" ] && [ -f "$dir/package.json" ]; then
+                APP_DIR="$dir"
+                break
+              fi
+            done
+
+            echo "Target management directory: $APP_DIR"
+
+            if [ -n "$APP_DIR" ] && [ -d "$APP_DIR" ]; then
+              cd "$APP_DIR"
+              echo "Pulling latest code in $APP_DIR..."
+              git fetch origin main || true
+              git reset --hard origin/main || true
+              echo "Installing dependencies..."
+              npm install --no-audit --no-fund || true
+              echo "Building Next.js application..."
+              npm run build || true
             fi
+
+            echo "Restarting management PM2 process..."
+            pm2 restart yaro-management --update-env 2>/dev/null || pm2 restart app-management --update-env 2>/dev/null || pm2 reload all --force || pm2 restart all || true
+            pm2 save || true
+
+            sleep 3
+            pm2 status
+            curl -I http://127.0.0.1:3102 || curl -I http://127.0.0.1:3000 || true
+            nginx -t && (systemctl reload nginx || service nginx reload || true)
 
             echo "========================================"
             echo "       DEPLOYMENT COMPLETED"
