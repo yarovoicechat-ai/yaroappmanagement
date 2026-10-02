@@ -64,6 +64,14 @@ jobs:
               fi
             fi
 
+            for conf in /etc/nginx/sites-available/* /etc/nginx/sites-enabled/* /etc/nginx/conf.d/*; do
+              if [ -f "$conf" ]; then
+                if grep -q "client_max_body_size" "$conf"; then
+                  sed -i 's/client_max_body_size .*/client_max_body_size 300M;/' "$conf"
+                fi
+              fi
+            done
+
             # Locate app management directory
             APP_DIR=""
             for dir in /root/apps/app-management /root/apps/yaro-management /root/apps/Yaro/YaroAppManagement /var/www/yaro-management; do
@@ -98,19 +106,6 @@ jobs:
             echo "$LOCAL_MGT_CURL"
 
             nginx -t && (systemctl reload nginx || service nginx reload || true)
-
-            if [ -n "$APP_DIR" ] && [ -d "$APP_DIR/public" ]; then
-              cat << DIAG_EOF > "$APP_DIR/public/management-status.txt"
-=== YARO MANAGEMENT DEPLOY DIAGNOSTIC REPORT ===
-Timestamp: $(date)
-Target Management Dir: $APP_DIR
-Local Curl:
-$LOCAL_MGT_CURL
-PM2 Status:
-$PM2_MGT_STATUS
-DIAG_EOF
-              echo "Wrote diagnostic report to $APP_DIR/public/management-status.txt"
-            fi
 
             echo "========================================"
             echo "       DEPLOYMENT COMPLETED"
