@@ -321,13 +321,13 @@ export default function Home() {
                 </Card>
             </div>
 
-            {/* Avatar Verification Requests Section */}
+            {/* Avatar Requests Section */}
             <Card className="rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/40">
                 <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-white/5">
                     <div className="flex items-center gap-2.5">
                         <User className="h-4 w-4 text-violet-400" />
                         <CardTitle className="text-base font-bold text-white">
-                            Pending Avatar Verification Requests
+                            Pending Avatar Change Requests
                         </CardTitle>
                         <span className="px-2.5 py-0.5 text-xs rounded-full bg-violet-500/20 text-violet-300 font-bold border border-violet-500/30">
                             {avatarRequests.length} Pending
@@ -339,7 +339,7 @@ export default function Home() {
                 </CardHeader>
                 <CardContent className="pt-4">
                     {avatarRequests.length === 0 ? (
-                        <p className="text-sm text-slate-500 py-6 text-center">No pending avatar verification requests from hosts.</p>
+                        <p className="text-sm text-slate-500 py-6 text-center">No pending avatar change requests from hosts.</p>
                     ) : (
                         <div className="space-y-3">
                             {avatarRequests.slice(0, 5).map((req: any) => (

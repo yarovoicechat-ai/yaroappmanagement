@@ -13,10 +13,18 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/Table";
-import { Layers, Plus, Trash2, Edit2, Coins, Phone, Clock } from "lucide-react";
+import { Layers, Plus, Trash2, Edit2, Coins, Phone, Clock, UploadCloud } from "lucide-react";
 import { toast } from 'sonner';
 import { apiClient as api } from '@/lib/apiClient';
 import { API_ENDPOINTS } from '@/lib/apiEndpoints';
+
+interface LevelReward {
+    type: 'frame' | 'entry';
+    name: string;
+    imageUrl: string;
+    animationUrl: string;
+    durationDays: number;
+}
 
 interface LevelData {
     _id: string;
@@ -25,6 +33,7 @@ interface LevelData {
     minCalls: number;
     minMinutes: number;
     coinPerMinute: number;
+    rewards?: LevelReward[];
 }
 
 export default function LevelsPage() {
@@ -38,6 +47,36 @@ export default function LevelsPage() {
     const [minCalls, setMinCalls] = useState('0');
     const [minMinutes, setMinMinutes] = useState('0');
     const [coinPerMinute, setCoinPerMinute] = useState('1');
+    const [rewards, setRewards] = useState<LevelReward[]>([]);
+    const [uploadingReward, setUploadingReward] = useState<number | null>(null);
+
+    const updateReward = (index: number, patch: Partial<LevelReward>) =>
+        setRewards(current => current.map((reward, position) => position === index ? { ...reward, ...patch } : reward));
+
+    const addReward = (type: LevelReward['type']) =>
+        setRewards(current => [...current, { type, name: '', imageUrl: '', animationUrl: '', durationDays: 30 }]);
+
+    const uploadReward = async (index: number, file?: File) => {
+        if (!file) return;
+        if (!/\.(svga|png|jpe?g|gif|webp)$/i.test(file.name)) {
+            toast.error('Please select an image, GIF, WebP, or SVGA file');
+            return;
+        }
+        try {
+            setUploadingReward(index);
+            const body = new FormData();
+            body.append('file', file);
+            const response = await api.uploadFile<{ url: string }>('/api/upload/file', body);
+            const url = response.data?.url;
+            if (!url) throw new Error('Upload URL missing');
+            updateReward(index, /\.svga$/i.test(file.name) ? { animationUrl: url } : { imageUrl: url });
+            toast.success('Reward asset uploaded');
+        } catch (error: any) {
+            toast.error(error.message || 'Upload failed');
+        } finally {
+            setUploadingReward(null);
+        }
+    };
 
     useEffect(() => {
         fetchLevels();
@@ -68,6 +107,7 @@ export default function LevelsPage() {
             minCalls: Number(minCalls),
             minMinutes: Number(minMinutes),
             coinPerMinute: Number(coinPerMinute),
+            rewards: rewards.filter(reward => reward.name.trim()).map(reward => ({ ...reward, name: reward.name.trim() })),
         };
 
         try {
@@ -105,6 +145,7 @@ export default function LevelsPage() {
         setMinCalls(String(item.minCalls));
         setMinMinutes(String(item.minMinutes));
         setCoinPerMinute(String(item.coinPerMinute));
+        setRewards((item.rewards || []).map(reward => ({ ...reward })));
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -132,6 +173,7 @@ export default function LevelsPage() {
         setMinCalls('0');
         setMinMinutes('0');
         setCoinPerMinute('1');
+        setRewards([]);
     };
 
     return (
@@ -204,6 +246,35 @@ export default function LevelsPage() {
                                     required
                                 />
                             </div>
+                            <div className="space-y-3 rounded-xl border border-violet-500/25 bg-violet-500/5 p-3">
+                                <p className="text-sm font-bold text-violet-200">Level rewards (optional)</p>
+                                <p className="text-xs text-slate-400">Add a frame, entry, or both. Duration 0 means permanent.</p>
+                                <div className="flex gap-2">
+                                    <Button type="button" size="sm" variant="outline" onClick={() => addReward('frame')}>+ Frame</Button>
+                                    <Button type="button" size="sm" variant="outline" onClick={() => addReward('entry')}>+ Entry</Button>
+                                </div>
+                                {rewards.map((reward, index) => (
+                                    <div key={`${index}-${reward.type}`} className="space-y-2 rounded-lg border border-slate-700 bg-slate-900/70 p-3">
+                                        <div className="flex items-center justify-between">
+                                            <Badge variant="outline" className="capitalize">{reward.type}</Badge>
+                                            <Button type="button" size="sm" variant="ghost" className="text-red-400" onClick={() => setRewards(current => current.filter((_, position) => position !== index))}>
+                                                <Trash2 size={14} />
+                                            </Button>
+                                        </div>
+                                        <Input value={reward.name} onChange={event => updateReward(index, { name: event.target.value })} placeholder={`${reward.type} name`} required />
+                                        <label className="block text-xs text-slate-400">Duration in days</label>
+                                        <Input type="number" min="0" value={reward.durationDays} onChange={event => updateReward(index, { durationDays: Number(event.target.value) })} />
+                                        <label className="block text-xs text-slate-400">Preview image</label>
+                                        <Input value={reward.imageUrl} onChange={event => updateReward(index, { imageUrl: event.target.value })} placeholder="Image URL" />
+                                        <label className="block text-xs text-slate-400">Animation / SVGA file</label>
+                                        <Input value={reward.animationUrl} onChange={event => updateReward(index, { animationUrl: event.target.value })} placeholder="Animation URL" />
+                                        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-violet-500/40 p-2 text-xs text-violet-200">
+                                            <UploadCloud size={15} /> {uploadingReward === index ? 'Uploading...' : 'Upload image / SVGA'}
+                                            <input type="file" accept=".svga,image/png,image/jpeg,image/gif,image/webp" className="hidden" disabled={uploadingReward !== null} onChange={event => uploadReward(index, event.target.files?.[0])} />
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
                             <div className="flex gap-2">
                                 <Button type="submit" className="flex-1 font-bold">
                                     {editingId ? 'Update Level' : 'Save Level'}
@@ -234,17 +305,18 @@ export default function LevelsPage() {
                                     <TableHead className="font-bold text-slate-300">Name</TableHead>
                                     <TableHead className="font-bold text-slate-300">Requirements</TableHead>
                                     <TableHead className="font-bold text-slate-300">Commission</TableHead>
+                                    <TableHead className="font-bold text-slate-300">Rewards</TableHead>
                                     <TableHead className="text-right font-bold text-slate-300">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {loading ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-8">Loading levels...</TableCell>
+                                        <TableCell colSpan={6} className="text-center py-8">Loading levels...</TableCell>
                                     </TableRow>
                                 ) : levels.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No levels configured yet.</TableCell>
+                                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No levels configured yet.</TableCell>
                                     </TableRow>
                                 ) : (
                                     levels.map((item) => (
@@ -271,6 +343,15 @@ export default function LevelsPage() {
                                                 <div className="flex items-center gap-1">
                                                     <Coins size={14} />
                                                     <span>{item.coinPerMinute} / min</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex min-w-[140px] flex-wrap gap-1">
+                                                    {(item.rewards || []).length ? item.rewards?.map((reward, index) => (
+                                                        <Badge key={index} variant="outline" className="text-xs capitalize">
+                                                            {reward.type}: {reward.name} ({reward.durationDays === 0 ? 'Permanent' : `${reward.durationDays}d`})
+                                                        </Badge>
+                                                    )) : <span className="text-xs text-slate-500">None</span>}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right">

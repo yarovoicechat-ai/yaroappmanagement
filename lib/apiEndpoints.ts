@@ -69,6 +69,22 @@ export const API_ENDPOINTS = {
         DELETE: (id: string) => `/api/frames/${id}`,
     },
 
+    // Entry Effects & Rides
+    ENTRY_EFFECTS: {
+        LIST: '/api/entry-effects/admin/all',
+        PUBLIC_LIST: '/api/entry-effects',
+        CREATE: '/api/entry-effects',
+        UPDATE: (id: string) => `/api/entry-effects/${id}`,
+        DELETE: (id: string) => `/api/entry-effects/${id}`,
+        TOGGLE: (id: string) => `/api/entry-effects/${id}/toggle`,
+    },
+
+    // Upload
+    UPLOAD: {
+        FILE: '/api/upload/file',
+        SIGNATURE: '/api/upload/signature',
+    },
+
     // Avatars
     AVATARS: {
         LIST: (gender: string) => `/api/avatar/${gender}`,

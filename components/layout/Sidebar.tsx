@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
     LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift,
     Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
-    MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell, ShoppingBag,
+    MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell, ShoppingBag, Car,
     type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -67,7 +67,8 @@ const sidebarSections: SidebarSection[] = [
             { name: 'VIP Program', href: '/vip', icon: Crown },
             { name: 'Levels', href: '/levels', icon: Award },
             { name: 'Gifts', href: '/gifts', icon: Gift },
-            { name: 'Frames', href: '/frames', icon: Sliders },
+            { name: 'Frames', href: '/frames', icon: Sparkles },
+            { name: 'Entry Effects', href: '/entries', icon: Car },
             { name: 'Avatars', href: '/avatars', icon: Award },
             { name: 'Content Moderation', href: '/moderation', icon: Settings }
         ]

@@ -2,160 +2,178 @@
 
 import React, { useState, useEffect } from 'react';
 import {
+  Car,
   Sparkles,
   Plus,
   Trash2,
   Edit2,
+  CheckCircle2,
+  XCircle,
+  Eye,
   RefreshCw,
   Search,
   Diamond,
   UploadCloud,
   FileImage,
   Film,
+  Flame,
+  Volume2,
   Check,
   X,
-  Award,
+  Layers,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/apiClient';
 import { API_ENDPOINTS } from '@/lib/apiEndpoints';
 
-export interface FrameItem {
+export interface EntryEffectItem {
   _id: string;
   name: string;
-  price: number;
-  priceOptions?: { days: number; diamonds: number }[];
-  validity: string;
-  badgeText?: string;
-  previewColor?: string;
-  imageUrl?: string;
+  slug?: string;
+  tagText: string;
+  animationType: 'BANNER' | 'CENTER_AVATAR' | 'PARTICLES' | 'VIP_ENTRANCE' | 'SPECIAL_EVENT';
   image?: string;
+  imageUrl?: string;
   animationUrl?: string;
-  desc?: string;
+  sound?: string;
+  bannerColors?: string[];
+  price: number;
+  duration?: number;
   isActive: boolean;
-  metadata?: Record<string, any>;
+  sortOrder?: number;
+  isVip?: boolean;
+  rarity?: string;
   createdAt?: string;
 }
 
-export default function FramesManagementPage() {
-  const [frames, setFrames] = useState<FrameItem[]>([]);
+export default function EntriesManagementPage() {
+  const [entries, setEntries] = useState<EntryEffectItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadingField, setUploadingField] = useState<'image' | 'animation' | null>(null);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<FrameItem | null>(null);
+  const [editingItem, setEditingItem] = useState<EntryEffectItem | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Form State (Strictly choose file / upload file - NO manual URL inputs)
   const [formData, setFormData] = useState({
     name: '',
-    price: 3500,
-    price3Days: 525,
-    price7Days: 1050,
-    price15Days: 1925,
-    price30Days: 3500,
-    validity: '30 Days',
-    badgeText: 'HOT',
-    previewColor: '#F43F5E',
+    tagText: '👑 VIP HAS ENTERED',
+    animationType: 'VIP_ENTRANCE' as EntryEffectItem['animationType'],
+    price: 15000,
+    price3Days: 2250,
+    price7Days: 4500,
+    price15Days: 8250,
+    price30Days: 15000,
     image: '',
     imageName: '',
     animationUrl: '',
     animationFileName: '',
     animationFileType: '',
-    levelRequired: '1',
-    desc: '',
+    sound: '',
+    bannerColor1: '#8B5CF6',
+    bannerColor2: '#4C1D95',
+    duration: 3200,
     isActive: true,
+    isVip: true,
   });
 
-  const fetchFrames = async () => {
+  const fetchEntries = async () => {
     try {
       setLoading(true);
-      // Fetch frames from store catalog category Frames
-      const res = await apiClient.get(API_ENDPOINTS.STORE.ITEMS, { category: 'Frames' });
-      let list: FrameItem[] = [];
+      const res = await apiClient.get(API_ENDPOINTS.ENTRY_EFFECTS.LIST);
+      let list: EntryEffectItem[] = [];
       if (res && res.data) {
         list = Array.isArray(res.data) ? res.data : (res.data.items || []);
       }
-
-      // If store is empty, also check legacy /api/frames endpoint
-      if (list.length === 0) {
-        try {
-          const legacyRes = await apiClient.get(API_ENDPOINTS.FRAMES.LIST);
-          const legacyItems = Array.isArray(legacyRes) ? legacyRes : (legacyRes?.data || []);
-          list = legacyItems.map((f: any) => ({
-            _id: f._id || f.id,
-            name: f.name || f.text || 'Avatar Frame',
-            price: f.price || 3500,
-            validity: '30 Days',
-            imageUrl: f.image?.startsWith('http') ? f.image : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yaroapp.in'}${f.image?.startsWith('/') ? '' : '/'}${f.image}`,
-            image: f.image,
-            animationUrl: f.animationUrl || '',
-            isActive: true,
-            metadata: { frameLevel: f.level || 1 },
-          }));
-        } catch (_) {}
-      }
-
-      setFrames(list);
+      setEntries(list);
     } catch (err: any) {
-      console.warn('Failed to load frames:', err);
-      toast.error('Failed to load frames catalog');
+      console.warn('Failed to load entry effects:', err);
+      // Fallback: load from store category Entry
+      try {
+        const storeRes = await apiClient.get(API_ENDPOINTS.STORE.ITEMS, { category: 'Entry' });
+        if (storeRes && storeRes.data) {
+          const rawItems = Array.isArray(storeRes.data) ? storeRes.data : (storeRes.data.items || []);
+          const mapped: EntryEffectItem[] = rawItems.map((item: any) => ({
+            _id: item._id,
+            name: item.name,
+            tagText: item.metadata?.banner || '👑 VIP HAS ENTERED',
+            animationType: item.metadata?.animationType || 'VIP_ENTRANCE',
+            image: item.imageUrl || item.image || '',
+            imageUrl: item.imageUrl || item.image || '',
+            animationUrl: item.animationUrl || '',
+            price: item.price || 15000,
+            duration: item.metadata?.duration || 3200,
+            isActive: item.isActive,
+            isVip: true,
+          }));
+          setEntries(mapped);
+        }
+      } catch (_) {
+        toast.error('Failed to load entry effects catalog');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchFrames();
+    fetchEntries();
   }, []);
 
   const handleOpenAddModal = () => {
     setEditingItem(null);
     setFormData({
       name: '',
-      price: 3500,
-      price3Days: 525,
-      price7Days: 1050,
-      price15Days: 1925,
-      price30Days: 3500,
-      validity: '30 Days',
-      badgeText: 'HOT',
-      previewColor: '#F43F5E',
+      tagText: '👑 VIP HAS ENTERED',
+      animationType: 'VIP_ENTRANCE',
+      price: 15000,
+      price3Days: 2250,
+      price7Days: 4500,
+      price15Days: 8250,
+      price30Days: 15000,
       image: '',
       imageName: '',
       animationUrl: '',
       animationFileName: '',
       animationFileType: '',
-      levelRequired: '1',
-      desc: '',
+      sound: '',
+      bannerColor1: '#8B5CF6',
+      bannerColor2: '#4C1D95',
+      duration: 3200,
       isActive: true,
+      isVip: true,
     });
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (item: FrameItem) => {
+  const handleOpenEditModal = (item: EntryEffectItem) => {
     setEditingItem(item);
-    const p = item.price || 3500;
+    const colors = item.bannerColors && item.bannerColors.length >= 2 ? item.bannerColors : ['#8B5CF6', '#4C1D95'];
+    const p = item.price || 15000;
     const animExt = item.animationUrl ? item.animationUrl.split('.').pop()?.toUpperCase() || '' : '';
     setFormData({
       name: item.name,
+      tagText: item.tagText || '👑 VIP HAS ENTERED',
+      animationType: item.animationType || 'VIP_ENTRANCE',
       price: p,
       price3Days: Math.round(p * 0.15),
       price7Days: Math.round(p * 0.3),
       price15Days: Math.round(p * 0.55),
       price30Days: p,
-      validity: item.validity || '30 Days',
-      badgeText: item.badgeText || 'HOT',
-      previewColor: item.previewColor || '#F43F5E',
-      image: item.imageUrl || item.image || '',
-      imageName: (item.imageUrl || item.image || '').split('/').pop() || '',
+      image: item.image || item.imageUrl || '',
+      imageName: (item.image || item.imageUrl || '').split('/').pop() || '',
       animationUrl: item.animationUrl || '',
       animationFileName: (item.animationUrl || '').split('/').pop() || '',
       animationFileType: animExt,
-      levelRequired: String(item.metadata?.frameLevel || '1'),
-      desc: item.desc || '',
+      sound: item.sound || '',
+      bannerColor1: colors[0],
+      bannerColor2: colors[1],
+      duration: item.duration || 3200,
       isActive: item.isActive,
+      isVip: Boolean(item.isVip),
     });
     setIsModalOpen(true);
   };
@@ -183,13 +201,13 @@ export default function FramesManagementPage() {
     }
   };
 
-  // Upload Frame Animation File (SVGA, GIF, WEBP, PNG, WAVE)
+  // Upload Animation / Ride File (SVGA, GIF, WEBP, WAVE, MP4)
   const handleUploadAnimationFile = async (file: File | undefined) => {
     if (!file) return;
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
-    const allowed = ['svga', 'gif', 'webp', 'png', 'wav', 'wave', 'mp3', 'mp4'];
+    const allowed = ['svga', 'gif', 'webp', 'png', 'mp4', 'wav', 'wave', 'mp3'];
     if (!allowed.includes(ext)) {
-      toast.error(`Invalid file format: .${ext}. Allowed: .svga, .gif, .webp, .png, .wave`);
+      toast.error(`Invalid file format: .${ext}. Allowed: .svga, .gif, .webp, .png, .wave, .wav, .mp3, .mp4`);
       return;
     }
 
@@ -206,18 +224,18 @@ export default function FramesManagementPage() {
         animationFileName: file.name,
         animationFileType: ext.toUpperCase(),
       }));
-      toast.success(`Frame animation file (.${ext}) upload ho gayi!`);
+      toast.success(`Entry animation file (.${ext}) upload ho gayi!`);
     } catch (err: any) {
-      toast.error(err?.message || 'Frame animation file upload failed');
+      toast.error(err?.message || 'Animation file upload failed');
     } finally {
       setUploadingField(null);
     }
   };
 
-  const handleSaveFrame = async (e: React.FormEvent) => {
+  const handleSaveEntry = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      toast.error('Frame name is required');
+      toast.error('Entry name is required');
       return;
     }
     if (!formData.image && !formData.animationUrl) {
@@ -225,52 +243,42 @@ export default function FramesManagementPage() {
       return;
     }
 
-    const price = Number(formData.price30Days) || Number(formData.price) || 0;
     const payload = {
       name: formData.name.trim(),
-      category: 'Frames',
-      price,
-      priceOptions: [
-        { days: 3, diamonds: Number(formData.price3Days) || Math.round(price * 0.15) },
-        { days: 7, diamonds: Number(formData.price7Days) || Math.round(price * 0.3) },
-        { days: 15, diamonds: Number(formData.price15Days) || Math.round(price * 0.55) },
-        { days: 30, diamonds: price },
-      ],
-      validity: formData.validity,
-      badgeText: formData.badgeText,
-      previewColor: formData.previewColor,
-      imageUrl: formData.image,
+      tagText: formData.tagText.trim(),
+      animationType: formData.animationType,
+      price: Number(formData.price30Days) || Number(formData.price) || 0,
       image: formData.image,
+      imageUrl: formData.image,
       animationUrl: formData.animationUrl,
-      desc: formData.desc || `Exclusive avatar profile frame: ${formData.name}`,
+      sound: formData.sound,
+      bannerColors: [formData.bannerColor1, formData.bannerColor2],
+      duration: Number(formData.duration) || 3200,
       isActive: formData.isActive,
-      metadata: {
-        frameLevel: Number(formData.levelRequired) || 1,
-        animated: Boolean(formData.animationUrl),
-      },
+      isVip: formData.isVip,
     };
 
     try {
       if (editingItem) {
-        await apiClient.put(API_ENDPOINTS.STORE.UPDATE(editingItem._id), payload);
-        toast.success(`Frame "${formData.name}" updated successfully!`);
+        await apiClient.put(API_ENDPOINTS.ENTRY_EFFECTS.UPDATE(editingItem._id), payload);
+        toast.success(`Entry effect "${formData.name}" updated successfully!`);
       } else {
-        await apiClient.post(API_ENDPOINTS.STORE.CREATE, payload);
-        toast.success(`Frame "${formData.name}" uploaded successfully! App me turant live.`);
+        await apiClient.post(API_ENDPOINTS.ENTRY_EFFECTS.CREATE, payload);
+        toast.success(`Entry effect "${formData.name}" uploaded successfully! App me turant live.`);
       }
       setIsModalOpen(false);
-      fetchFrames();
+      fetchEntries();
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to save frame');
+      toast.error(err?.message || 'Failed to save entry effect');
     }
   };
 
-  const handleToggleStatus = async (item: FrameItem) => {
+  const handleToggleStatus = async (item: EntryEffectItem) => {
     try {
-      await apiClient.patch(API_ENDPOINTS.STORE.TOGGLE(item._id), {});
+      await apiClient.patch(API_ENDPOINTS.ENTRY_EFFECTS.TOGGLE(item._id), {});
       const nextStatus = !item.isActive;
       toast.success(`"${item.name}" is now ${nextStatus ? 'Active' : 'Inactive'}`);
-      setFrames(prev => prev.map(f => f._id === item._id ? { ...f, isActive: nextStatus } : f));
+      setEntries(prev => prev.map(e => e._id === item._id ? { ...e, isActive: nextStatus } : e));
     } catch (err: any) {
       toast.error(err?.message || 'Failed to toggle status');
     }
@@ -279,20 +287,21 @@ export default function FramesManagementPage() {
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
     try {
-      await apiClient.delete(API_ENDPOINTS.STORE.DELETE(id));
+      await apiClient.delete(API_ENDPOINTS.ENTRY_EFFECTS.DELETE(id));
       toast.success(`"${name}" deleted successfully`);
-      setFrames(prev => prev.filter(f => f._id !== id));
+      setEntries(prev => prev.filter(e => e._id !== id));
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to delete frame');
+      toast.error(err?.message || 'Failed to delete entry effect');
     }
   };
 
-  const filteredFrames = frames.filter(f => {
+  const filteredEntries = entries.filter(e => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
     return (
-      (f.name && f.name.toLowerCase().includes(q)) ||
-      (f.badgeText && f.badgeText.toLowerCase().includes(q))
+      (e.name && e.name.toLowerCase().includes(q)) ||
+      (e.tagText && e.tagText.toLowerCase().includes(q)) ||
+      (e.animationType && e.animationType.toLowerCase().includes(q))
     );
   });
 
@@ -302,15 +311,15 @@ export default function FramesManagementPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-600 shadow-lg shadow-pink-500/20">
-              <Sparkles className="h-6 w-6 text-white" />
+            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-orange-500 to-pink-500 shadow-lg shadow-orange-500/20">
+              <Car className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-pink-400 via-rose-400 to-amber-300 bg-clip-text text-transparent">
-                Avatar Frame Management
+              <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Room Entry & Ride Effects
               </h2>
               <p className="text-slate-400 text-xs mt-0.5">
-                Upload user profile frames (SVGA, GIF, WEBP, PNG), choose preview image, set diamond price & connect immediately to mobile app.
+                Upload room entrance rides (SVGA, GIF, WEBP, WAVE, MP4), choose preview image, set diamond cost & connect immediately to mobile app.
               </p>
             </div>
           </div>
@@ -318,7 +327,7 @@ export default function FramesManagementPage() {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={fetchFrames}
+            onClick={fetchEntries}
             className="p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:border-slate-600 transition"
             title="Refresh"
           >
@@ -327,10 +336,10 @@ export default function FramesManagementPage() {
 
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white font-semibold text-xs shadow-lg shadow-pink-500/25 hover:opacity-95 transition"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 text-white font-semibold text-xs shadow-lg shadow-pink-500/25 hover:opacity-95 transition"
           >
             <Plus className="h-4 w-4" />
-            Upload New Frame
+            Upload New Entry
           </button>
         </div>
       </div>
@@ -338,107 +347,102 @@ export default function FramesManagementPage() {
       {/* Summary Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-          <p className="text-[11px] font-medium text-slate-400">Total Frames</p>
-          <p className="text-2xl font-bold text-white mt-1">{frames.length}</p>
-          <p className="text-[10px] text-emerald-400 mt-1">Live in store & user profiles</p>
+          <p className="text-[11px] font-medium text-slate-400">Total Entry Effects</p>
+          <p className="text-2xl font-bold text-white mt-1">{entries.length}</p>
+          <p className="text-[10px] text-emerald-400 mt-1">Live in store & party rooms</p>
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-          <p className="text-[11px] font-medium text-slate-400">Active Frames</p>
+          <p className="text-[11px] font-medium text-slate-400">Active Effects</p>
           <p className="text-2xl font-bold text-emerald-400 mt-1">
-            {frames.filter(f => f.isActive).length}
+            {entries.filter(e => e.isActive).length}
           </p>
           <p className="text-[10px] text-slate-400 mt-1">Visible to users</p>
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-          <p className="text-[11px] font-medium text-slate-400">Diamond Pricing</p>
-          <p className="text-2xl font-bold text-cyan-400 mt-1">
-            {frames.length > 0 ? `${Math.round(frames.reduce((a, b) => a + (b.price || 0), 0) / frames.length).toLocaleString()}` : '3,500'}
+          <p className="text-[11px] font-medium text-slate-400">VIP / Exclusive Rides</p>
+          <p className="text-2xl font-bold text-amber-400 mt-1">
+            {entries.filter(e => e.isVip || (e.price && e.price >= 10000)).length}
           </p>
-          <p className="text-[10px] text-cyan-400 mt-1">Avg diamonds per frame</p>
+          <p className="text-[10px] text-amber-400 mt-1">Phantom, Dragon, Sports Cars</p>
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-          <p className="text-[11px] font-medium text-slate-400">Supported Formats</p>
-          <p className="text-2xl font-bold text-rose-400 mt-1">SVGA & GIF</p>
-          <p className="text-[10px] text-rose-300 mt-1">.svga, .gif, .webp, .png</p>
+          <p className="text-[11px] font-medium text-slate-400">Supported Asset Formats</p>
+          <p className="text-2xl font-bold text-purple-400 mt-1">SVGA & GIF</p>
+          <p className="text-[10px] text-purple-300 mt-1">.svga, .gif, .webp, .wave, .mp4</p>
         </div>
       </div>
 
-      {/* Search Bar */}
+      {/* Search & Filter Bar */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
           <input
             type="text"
-            placeholder="Search avatar frames by name or tag..."
+            placeholder="Search entry effects by name, tag, or type..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900/80 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900/80 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
           />
         </div>
       </div>
 
-      {/* Frames Grid */}
+      {/* Entry Effects Grid / Table */}
       {loading ? (
         <div className="py-20 text-center">
-          <RefreshCw className="h-8 w-8 text-pink-400 animate-spin mx-auto mb-3" />
-          <p className="text-xs text-slate-400">Loading frames catalog...</p>
+          <RefreshCw className="h-8 w-8 text-orange-400 animate-spin mx-auto mb-3" />
+          <p className="text-xs text-slate-400">Loading entry effects catalog...</p>
         </div>
-      ) : filteredFrames.length === 0 ? (
+      ) : filteredEntries.length === 0 ? (
         <div className="py-16 text-center rounded-2xl border border-slate-800 bg-slate-900/40">
-          <Sparkles className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-slate-300">No avatar frames found</p>
-          <p className="text-xs text-slate-500 mt-1">Click "Upload New Frame" to upload your first frame.</p>
+          <Car className="h-12 w-12 text-slate-600 mx-auto mb-3" />
+          <p className="text-sm font-semibold text-slate-300">No entry effects found</p>
+          <p className="text-xs text-slate-500 mt-1">Click "Upload New Entry" to upload your first SVGA/GIF entrance effect.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredFrames.map(item => {
-            const previewImg = item.imageUrl || item.image || '';
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredEntries.map(item => {
+            const previewImg = item.image || item.imageUrl || '';
             const animFile = item.animationUrl || '';
             const animExt = animFile ? animFile.split('.').pop()?.toUpperCase() : '';
+            const colors = item.bannerColors && item.bannerColors.length >= 2 ? item.bannerColors : ['#8B5CF6', '#4C1D95'];
 
             return (
               <div
                 key={item._id}
-                className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 hover:border-pink-500/40 transition group flex flex-col justify-between"
+                className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 hover:border-orange-500/40 transition group flex flex-col justify-between"
               >
                 <div>
-                  {/* Avatar Frame Live Mockup Card */}
+                  {/* Top Row: Preview Card (Bahar ki image) & Animation Tag */}
                   <div className="relative h-36 rounded-xl overflow-hidden bg-slate-950 flex items-center justify-center p-3 border border-slate-800/80">
-                    {/* Background glow */}
+                    {/* Background Banner Colors */}
                     <div
-                      className="absolute inset-0 opacity-20"
+                      className="absolute inset-0 opacity-25"
                       style={{
-                        background: `radial-gradient(circle, ${item.previewColor || '#F43F5E'} 0%, transparent 70%)`,
+                        background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`,
                       }}
                     />
 
-                    {/* Circular Mock Avatar with Frame */}
-                    <div className="relative w-20 h-20 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
-                        <img
-                          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120"
-                          alt="Demo Avatar"
-                          className="w-full h-full object-cover"
-                        />
+                    {/* Preview Image ("Bahar jo image dikhe") */}
+                    {previewImg ? (
+                      <img
+                        src={previewImg}
+                        alt={item.name}
+                        className="max-h-28 max-w-full object-contain relative z-10 drop-shadow-md group-hover:scale-105 transition"
+                      />
+                    ) : (
+                      <div className="text-center relative z-10">
+                        <Car className="h-12 w-12 text-orange-400 mx-auto mb-1 opacity-70" />
+                        <span className="text-[10px] text-slate-500">No preview image</span>
                       </div>
+                    )}
 
-                      {/* Frame Overlay */}
-                      {previewImg && (
-                        <img
-                          src={previewImg}
-                          alt={item.name}
-                          className="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-md group-hover:scale-110 transition"
-                        />
-                      )}
-                    </div>
-
-                    {/* Format Pill (SVGA / GIF / PNG) */}
-                    <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5">
+                    {/* Format Pill (SVGA / GIF / WAVE) */}
+                    <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5">
                       {animExt && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-pink-500/80 text-white backdrop-blur-md">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/80 text-white backdrop-blur-md shadow">
                           {animExt}
                         </span>
                       )}
@@ -447,20 +451,18 @@ export default function FramesManagementPage() {
                       </span>
                     </div>
 
-                    {/* Badge Pill */}
-                    {item.badgeText && (
-                      <div className="absolute bottom-2 left-2 z-20">
-                        <span className="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-slate-900/90 text-amber-300 border border-amber-500/30">
-                          {item.badgeText}
-                        </span>
-                      </div>
-                    )}
+                    {/* Greeting Tag Pill */}
+                    <div className="absolute bottom-2 left-2 z-20">
+                      <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-900/90 text-amber-300 border border-amber-500/30 backdrop-blur-md">
+                        {item.tagText || '👑 VIP HAS ENTERED'}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Frame Info */}
+                  {/* Info Row */}
                   <div className="mt-3.5 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-white group-hover:text-pink-400 transition truncate">
+                      <h4 className="text-sm font-bold text-white group-hover:text-orange-400 transition truncate">
                         {item.name}
                       </h4>
                       <div className="flex items-center gap-1 text-xs font-bold text-cyan-400">
@@ -470,8 +472,8 @@ export default function FramesManagementPage() {
                     </div>
 
                     <div className="flex items-center justify-between text-[11px] text-slate-400">
-                      <span>Validity: <strong className="text-slate-300">{item.validity || '30 Days'}</strong></span>
-                      <span>Level: <strong className="text-slate-300">Lv.{item.metadata?.frameLevel || 1}</strong></span>
+                      <span>Type: <strong className="text-slate-300">{item.animationType}</strong></span>
+                      <span>Duration: <strong className="text-slate-300">{(item.duration || 3200) / 1000}s</strong></span>
                     </div>
                   </div>
                 </div>
@@ -480,13 +482,13 @@ export default function FramesManagementPage() {
                 <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
                   <button
                     onClick={() => handleToggleStatus(item)}
-                    className={`text-[11px] font-semibold px-2 py-1 rounded-lg border transition ${
+                    className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition ${
                       item.isActive
                         ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
                         : 'border-slate-700 text-slate-400 hover:bg-slate-800'
                     }`}
                   >
-                    {item.isActive ? 'Active' : 'Disabled'}
+                    {item.isActive ? 'Active (Live)' : 'Disabled'}
                   </button>
 
                   <div className="flex items-center gap-2">
@@ -516,15 +518,15 @@ export default function FramesManagementPage() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
-            {/* Header */}
+            {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-pink-500/10 text-pink-400 border border-pink-500/20">
-                  <Sparkles className="h-5 w-5" />
+                <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                  <Car className="h-5 w-5" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">
-                    {editingItem ? 'Edit Avatar Frame' : 'Upload New Avatar Frame'}
+                    {editingItem ? 'Edit Entry Effect / Ride' : 'Upload New Entry Effect / Ride'}
                   </h3>
                   <p className="text-[11px] text-slate-400">
                     File choose karein, name & diamond set karein. Upload karte hi mobile app me live hoga.
@@ -539,19 +541,19 @@ export default function FramesManagementPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveFrame} className="space-y-4 mt-5">
+            <form onSubmit={handleSaveEntry} className="space-y-4 mt-5">
               {/* 1. Name */}
               <div>
                 <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                  Frame Name *
+                  Entry Effect / Ride Name *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Crown Imperial Frame, Rose Sovereign, Cyber Neon Ring"
+                  placeholder="e.g. Royal Phantom Rolls, Golden Dragon Flight, Cyber Hypercar"
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
                 />
               </div>
 
@@ -617,7 +619,7 @@ export default function FramesManagementPage() {
                     <FileImage className="h-4 w-4 text-pink-400" />
                     Bahar Jo Image Dikhe *
                   </label>
-                  <p className="text-[10px] text-slate-400 mb-3">Store/profile me bahar dikhne wali frame image.</p>
+                  <p className="text-[10px] text-slate-400 mb-3">Store/list me bahar show hone wali preview photo.</p>
 
                   <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-pink-500/50 hover:border-pink-400 bg-slate-900/60 p-4 text-center transition">
                     <UploadCloud className="h-6 w-6 text-pink-400 animate-bounce" />
@@ -634,47 +636,38 @@ export default function FramesManagementPage() {
                     />
                   </label>
 
-                  {/* Live Mockup with Avatar */}
+                  {/* Live Image Preview */}
                   {formData.image && (
-                    <div className="mt-3 relative rounded-xl border border-slate-700 bg-slate-950 p-2 text-center flex flex-col items-center">
-                      <div className="relative w-16 h-16 flex items-center justify-center my-1">
-                        <div className="w-12 h-12 rounded-full bg-slate-800 overflow-hidden">
-                          <img
-                            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120"
-                            alt="Mockup"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <img
-                          src={formData.image}
-                          alt="Frame"
-                          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                        />
-                      </div>
-                      <span className="inline-block text-[10px] font-medium text-emerald-400 truncate max-w-full px-2">
+                    <div className="mt-3 relative rounded-xl border border-slate-700 bg-slate-950 p-2 text-center">
+                      <img
+                        src={formData.image}
+                        alt="Bahar ki preview"
+                        className="h-24 w-full object-contain mx-auto rounded-lg"
+                      />
+                      <span className="inline-block mt-1 text-[10px] font-medium text-emerald-400 truncate max-w-full px-2">
                         ✓ {formData.imageName || 'Uploaded successfully'}
                       </span>
                     </div>
                   )}
                 </div>
 
-                {/* Animation File (SVGA, GIF, WEBP, PNG, WAVE) */}
+                {/* Animation File (SVGA, GIF, WEBP, WAVE, MP4) */}
                 <div className="rounded-2xl border border-purple-500/30 bg-slate-800/80 p-4">
                   <label className="mb-1 flex items-center gap-2 text-xs font-bold text-purple-300">
                     <Film className="h-4 w-4 text-purple-400" />
-                    Frame Animation File *
+                    Entry Animation File *
                   </label>
-                  <p className="text-[10px] text-slate-400 mb-3">File type: SVGA, GIF, WEBP, PNG, WAVE</p>
+                  <p className="text-[10px] text-slate-400 mb-3">File type: SVGA, GIF, WEBP, WAVE, MP4</p>
 
                   <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-purple-500/50 hover:border-purple-400 bg-slate-900/60 p-4 text-center transition">
                     <UploadCloud className="h-6 w-6 text-purple-400" />
                     <span className="text-xs font-semibold text-white">
                       {uploadingField === 'animation' ? 'Uploading File...' : 'Choose Animation File'}
                     </span>
-                    <span className="text-[10px] text-slate-400">.svga, .gif, .webp, .png, .wave</span>
+                    <span className="text-[10px] text-slate-400">.svga, .gif, .webp, .wave, .mp4</span>
                     <input
                       type="file"
-                      accept=".svga,.gif,.webp,.png,.wav,.wave"
+                      accept=".svga,.gif,.webp,.png,.mp4,.wav,.wave,.mp3"
                       className="hidden"
                       disabled={uploadingField !== null}
                       onChange={e => handleUploadAnimationFile(e.target.files?.[0])}
@@ -692,84 +685,82 @@ export default function FramesManagementPage() {
                           {formData.animationFileName || 'Animation file attached'}
                         </span>
                       </div>
-                      <p className="text-[10px] text-purple-300/80 mt-1">App me native SVG/GIF engine se play hoga.</p>
+                      <p className="text-[10px] text-purple-300/80 mt-1">App me native hardware player se run hoga.</p>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* 4. Validity & Badge */}
+              {/* 4. Greeting Tag & Animation Type */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                    Validity Duration
+                    Greeting Banner Tag
                   </label>
-                  <select
-                    value={formData.validity}
-                    onChange={e => setFormData({ ...formData, validity: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-pink-500"
-                  >
-                    <option value="3 Days">3 Days</option>
-                    <option value="7 Days">7 Days</option>
-                    <option value="15 Days">15 Days</option>
-                    <option value="30 Days">30 Days</option>
-                    <option value="90 Days">90 Days</option>
-                    <option value="Permanent">Permanent</option>
-                  </select>
+                  <input
+                    type="text"
+                    placeholder="e.g. 👑 VIP HAS ENTERED"
+                    value={formData.tagText}
+                    onChange={e => setFormData({ ...formData, tagText: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-orange-500"
+                  />
                 </div>
 
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                    Badge Tag
+                    Animation Style
                   </label>
                   <select
-                    value={formData.badgeText}
-                    onChange={e => setFormData({ ...formData, badgeText: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-pink-500"
+                    value={formData.animationType}
+                    onChange={e => setFormData({ ...formData, animationType: e.target.value as any })}
+                    className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-orange-500"
                   >
-                    <option value="">None</option>
-                    <option value="HOT">HOT 🔥</option>
-                    <option value="NEW">NEW ✨</option>
-                    <option value="LIMITED">LIMITED ⏳</option>
-                    <option value="SALE">SALE 🏷️</option>
-                    <option value="VIP">VIP 👑</option>
+                    <option value="VIP_ENTRANCE">VIP Ride / Entrance (Car/Dragon)</option>
+                    <option value="CENTER_AVATAR">Center Avatar Stage Reveal</option>
+                    <option value="BANNER">Luxury Sliding Top Banner</option>
+                    <option value="PARTICLES">Floating Star & Gems Shower</option>
+                    <option value="SPECIAL_EVENT">Grand Special Event</option>
                   </select>
                 </div>
               </div>
 
-              {/* 5. Theme Color & Level */}
+              {/* 5. Banner Colors & Duration */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                    Aura Hex Color
+                    Banner Gradient Colors
                   </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
-                      value={formData.previewColor}
-                      onChange={e => setFormData({ ...formData, previewColor: e.target.value })}
-                      className="w-9 h-9 rounded-xl cursor-pointer bg-transparent border-0"
+                      value={formData.bannerColor1}
+                      onChange={e => setFormData({ ...formData, bannerColor1: e.target.value })}
+                      className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
                     />
                     <input
-                      type="text"
-                      value={formData.previewColor}
-                      onChange={e => setFormData({ ...formData, previewColor: e.target.value })}
-                      className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none"
+                      type="color"
+                      value={formData.bannerColor2}
+                      onChange={e => setFormData({ ...formData, bannerColor2: e.target.value })}
+                      className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
                     />
+                    <span className="text-[10px] text-slate-400">Gradient Colors</span>
                   </div>
                 </div>
 
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                    Required Level
+                    Display Duration (Seconds)
                   </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={formData.levelRequired}
-                    onChange={e => setFormData({ ...formData, levelRequired: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none"
-                  />
+                  <select
+                    value={formData.duration}
+                    onChange={e => setFormData({ ...formData, duration: Number(e.target.value) })}
+                    className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-orange-500"
+                  >
+                    <option value={2500}>2.5 Seconds</option>
+                    <option value={3200}>3.2 Seconds</option>
+                    <option value={4000}>4.0 Seconds</option>
+                    <option value={5000}>5.0 Seconds (Long Ride)</option>
+                  </select>
                 </div>
               </div>
 
@@ -780,7 +771,7 @@ export default function FramesManagementPage() {
                     type="checkbox"
                     checked={formData.isActive}
                     onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="w-4 h-4 rounded text-pink-500 focus:ring-pink-500"
+                    className="w-4 h-4 rounded text-orange-500 focus:ring-orange-500"
                   />
                   <span className="text-xs text-slate-200">
                     Publish immediately (App me turant active dikhega)
@@ -788,7 +779,7 @@ export default function FramesManagementPage() {
                 </label>
               </div>
 
-              {/* Buttons */}
+              {/* Submit Buttons */}
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
                 <button
                   type="button"
@@ -800,7 +791,7 @@ export default function FramesManagementPage() {
                 <button
                   type="submit"
                   disabled={uploadingField !== null}
-                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-xs font-bold text-white shadow-lg shadow-pink-500/25 hover:opacity-95 disabled:opacity-50"
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 text-xs font-bold text-white shadow-lg shadow-pink-500/25 hover:opacity-95 disabled:opacity-50"
                 >
                   <Check className="h-4 w-4" />
                   {editingItem ? 'Save Changes' : 'Upload & Publish to App'}
