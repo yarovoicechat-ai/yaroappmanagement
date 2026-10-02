@@ -71,36 +71,43 @@ export default function FramesManagementPage() {
   const fetchFrames = async () => {
     try {
       setLoading(true);
-      // Fetch frames from store catalog category Frames
-      const res = await apiClient.get(API_ENDPOINTS.STORE.ITEMS, { category: 'Frames' });
       let list: FrameItem[] = [];
-      if (res && res.data) {
-        list = Array.isArray(res.data) ? res.data : (res.data.items || []);
+
+      // 1. Try store catalog category Frames
+      try {
+        const res = await apiClient.get(API_ENDPOINTS.STORE.ITEMS, { category: 'Frames' });
+        if (res && res.data) {
+          const raw = Array.isArray(res.data) ? res.data : (res.data.items || []);
+          if (Array.isArray(raw)) list = raw;
+        }
+      } catch (err) {
+        console.warn('Store items fetch error:', err);
       }
 
-      // If store is empty, also check legacy /api/frames endpoint
+      // 2. If empty, check legacy /api/frames endpoint
       if (list.length === 0) {
         try {
           const legacyRes = await apiClient.get(API_ENDPOINTS.FRAMES.LIST);
           const legacyItems = Array.isArray(legacyRes) ? legacyRes : (legacyRes?.data || []);
-          list = legacyItems.map((f: any) => ({
-            _id: f._id || f.id,
-            name: f.name || f.text || 'Avatar Frame',
-            price: f.price || 3500,
-            validity: '30 Days',
-            imageUrl: f.image?.startsWith('http') ? f.image : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yaroapp.in'}${f.image?.startsWith('/') ? '' : '/'}${f.image}`,
-            image: f.image,
-            animationUrl: f.animationUrl || '',
-            isActive: true,
-            metadata: { frameLevel: f.level || 1 },
-          }));
+          if (Array.isArray(legacyItems) && legacyItems.length > 0) {
+            list = legacyItems.map((f: any) => ({
+              _id: f._id || f.id,
+              name: f.name || f.text || 'Avatar Frame',
+              price: f.price || 3500,
+              validity: '30 Days',
+              imageUrl: f.image?.startsWith('http') ? f.image : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yaroapp.in'}${f.image?.startsWith('/') ? '' : '/'}${f.image}`,
+              image: f.image,
+              animationUrl: f.animationUrl || '',
+              isActive: true,
+              metadata: { frameLevel: f.level || 1 },
+            }));
+          }
         } catch (_) {}
       }
 
       setFrames(list);
     } catch (err: any) {
       console.warn('Failed to load frames:', err);
-      toast.error('Failed to load frames catalog');
     } finally {
       setLoading(false);
     }

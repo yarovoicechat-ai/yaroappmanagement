@@ -66,6 +66,7 @@ export const API_ENDPOINTS = {
     FRAMES: {
         LIST: '/api/frames',
         CREATE: '/api/frames',
+        UPDATE: (id: string) => `/api/frames/${id}`,
         DELETE: (id: string) => `/api/frames/${id}`,
     },
 
@@ -77,6 +78,7 @@ export const API_ENDPOINTS = {
         UPDATE: (id: string) => `/api/entry-effects/${id}`,
         DELETE: (id: string) => `/api/entry-effects/${id}`,
         TOGGLE: (id: string) => `/api/entry-effects/${id}/toggle`,
+        BROADCAST: '/api/entry-effects/broadcast',
     },
 
     // Upload

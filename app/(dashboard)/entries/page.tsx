@@ -112,7 +112,7 @@ export default function EntriesManagementPage() {
           setEntries(mapped);
         }
       } catch (_) {
-        toast.error('Failed to load entry effects catalog');
+        console.warn('Fallback store entry fetch failed');
       }
     } finally {
       setLoading(false);
