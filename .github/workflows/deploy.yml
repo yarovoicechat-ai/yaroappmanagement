@@ -46,6 +46,15 @@ jobs:
             echo "GitHub Branch: ${{ github.ref_name }}"
             echo "Deployment started: $(date)"
 
+            # Ensure 2GB swap space exists
+            if ! swapon --show | grep -q "/swapfile"; then
+              echo "Creating 2GB swapfile..."
+              fallocate -l 2G /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=2048
+              chmod 600 /swapfile
+              mkswap /swapfile
+              swapon /swapfile || true
+            fi
+
             # Update Nginx client_max_body_size to 300M
             if [ -f /etc/nginx/nginx.conf ]; then
               if grep -q "client_max_body_size" /etc/nginx/nginx.conf; then
@@ -53,13 +62,6 @@ jobs:
               else
                 sed -i '/http {/a \    client_max_body_size 300M;' /etc/nginx/nginx.conf
               fi
-            fi
-
-            # Run existing deploy script if available
-            if [ -f /root/deployments/yaro-management/deploy-yaro-management.sh ]; then
-              sed -i 's/--force//g' /root/deployments/yaro-management/deploy-yaro-management.sh || true
-              sed -i 's/pm2 reload/pm2 reload --force/g' /root/deployments/yaro-management/deploy-yaro-management.sh || true
-              /root/deployments/yaro-management/deploy-yaro-management.sh || true
             fi
 
             # Locate app management directory
@@ -80,8 +82,8 @@ jobs:
               git reset --hard origin/main || true
               echo "Installing dependencies..."
               npm install --no-audit --no-fund || true
-              echo "Building Next.js application..."
-              npm run build || true
+              echo "Building Next.js application with 2GB memory..."
+              NODE_OPTIONS="--max-old-space-size=2048" npm run build || true
             fi
 
             echo "Restarting management PM2 process..."
@@ -89,9 +91,26 @@ jobs:
             pm2 save || true
 
             sleep 3
-            pm2 status
-            curl -I http://127.0.0.1:3102 || curl -I http://127.0.0.1:3000 || true
+            PM2_MGT_STATUS=$(pm2 list)
+            echo "$PM2_MGT_STATUS"
+
+            LOCAL_MGT_CURL=$(curl -sv http://127.0.0.1:3102 2>&1 || curl -sv http://127.0.0.1:3000 2>&1 || true)
+            echo "$LOCAL_MGT_CURL"
+
             nginx -t && (systemctl reload nginx || service nginx reload || true)
+
+            if [ -n "$APP_DIR" ] && [ -d "$APP_DIR/public" ]; then
+              cat << DIAG_EOF > "$APP_DIR/public/management-status.txt"
+=== YARO MANAGEMENT DEPLOY DIAGNOSTIC REPORT ===
+Timestamp: $(date)
+Target Management Dir: $APP_DIR
+Local Curl:
+$LOCAL_MGT_CURL
+PM2 Status:
+$PM2_MGT_STATUS
+DIAG_EOF
+              echo "Wrote diagnostic report to $APP_DIR/public/management-status.txt"
+            fi
 
             echo "========================================"
             echo "       DEPLOYMENT COMPLETED"
