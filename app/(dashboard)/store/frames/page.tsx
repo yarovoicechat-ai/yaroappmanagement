@@ -311,6 +311,7 @@ export default function StoreFramesPage() {
             name: formData.name.trim(),
             level: Number(formData.levelRequired) || 1,
             image: formData.image,
+            animationUrl: formData.animationUrl || '',
           });
         } catch (_) {}
         toast.success(`Frame "${formData.name}" uploaded! Live in store & app.`);
@@ -497,7 +498,7 @@ export default function StoreFramesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredFrames.map(item => {
-            const displayUrl = item.animationUrl || item.imageUrl || item.image || '';
+            const displayUrl = (item.animationUrl && !item.animationUrl.includes('.svga') ? item.animationUrl : '') || item.imageUrl || item.image || '';
             const p30 = item.priceOptions?.find(p => p.days === 30)?.diamonds ?? item.price;
             const p3 = item.priceOptions?.find(p => p.days === 3)?.diamonds ?? Math.round(p30 * 0.15);
 
@@ -711,42 +712,63 @@ export default function StoreFramesPage() {
                 </div>
 
                 {/* 2. Animation Asset (.svga, .gif, .webp, .mp4) */}
-                <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
-                  <label className="block text-xs font-semibold text-slate-200 mb-1">
-                    Frame Animation File (Optional SVGA / GIF)
+                <div className="p-4 rounded-2xl bg-slate-950/60 border border-cyan-500/30">
+                  <label className="block text-xs font-semibold text-cyan-300 mb-1">
+                    Frame Animation File (SVGA / GIF / WebP) *
                   </label>
-                  <p className="text-[11px] text-slate-500 mb-3">
-                    Animated .svga or .gif for high-end glowing borders.
+                  <p className="text-[11px] text-slate-400 mb-3">
+                    Asli frame jo avatar par ghumega & popup me play hoga (.svga, .gif).
                   </p>
 
-                  <div className="flex items-center gap-3">
-                    <label className="flex-1 flex flex-col items-center justify-center p-3 border border-dashed border-slate-700 hover:border-cyan-500/50 rounded-xl cursor-pointer bg-slate-900/40 hover:bg-slate-900 transition">
-                      <Film size={20} className="text-cyan-400 mb-1" />
-                      <span className="text-[11px] text-slate-300 font-medium truncate max-w-[140px]">
-                        {uploadingField === 'animation'
-                          ? 'Uploading SVGA...'
-                          : formData.animationFileName || 'Upload .svga / .gif / .webp'}
-                      </span>
-                      <input
-                        type="file"
-                        accept=".svga,.gif,.webp,.png,.mp4"
-                        className="hidden"
-                        onChange={e => handleUploadAnimationFile(e.target.files?.[0])}
-                      />
-                    </label>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3">
+                      <label className="flex-1 flex flex-col items-center justify-center p-3 border border-dashed border-cyan-500/40 hover:border-cyan-400 rounded-xl cursor-pointer bg-slate-900/40 hover:bg-slate-900 transition">
+                        <Film size={20} className="text-cyan-400 mb-1" />
+                        <span className="text-[11px] text-slate-200 font-medium truncate max-w-[140px]">
+                          {uploadingField === 'animation'
+                            ? 'Uploading SVGA...'
+                            : formData.animationFileName || 'Upload .svga / .gif / .webp'}
+                        </span>
+                        <input
+                          type="file"
+                          accept=".svga,.gif,.webp,.png,.mp4"
+                          className="hidden"
+                          onChange={e => handleUploadAnimationFile(e.target.files?.[0])}
+                        />
+                      </label>
 
-                    {formData.animationUrl && (
-                      <div className="px-2.5 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono shrink-0">
-                        SVGA OK
-                      </div>
-                    )}
+                      {formData.animationUrl && (
+                        <div className="flex items-center gap-2">
+                          <div className="px-2.5 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono shrink-0">
+                            ✓ ACTIVE
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setFormData(p => ({ ...p, animationUrl: '', animationFileName: '' }))}
+                            className="text-xs text-rose-400 hover:text-rose-300 px-2 py-1 bg-rose-500/10 rounded-lg"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-1">
+                      <input
+                        type="text"
+                        placeholder="Ya direct Animation URL dalein (https://.../frame.svga)"
+                        value={formData.animationUrl}
+                        onChange={e => setFormData(p => ({ ...p, animationUrl: e.target.value.trim(), animationFileName: e.target.value.split('/').pop() || '' }))}
+                        className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-[11px] text-cyan-200 placeholder:text-slate-600 focus:outline-none focus:border-cyan-500 font-mono"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Live Preview Simulator */}
               {(formData.image || formData.animationUrl) && (
-                <div className="p-4 rounded-2xl bg-slate-950/80 border border-rose-500/20 flex items-center gap-4">
+                <div className="p-4 rounded-2xl bg-slate-950/80 border border-cyan-500/20 flex items-center gap-4">
                   <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
                     <div className="w-12 h-12 rounded-full overflow-hidden bg-purple-700">
                       <img
@@ -755,16 +777,30 @@ export default function StoreFramesPage() {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <img
-                      src={formData.animationUrl || formData.image}
-                      alt="Frame preview"
-                      className="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-[0_2px_8px_rgba(244,63,94,0.4)]"
-                    />
+                    {formData.animationUrl && !formData.animationUrl.includes('.svga') ? (
+                      <img
+                        src={formData.animationUrl}
+                        alt="Frame preview"
+                        className="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+                      />
+                    ) : formData.image ? (
+                      <img
+                        src={formData.image}
+                        alt="Frame preview"
+                        className="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 rounded-full border border-dashed border-amber-500/60 flex items-center justify-center pointer-events-none">
+                        <span className="text-[9px] font-mono text-amber-300 bg-slate-950/90 px-1 py-0.5 rounded">Preview Only</span>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <h4 className="text-xs font-semibold text-white">Live App Simulation</h4>
                     <p className="text-[11px] text-slate-400 mt-0.5">
-                      This is how user avatars will appear in voice chat rooms and profiles when equipped.
+                      {formData.animationUrl
+                        ? '✨ Avatar frame animation is active! This file will animate around user avatars.'
+                        : '⚠️ Frame Preview Image is uploaded. Avatar par animation frame lagane ke liye "Frame Animation File" attach karein.'}
                     </p>
                   </div>
                 </div>
