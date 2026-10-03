@@ -39,6 +39,7 @@ const storeSubmenu: SubmenuItem[] = [
     { name: 'Chat Bubbles', href: '/store/chat-bubbles' },
     { name: 'Themes', href: '/store/themes' },
     { name: 'Tassels', href: '/store/tassels' },
+    { name: 'Entry', href: '/store/entry' },
     { name: 'Entrance Effects', href: '/store/entries' },
     { name: 'Mic Waves', href: '/store/mic-waves' },
     { name: 'Profile Cards', href: '/store/profile-cards' },
