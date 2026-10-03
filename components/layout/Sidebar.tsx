@@ -7,6 +7,7 @@ import {
     LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift,
     Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
     MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell, ShoppingBag, Car,
+    Heart, Flame,
     type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -30,6 +31,25 @@ interface SidebarSection {
     title: string;
     items: SidebarItem[];
 }
+
+const storeSubmenu: SubmenuItem[] = [
+    { name: 'Store Overview', href: '/store' },
+    { name: 'Unique ID', href: '/store/unique-ids' },
+    { name: 'Frames', href: '/store/frames' },
+    { name: 'Chat Bubbles', href: '/store/chat-bubbles' },
+    { name: 'Themes', href: '/store/themes' },
+    { name: 'Tassels', href: '/store/tassels' },
+    { name: 'Entrance Effects', href: '/store/entries' },
+    { name: 'Mic Waves', href: '/store/mic-waves' },
+    { name: 'Profile Cards', href: '/store/profile-cards' },
+    { name: 'Room Cards', href: '/store/room-cards' },
+    { name: 'Profile Entries', href: '/store/profile-entries' },
+];
+
+const levelSubmenu: SubmenuItem[] = [
+    { name: 'Wealth Level (Gifter)', href: '/levels/wealth' },
+    { name: 'Charm Level (Host)', href: '/levels/charm' },
+];
 
 const sidebarSections: SidebarSection[] = [
     {
@@ -61,15 +81,24 @@ const sidebarSections: SidebarSection[] = [
         title: 'App Content & Economy',
         items: [
             { name: 'CMS Editor', href: '/cms', icon: FileText },
-            { name: 'Store Management', href: '/store', icon: ShoppingBag },
+            {
+                name: 'Store Management',
+                icon: ShoppingBag,
+                submenu: storeSubmenu,
+            },
+            { name: 'VIP Program', href: '/vip', icon: Crown },
+            { name: 'King of Kings', href: '/king-of-kings', icon: Flame },
+            {
+                name: 'Levels',
+                icon: Award,
+                submenu: levelSubmenu,
+            },
+            { name: 'Family System', href: '/family', icon: Users },
+            { name: 'CP (Couple) System', href: '/cp', icon: Heart },
+            { name: 'Gifts', href: '/gifts', icon: Gift },
+            { name: 'Avatars', href: '/avatars', icon: Award },
             { name: 'Banners', href: '/banners', icon: Layers },
             { name: 'Ads', href: '/ads', icon: Layers },
-            { name: 'VIP Program', href: '/vip', icon: Crown },
-            { name: 'Levels', href: '/levels', icon: Award },
-            { name: 'Gifts', href: '/gifts', icon: Gift },
-            { name: 'Frames', href: '/frames', icon: Sparkles },
-            { name: 'Entry Effects', href: '/entries', icon: Car },
-            { name: 'Avatars', href: '/avatars', icon: Award },
             { name: 'Content Moderation', href: '/moderation', icon: Settings }
         ]
     },

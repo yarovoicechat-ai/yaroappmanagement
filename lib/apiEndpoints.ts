@@ -177,4 +177,28 @@ export const API_ENDPOINTS = {
         TOGGLE: (id: string) => `/api/store/items/${id}/toggle`,
         RESET: '/api/store/reset-catalog',
     },
+
+    // Family System
+    FAMILY: {
+        LIST: '/api/family',
+        ADMIN_ALL: '/api/family/admin/all',
+        CREATE: '/api/family/create',
+        UPDATE: (id: string) => `/api/family/admin/${id}`,
+        DELETE: (id: string) => `/api/family/admin/${id}`,
+    },
+
+    // Couple (CP) System
+    CP: {
+        LIST: '/api/couple',
+        ADMIN_ALL: '/api/couple/admin/all',
+        UPDATE: (id: string) => `/api/couple/admin/${id}`,
+        DELETE: (id: string) => `/api/couple/admin/${id}`,
+    },
+
+    // System Config & Feature Flags
+    SYSTEM_CONFIG: {
+        GET: '/api/system-config',
+        TOGGLE: '/api/system-config/toggle',
+        UPDATE: '/api/system-config/update',
+    },
 } as const;
