@@ -27,10 +27,6 @@ export function proxy(request: NextRequest) {
         return NextResponse.next();
     }
 
-    if (!APP_MANAGEMENT_ROUTES.has(request.nextUrl.pathname)) {
-        return NextResponse.redirect(new URL('/', getPublicOrigin(request)));
-    }
-
     const token = request.cookies.get('admin_token');
 
     if (!token) {
