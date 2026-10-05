@@ -1,4 +1,4 @@
-import Sidebar from "@/components/layout/Sidebar";
+﻿import Sidebar from "@/components/layout/Sidebar";
 import TopHeader from "@/components/layout/TopHeader";
 
 export default function DashboardLayout({
@@ -8,7 +8,7 @@ export default function DashboardLayout({
 }>) {
     return (
         <div className="relative flex h-screen flex-col overflow-hidden bg-[#070a13] text-slate-100">
-            {/* Ambient Aurora Glow - Neon Yaro Signature */}
+            {/* Ambient Aurora Glow - Neon Dark Moon Signature */}
             <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
                 <div className="absolute -top-[25%] left-[10%] h-[600px] w-[600px] rounded-full bg-pink-500/[0.12] blur-[150px]" />
                 <div className="absolute top-[30%] -right-[10%] h-[550px] w-[550px] rounded-full bg-purple-600/[0.11] blur-[160px]" />

@@ -24,6 +24,8 @@ import {
   Check,
   Flame,
   Diamond,
+  UploadCloud,
+  FileImage,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/apiClient';
@@ -38,13 +40,15 @@ export type StoreCategory =
   | 'Entry'
   | 'Theme'
   | 'Tassel'
-  | 'VIP';
+  | 'VIP'
+  | 'King of Kings';
 
 export interface StoreItem {
   _id: string;
   name: string;
   category: string;
   price: number;
+  priceOptions?: { days: number; diamonds: number }[];
   validity: string;
   badgeText?: string;
   previewColor?: string;
@@ -60,6 +64,10 @@ export interface StoreItem {
   createdAt: string;
 }
 
+const durationPrice = (item: StoreItem, days: number) =>
+  item.priceOptions?.find(option => option.days === days)?.diamonds ??
+  Math.max(0, Math.round(item.price * (({ 3: 0.15, 7: 0.3, 15: 0.55, 30: 1 } as Record<number, number>)[days] || 1)));
+
 const CATEGORIES: { label: StoreCategory; icon: any; color: string }[] = [
   { label: 'All', icon: ShoppingBag, color: 'text-pink-400' },
   { label: 'Unique ID', icon: Tag, color: 'text-amber-400' },
@@ -70,6 +78,7 @@ const CATEGORIES: { label: StoreCategory; icon: any; color: string }[] = [
   { label: 'Theme', icon: Palette, color: 'text-purple-400' },
   { label: 'Tassel', icon: Layers, color: 'text-amber-300' },
   { label: 'VIP', icon: Crown, color: 'text-yellow-400' },
+  { label: 'King of Kings', icon: Crown, color: 'text-amber-300' },
 ];
 
 export default function StoreManagementPage() {
@@ -78,6 +87,7 @@ export default function StoreManagementPage() {
   const [selectedCategory, setSelectedCategory] = useState<StoreCategory>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
+  const [uploadingField, setUploadingField] = useState<'imageUrl' | 'animationUrl' | null>(null);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,6 +96,10 @@ export default function StoreManagementPage() {
     name: '',
     category: 'Unique ID',
     price: 1000,
+    price3Days: 150,
+    price7Days: 300,
+    price15Days: 550,
+    price30Days: 1000,
     validity: '30 Days',
     badgeText: 'HOT',
     previewColor: '#FF2A85',
@@ -97,6 +111,7 @@ export default function StoreManagementPage() {
     metadataNumber: '',
     metadataTag: '',
     metadataBanner: '',
+    metadataBenefits: '',
   });
 
   const fetchStoreItems = async () => {
@@ -128,6 +143,10 @@ export default function StoreManagementPage() {
       name: '',
       category: selectedCategory === 'All' ? 'Unique ID' : selectedCategory,
       price: 2500,
+      price3Days: 375,
+      price7Days: 750,
+      price15Days: 1375,
+      price30Days: 2500,
       validity: '30 Days',
       badgeText: 'HOT',
       previewColor: '#FF2A85',
@@ -139,6 +158,7 @@ export default function StoreManagementPage() {
       metadataNumber: '',
       metadataTag: '',
       metadataBanner: '',
+      metadataBenefits: '',
     });
     setIsModalOpen(true);
   };
@@ -149,6 +169,10 @@ export default function StoreManagementPage() {
       name: item.name,
       category: item.category,
       price: item.price,
+      price3Days: durationPrice(item, 3),
+      price7Days: durationPrice(item, 7),
+      price15Days: durationPrice(item, 15),
+      price30Days: durationPrice(item, 30),
       validity: item.validity || '30 Days',
       badgeText: item.badgeText || '',
       previewColor: item.previewColor || '#FF2A85',
@@ -160,6 +184,7 @@ export default function StoreManagementPage() {
       metadataNumber: item.metadata?.number || '',
       metadataTag: item.metadata?.tag || '',
       metadataBanner: item.metadata?.banner || '',
+      metadataBenefits: Array.isArray(item.metadata?.benefits) ? item.metadata.benefits.join('\n') : '',
     });
     setIsModalOpen(true);
   };
@@ -174,7 +199,13 @@ export default function StoreManagementPage() {
     const payload = {
       name: formData.name.trim(),
       category: formData.category,
-      price: Number(formData.price) || 0,
+      price: Number(formData.price30Days) || 0,
+      priceOptions: [
+        { days: 3, diamonds: Number(formData.price3Days) || 0 },
+        { days: 7, diamonds: Number(formData.price7Days) || 0 },
+        { days: 15, diamonds: Number(formData.price15Days) || 0 },
+        { days: 30, diamonds: Number(formData.price30Days) || 0 },
+      ],
       validity: formData.validity,
       badgeText: formData.badgeText,
       previewColor: formData.previewColor,
@@ -187,6 +218,7 @@ export default function StoreManagementPage() {
         number: formData.metadataNumber,
         tag: formData.metadataTag,
         banner: formData.metadataBanner,
+        benefits: formData.metadataBenefits.split(/\n|,/).map(value => value.trim()).filter(Boolean),
       },
     };
 
@@ -202,6 +234,30 @@ export default function StoreManagementPage() {
       fetchStoreItems();
     } catch (err: any) {
       toast.error(err?.message || 'Failed to save store item');
+    }
+  };
+
+  const handleAssetUpload = async (file: File | undefined, field: 'imageUrl' | 'animationUrl') => {
+    if (!file) return;
+    const isAnimation = field === 'animationUrl';
+    if (isAnimation && !/\.(svga|gif|webp|png)$/i.test(file.name)) {
+      toast.error('Animation file must be .svga, .gif, .webp, or .png');
+      return;
+    }
+
+    try {
+      setUploadingField(field);
+      const body = new FormData();
+      body.append('file', file);
+      const response = await apiClient.uploadFile<{ url: string }>('/api/upload/file', body);
+      const url = response.data?.url;
+      if (!url) throw new Error('Upload URL was not returned');
+      setFormData(current => ({ ...current, [field]: url }));
+      toast.success(`${isAnimation ? 'Item file' : 'Preview image'} uploaded`);
+    } catch (error: any) {
+      toast.error(error?.message || 'File upload failed');
+    } finally {
+      setUploadingField(null);
     }
   };
 
@@ -321,7 +377,7 @@ export default function StoreManagementPage() {
           </div>
           <div className="bg-slate-900/60 rounded-2xl p-4 border border-white/5 backdrop-blur-md">
             <p className="text-xs font-medium text-slate-400">Store Categories</p>
-            <p className="text-2xl font-black text-pink-400 mt-1">8 Active</p>
+                <p className="text-2xl font-black text-pink-400 mt-1">{CATEGORIES.length - 1} Available</p>
           </div>
           <div className="bg-slate-900/60 rounded-2xl p-4 border border-white/5 backdrop-blur-md">
             <p className="text-xs font-medium text-slate-400">Total Purchases</p>
@@ -433,7 +489,11 @@ export default function StoreManagementPage() {
                           boxShadow: `0 4px 14px ${item.previewColor || '#8B5CF6'}44`,
                         }}
                       >
-                        <Sparkles className="w-6 h-6" />
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt="" className="h-full w-full rounded-xl object-cover" />
+                        ) : (
+                          <Sparkles className="w-6 h-6" />
+                        )}
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -451,7 +511,7 @@ export default function StoreManagementPage() {
                         <div className="flex items-center gap-3 mt-3">
                           <div className="flex items-center gap-1.5 text-amber-400 font-extrabold text-xs">
                             <span className="text-sm">💎</span>
-                            <span>{item.price.toLocaleString()}</span>
+                            <span>From {durationPrice(item, 3).toLocaleString()}</span>
                           </div>
 
                           <span className="text-[11px] text-slate-500 font-medium">
@@ -612,7 +672,7 @@ export default function StoreManagementPage() {
                     </div>
                   )}
 
-                  {selectedItem.category === 'VIP' && (
+                  {(selectedItem.category === 'VIP' || selectedItem.category === 'King of Kings') && (
                     <div className="w-full bg-black/50 backdrop-blur-md rounded-2xl p-4 border border-purple-400/40 text-center">
                       <Crown className="w-10 h-10 text-yellow-400 mx-auto mb-1 animate-pulse" />
                       <p className="text-purple-300 font-black text-sm">{selectedItem.name}</p>
@@ -737,6 +797,33 @@ export default function StoreManagementPage() {
                 />
               </div>
 
+              <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Diamond className="h-4 w-4 text-cyan-400" />
+                  <p className="text-xs font-bold text-cyan-300">Duration-wise diamond pricing</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {([
+                    [3, 'price3Days'],
+                    [7, 'price7Days'],
+                    [15, 'price15Days'],
+                    [30, 'price30Days'],
+                  ] as const).map(([days, key]) => (
+                    <div key={days}>
+                      <label className="mb-1 block text-[11px] text-slate-400">{days} Days</label>
+                      <input
+                        type="number"
+                        min="0"
+                        required
+                        value={formData[key]}
+                        onChange={event => setFormData({ ...formData, [key]: Number(event.target.value) })}
+                        className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:border-cyan-500 focus:outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1.5">
@@ -757,14 +844,14 @@ export default function StoreManagementPage() {
 
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                    Price (Diamonds) *
+                    30-Day Price (Diamonds) *
                   </label>
                   <input
                     type="number"
                     min="0"
                     required
-                    value={formData.price}
-                    onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
+                    value={formData.price30Days}
+                    onChange={e => setFormData({ ...formData, price30Days: Number(e.target.value), price: Number(e.target.value) })}
                     className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-pink-500"
                   />
                 </div>
@@ -780,7 +867,9 @@ export default function StoreManagementPage() {
                     onChange={e => setFormData({ ...formData, validity: e.target.value })}
                     className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-pink-500"
                   >
+                    <option value="3 Days">3 Days</option>
                     <option value="7 Days">7 Days</option>
+                    <option value="15 Days">15 Days</option>
                     <option value="30 Days">30 Days</option>
                     <option value="90 Days">90 Days</option>
                     <option value="Permanent">Permanent</option>
@@ -886,6 +975,73 @@ export default function StoreManagementPage() {
                   />
                 </div>
               )}
+
+              {(formData.category === 'VIP' || formData.category === 'King of Kings' || formData.category === 'Entry' || formData.category === 'Frames') && (
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                    Included Items / Benefits
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="One item per line, e.g. Royal frame, Dragon entry, Anti-kick"
+                    value={formData.metadataBenefits}
+                    onChange={e => setFormData({ ...formData, metadataBenefits: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500"
+                  />
+                </div>
+              )}
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-4">
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-200">
+                    <FileImage className="h-4 w-4 text-pink-400" /> Item preview image
+                  </label>
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-600 px-3 py-3 text-xs font-semibold text-slate-300 hover:border-pink-500">
+                    <UploadCloud className="h-4 w-4" />
+                    {uploadingField === 'imageUrl' ? 'Uploading...' : 'Upload image'}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      className="hidden"
+                      disabled={uploadingField !== null}
+                      onChange={event => handleAssetUpload(event.target.files?.[0], 'imageUrl')}
+                    />
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="or paste image URL"
+                    value={formData.imageUrl}
+                    onChange={event => setFormData({ ...formData, imageUrl: event.target.value })}
+                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white"
+                  />
+                  {formData.imageUrl && <img src={formData.imageUrl} alt="Item preview" className="mt-3 h-24 w-full rounded-xl object-contain bg-slate-950" />}
+                </div>
+
+                <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-4">
+                  <label className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-200">
+                    <Sparkles className="h-4 w-4 text-violet-400" /> Item animation file
+                  </label>
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-600 px-3 py-3 text-xs font-semibold text-slate-300 hover:border-violet-500">
+                    <UploadCloud className="h-4 w-4" />
+                    {uploadingField === 'animationUrl' ? 'Uploading...' : 'Upload SVGA / GIF'}
+                    <input
+                      type="file"
+                      accept=".svga,image/gif,image/webp,image/png"
+                      className="hidden"
+                      disabled={uploadingField !== null}
+                      onChange={event => handleAssetUpload(event.target.files?.[0], 'animationUrl')}
+                    />
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="or paste animation URL"
+                    value={formData.animationUrl}
+                    onChange={event => setFormData({ ...formData, animationUrl: event.target.value })}
+                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white"
+                  />
+                  <p className="mt-2 text-[10px] text-slate-500">.svga is played natively in the mobile preview.</p>
+                </div>
+              </div>
 
               <div>
                 <label className="text-xs font-semibold text-slate-300 block mb-1.5">

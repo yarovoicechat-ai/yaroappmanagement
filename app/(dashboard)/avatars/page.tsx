@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/Button";
@@ -45,7 +45,7 @@ export default function AvatarsPage() {
                     ...avatar,
                     url: avatar.avatarUrl.startsWith('http')
                         ? avatar.avatarUrl
-                        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yaroapp.in'}${avatar.avatarUrl.startsWith('/') ? '' : '/'}${avatar.avatarUrl}`
+                        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.darkmoon.app'}${avatar.avatarUrl.startsWith('/') ? '' : '/'}${avatar.avatarUrl}`
                 }));
                 setAvatars(updatedAvatars);
             }

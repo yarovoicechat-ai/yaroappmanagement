@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/Badge";
@@ -69,7 +69,7 @@ export default function FramesPage() {
                     ...frame,
                     image: frame.image?.startsWith('http')
                         ? frame.image
-                        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yaroapp.in'}${frame.image?.startsWith('/') ? '' : '/'}${frame.image}`
+                        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.darkmoon.app'}${frame.image?.startsWith('/') ? '' : '/'}${frame.image}`
                 }));
                 setFrames(updatedFrames);
             }

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -147,7 +147,7 @@ export default function Sidebar() {
                             <div className="h-12 w-12 rounded-2xl p-[1.5px] bg-gradient-to-tr from-pink-500 via-purple-500 to-cyan-400 shadow-lg shadow-pink-500/30">
                                 <img
                                     src="/logo.png"
-                                    alt="Yaro Logo"
+                                    alt="Dark Moon Logo"
                                     className="h-full w-full rounded-[14px] object-cover"
                                 />
                             </div>
@@ -155,7 +155,7 @@ export default function Sidebar() {
                         </div>
                         <div className="flex-1 min-w-0">
                             <h1 className="text-lg font-black tracking-tight bg-gradient-to-r from-pink-400 via-purple-300 to-white bg-clip-text text-transparent">
-                                Yaro Studio
+                                Dark Moon Studio
                             </h1>
                             <div className="flex items-center gap-1.5 mt-0.5">
                                 <span className="h-1.5 w-1.5 rounded-full bg-pink-400 animate-ping" />

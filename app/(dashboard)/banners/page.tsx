@@ -52,7 +52,7 @@ const APP_PAGE_OPTIONS = [
     ['Wallet', 'Wallet / Recharge'], ['Level', 'Host Levels'], ['Frame', 'Profile Frames'],
     ['Withdrawal', 'Withdrawal'], ['Kyc', 'KYC Verification'], ['VerificationHub', 'Verification Center'],
     ['HelpAndSupport', 'Help & Support'], ['Notifications', 'Activity'], ['SystemMessage', 'System Messages'],
-    ['CallHistory', 'Call History'], ['Earning', 'Host Earnings'], ['ExchangeCoins', 'Exchange Coins'],
+    ['Earning', 'Host Earnings'],
     ['HostApply', 'Become a Host'], ['Setting', 'App Settings'], ['Profile', 'Profile'],
 ] as const;
 

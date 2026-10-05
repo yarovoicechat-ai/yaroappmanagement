@@ -4,8 +4,8 @@ import { Providers } from "@/components/Providers";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "Meethi Chat Management",
-  description: "App management panel for Meethi Chat",
+  title: "Dark Moon App Operations",
+  description: "App Operations and Management Center for Dark Moon",
 };
 
 export default function RootLayout({
