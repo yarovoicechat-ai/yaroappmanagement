@@ -37,7 +37,7 @@ const storeSubmenu: SubmenuItem[] = [
     { name: 'Unique ID', href: '/store/unique-ids' },
     { name: 'Frames', href: '/store/frames' },
     { name: 'Chat Bubbles', href: '/store/chat-bubbles' },
-    { name: 'Themes', href: '/store/themes' },
+    { name: 'Themes: Store & Room Tools', href: '/store/themes' },
     { name: 'Tassels', href: '/store/tassels' },
     { name: 'Entry', href: '/store/entry' },
     { name: 'Entrance Effects', href: '/store/entries' },
@@ -45,6 +45,8 @@ const storeSubmenu: SubmenuItem[] = [
     { name: 'Profile Cards', href: '/store/profile-cards' },
     { name: 'Room Cards', href: '/store/room-cards' },
     { name: 'Profile Entries', href: '/store/profile-entries' },
+    { name: 'VIP Packages', href: '/vip' },
+    { name: 'King of Kings', href: '/king-of-kings' },
 ];
 
 const levelSubmenu: SubmenuItem[] = [

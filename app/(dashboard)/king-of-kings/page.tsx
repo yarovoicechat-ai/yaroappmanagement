@@ -65,8 +65,8 @@ interface KingMember {
   userName: string;
   userAvatar: string;
   packageTier: string;
-  grantedAt: string;
-  expiresAt: string;
+  grantedAt: string | null;
+  expiresAt: string | null;
   status: 'active' | 'expired';
 }
 
@@ -154,36 +154,37 @@ const DEFAULT_KING_PACKAGES: KingPackage[] = [
   },
 ];
 
+const storeItemToKingPackage = (item: any, index: number): KingPackage => {
+  const metadata = item.metadata || {};
+  const fallback = DEFAULT_KING_PACKAGES[Math.min(index, DEFAULT_KING_PACKAGES.length - 1)];
+  const validityDays = Number.parseInt(String(item.validity || metadata.validityDays || 30), 10) || 30;
+  return {
+    _id: String(item._id || item.id),
+    name: item.name || fallback.name,
+    slug: metadata.vipSlug || metadata.slug || String(item.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    title: metadata.title || item.desc || fallback.title,
+    tierLevel: Number(metadata.tierLevel || index + 1),
+    priceDiamonds: Number(item.price || 0),
+    validityDays,
+    badge: item.badgeText || metadata.badge || fallback.badge,
+    crownImageUrl: item.imageUrl || metadata.crownImageUrl || '',
+    throneImageUrl: metadata.throneImageUrl || '',
+    entryBroadcastBanner: metadata.banner || metadata.entryBroadcastBanner || fallback.entryBroadcastBanner,
+    entrySoundName: metadata.entrySound || metadata.entrySoundName || '',
+    bubbleTheme: metadata.bubbleTheme || 'gold_emperor',
+    micWaveAura: metadata.micWaveAura || '#FFD700,#FF4500',
+    perks: { ...fallback.perks, ...(metadata.kokPerks || metadata.perks || {}) },
+    isActive: item.isActive !== false,
+  };
+};
+
 export default function KingOfKingsManagementPage() {
   const [activeTab, setActiveTab] = useState<'packages' | 'perks' | 'members' | 'preview'>('packages');
   const [packages, setPackages] = useState<KingPackage[]>(DEFAULT_KING_PACKAGES);
   const [loading, setLoading] = useState(false);
 
   // Members list
-  const [members, setMembers] = useState<KingMember[]>([
-    {
-      _id: 'km_1',
-      userId: '60c72b2f9b1d8b2badbee001',
-      userNumericId: '888888',
-      userName: 'Yaro Sovereign King',
-      userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop',
-      packageTier: 'King of Kings Supreme',
-      grantedAt: '2026-09-01',
-      expiresAt: '2026-10-31',
-      status: 'active',
-    },
-    {
-      _id: 'km_2',
-      userId: '60c72b2f9b1d8b2badbee002',
-      userNumericId: '777777',
-      userName: 'Royal Duchess Zara',
-      userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop',
-      packageTier: 'Grand Sovereign Emperor',
-      grantedAt: '2026-08-15',
-      expiresAt: '2026-11-15',
-      status: 'active',
-    },
-  ]);
+  const [members, setMembers] = useState<KingMember[]>([]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -192,7 +193,7 @@ export default function KingOfKingsManagementPage() {
   // Grant Modal
   const [isGrantModalOpen, setIsGrantModalOpen] = useState(false);
   const [grantNumericId, setGrantNumericId] = useState('');
-  const [grantSelectedPkg, setGrantSelectedPkg] = useState('King of Kings Supreme');
+  const [grantSelectedPkg, setGrantSelectedPkg] = useState('');
   const [grantDays, setGrantDays] = useState(30);
 
   // Form State
@@ -201,12 +202,22 @@ export default function KingOfKingsManagementPage() {
   const fetchKingData = async () => {
     try {
       setLoading(true);
-      // Try to fetch packages from store category "King of Kings" or system config
-      const res = await apiClient.get('/api/store/items', { category: 'King of Kings' }).catch(() => null);
-      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-        // Merge or populate
-      }
-    } catch (_) {
+      const [packageRes, memberRes] = await Promise.all([
+        apiClient.get('/api/store/items', { category: 'King of Kings' }),
+        apiClient.get('/api/store/king-members'),
+      ]);
+      const packagePayload: any = packageRes.data || {};
+      const rawPackages = Array.isArray(packagePayload) ? packagePayload : (packagePayload.items || []);
+      const mappedPackages = rawPackages
+        .filter((item: any) => item.category === 'King of Kings')
+        .map(storeItemToKingPackage);
+      setPackages(mappedPackages.length ? mappedPackages : DEFAULT_KING_PACKAGES);
+      setGrantSelectedPkg(current => current || mappedPackages[0]?._id || '');
+
+      const memberPayload: any = memberRes.data || {};
+      setMembers(Array.isArray(memberPayload) ? memberPayload : (memberPayload.members || []));
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to sync King of Kings data');
     } finally {
       setLoading(false);
     }

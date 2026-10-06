@@ -15,6 +15,11 @@ export interface User {
     role: 'owner' | 'superAdmin' | 'admin' | 'coinSeller' | 'host' | 'user';
     authType: 'phone' | 'google' | 'email';
     coins: number;
+    level?: number;
+    wealthLevel?: number;
+    wealthExp?: number;
+    charmLevel?: number;
+    charmExp?: number;
     image?: string;
     isDeleted: boolean;
     isOnline: boolean;

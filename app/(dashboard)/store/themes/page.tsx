@@ -16,6 +16,7 @@ export default function ThemesStorePage() {
       extraFieldLabel="Theme Style / Ambient Sound Tag"
       extraFieldKey="themeStyle"
       extraFieldPlaceholder="e.g. Cyberpunk, Royal Castle, Romantic Rose"
+      enableThemePlacement
     />
   );
 }

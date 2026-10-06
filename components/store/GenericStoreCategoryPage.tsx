@@ -50,6 +50,7 @@ interface Props {
   extraFieldLabel?: string;
   extraFieldKey?: string;
   extraFieldPlaceholder?: string;
+  enableThemePlacement?: boolean;
 }
 
 export default function GenericStoreCategoryPage({
@@ -62,6 +63,7 @@ export default function GenericStoreCategoryPage({
   extraFieldLabel,
   extraFieldKey,
   extraFieldPlaceholder,
+  enableThemePlacement = false,
 }: Props) {
   const [items, setItems] = useState<GenericStoreItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,6 +91,8 @@ export default function GenericStoreCategoryPage({
     animationFileName: '',
     desc: '',
     extraValue: '',
+    themeLocation: 'STORE' as 'STORE' | 'ROOM_TOOL' | 'BOTH',
+    isFree: false,
     isActive: true,
   });
 
@@ -131,6 +135,8 @@ export default function GenericStoreCategoryPage({
       animationFileName: '',
       desc: '',
       extraValue: '',
+      themeLocation: 'STORE',
+      isFree: false,
       isActive: true,
     });
     setIsModalOpen(true);
@@ -159,6 +165,10 @@ export default function GenericStoreCategoryPage({
       animationFileName: item.animationUrl ? item.animationUrl.split('/').pop() || 'Existing animation' : '',
       desc: item.desc || '',
       extraValue: extraFieldKey && item.metadata ? String(item.metadata[extraFieldKey] || '') : '',
+      themeLocation: (['STORE', 'ROOM_TOOL', 'BOTH'].includes(String(item.metadata?.themeLocation || '').toUpperCase())
+        ? String(item.metadata?.themeLocation).toUpperCase()
+        : 'STORE') as 'STORE' | 'ROOM_TOOL' | 'BOTH',
+      isFree: Boolean(item.metadata?.isFree || item.price === 0),
       isActive: item.isActive !== false,
     });
     setIsModalOpen(true);
@@ -233,10 +243,14 @@ export default function GenericStoreCategoryPage({
       return;
     }
 
-    const price = Number(formData.price30Days) || Number(formData.price) || 0;
-    const metadata: Record<string, any> = {};
+    const price = formData.isFree ? 0 : Math.max(0, Number(formData.price30Days) || Number(formData.price) || 0);
+    const metadata: Record<string, any> = { ...(editingItem?.metadata || {}) };
     if (extraFieldKey && formData.extraValue) {
       metadata[extraFieldKey] = formData.extraValue.trim();
+    }
+    if (enableThemePlacement) {
+      metadata.themeLocation = formData.themeLocation;
+      metadata.isFree = formData.isFree;
     }
 
     const payload = {
@@ -244,13 +258,13 @@ export default function GenericStoreCategoryPage({
       category: categoryName,
       price,
       priceOptions: [
-        { days: 3, diamonds: Number(formData.price3Days) || Math.round(price * 0.15) },
-        { days: 7, diamonds: Number(formData.price7Days) || Math.round(price * 0.3) },
-        { days: 15, diamonds: Number(formData.price15Days) || Math.round(price * 0.55) },
+        { days: 3, diamonds: formData.isFree ? 0 : Math.max(0, Number(formData.price3Days) || Math.round(price * 0.15)) },
+        { days: 7, diamonds: formData.isFree ? 0 : Math.max(0, Number(formData.price7Days) || Math.round(price * 0.3)) },
+        { days: 15, diamonds: formData.isFree ? 0 : Math.max(0, Number(formData.price15Days) || Math.round(price * 0.55)) },
         { days: 30, diamonds: price },
       ],
-      validity: formData.validity,
-      badgeText: formData.badgeText,
+      validity: formData.isFree ? 'Permanent' : formData.validity,
+      badgeText: formData.isFree ? 'FREE' : formData.badgeText,
       previewColor: formData.previewColor,
       imageUrl: formData.image,
       image: formData.image,
@@ -524,6 +538,22 @@ export default function GenericStoreCategoryPage({
                         </span>
                       </div>
                     )}
+                    {enableThemePlacement && (
+                      <div className="mt-2 flex items-center justify-center gap-1.5">
+                        <span className="px-2 py-0.5 rounded text-[10px] bg-violet-500/10 text-violet-300 border border-violet-500/20">
+                          {item.metadata?.themeLocation === 'ROOM_TOOL'
+                            ? 'Room Tool'
+                            : item.metadata?.themeLocation === 'BOTH'
+                              ? 'Store + Room Tool'
+                              : 'Store'}
+                        </span>
+                        {(item.metadata?.isFree || item.price === 0) && (
+                          <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                            Free
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Pricing */}
@@ -664,6 +694,56 @@ export default function GenericStoreCategoryPage({
                 </div>
               )}
 
+              {enableThemePlacement && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-2xl bg-violet-500/5 border border-violet-500/20">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                      Theme Location
+                    </label>
+                    <select
+                      value={formData.themeLocation}
+                      onChange={e => setFormData(prev => ({
+                        ...prev,
+                        themeLocation: e.target.value as 'STORE' | 'ROOM_TOOL' | 'BOTH',
+                      }))}
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none"
+                    >
+                      <option value="STORE">Store only</option>
+                      <option value="ROOM_TOOL">Room Tool only</option>
+                      <option value="BOTH">Store + Room Tool</option>
+                    </select>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Room Tool themes appear inside the room owner Theme picker.
+                    </p>
+                  </div>
+                  <label className="flex items-center justify-between gap-4 p-3 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer self-start">
+                    <div>
+                      <div className="text-xs font-semibold text-white">Free Room Theme</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">No purchase or inventory ownership required</div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={formData.isFree}
+                      onChange={e => {
+                        const isFree = e.target.checked;
+                        setFormData(prev => ({
+                          ...prev,
+                          isFree,
+                          price: isFree ? 0 : (prev.price || defaultPrice),
+                          price3Days: isFree ? 0 : (prev.price3Days || Math.round(defaultPrice * 0.15)),
+                          price7Days: isFree ? 0 : (prev.price7Days || Math.round(defaultPrice * 0.3)),
+                          price15Days: isFree ? 0 : (prev.price15Days || Math.round(defaultPrice * 0.55)),
+                          price30Days: isFree ? 0 : (prev.price30Days || defaultPrice),
+                          badgeText: isFree ? 'FREE' : (prev.badgeText === 'FREE' ? 'HOT' : prev.badgeText),
+                          validity: isFree ? 'Permanent' : (prev.validity === 'Permanent' ? '30 Days' : prev.validity),
+                        }));
+                      }}
+                      className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+                    />
+                  </label>
+                </div>
+              )}
+
               {/* Uploads Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
@@ -729,6 +809,7 @@ export default function GenericStoreCategoryPage({
                     <input
                       type="number"
                       value={formData.price3Days}
+                      disabled={formData.isFree}
                       onChange={e => setFormData(prev => ({ ...prev, price3Days: Number(e.target.value) }))}
                       className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white"
                     />
@@ -738,6 +819,7 @@ export default function GenericStoreCategoryPage({
                     <input
                       type="number"
                       value={formData.price7Days}
+                      disabled={formData.isFree}
                       onChange={e => setFormData(prev => ({ ...prev, price7Days: Number(e.target.value) }))}
                       className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white"
                     />
@@ -747,6 +829,7 @@ export default function GenericStoreCategoryPage({
                     <input
                       type="number"
                       value={formData.price15Days}
+                      disabled={formData.isFree}
                       onChange={e => setFormData(prev => ({ ...prev, price15Days: Number(e.target.value) }))}
                       className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white"
                     />
@@ -756,6 +839,7 @@ export default function GenericStoreCategoryPage({
                     <input
                       type="number"
                       value={formData.price30Days}
+                      disabled={formData.isFree}
                       onChange={e => handleBasePriceChange(Number(e.target.value))}
                       className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-amber-400 font-bold"
                     />

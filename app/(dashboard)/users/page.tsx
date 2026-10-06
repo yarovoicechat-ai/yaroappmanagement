@@ -31,7 +31,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/AlertDialog";
-import { Ban, Edit2, Search, ShieldCheck, UserPlus, Trash2, CheckCircle, Save, Users, UserCheck, Coins } from "lucide-react";
+import { Ban, Edit2, Search, ShieldCheck, UserPlus, Trash2, CheckCircle, Save, Users, UserCheck, Coins, Award, Sparkles } from "lucide-react";
 import { toast } from 'sonner';
 import { Pagination } from "@/components/ui/Pagination";
 import { apiClient } from '@/lib/apiClient';
@@ -65,6 +65,14 @@ export default function UsersPage() {
     const [isAddCoinsOpen, setIsAddCoinsOpen] = useState(false);
     const [selectedUserForCoins, setSelectedUserForCoins] = useState<User | null>(null);
     const [coinsAmount, setCoinsAmount] = useState('');
+
+    // Level Management State
+    const [isLevelModalOpen, setIsLevelModalOpen] = useState(false);
+    const [selectedUserForLevel, setSelectedUserForLevel] = useState<User | null>(null);
+    const [levelType, setLevelType] = useState<'wealth' | 'charm'>('wealth');
+    const [expDelta, setExpDelta] = useState('');
+    const [adjustReason, setAdjustReason] = useState('');
+    const [adjustLoading, setAdjustLoading] = useState(false);
 
     useEffect(() => {
         fetchUsers(pagination.currentPage);
@@ -198,6 +206,39 @@ export default function UsersPage() {
         }
     };
 
+    const handleAdjustExp = async () => {
+        if (!selectedUserForLevel || !expDelta) return;
+
+        const delta = parseInt(expDelta);
+        if (isNaN(delta) || delta === 0) {
+            toast.error("Please enter a non-zero integer EXP amount");
+            return;
+        }
+
+        try {
+            setAdjustLoading(true);
+            const response = await apiClient.post('/api/level/admin/adjust-exp', {
+                userId: selectedUserForLevel.userId || selectedUserForLevel._id,
+                type: levelType,
+                expDelta: delta,
+                reason: adjustReason || 'Admin manual adjustment'
+            });
+
+            if (response.success) {
+                toast.success(`Successfully adjusted ${levelType} EXP by ${delta}`);
+                setIsLevelModalOpen(false);
+                setExpDelta('');
+                setAdjustReason('');
+                setSelectedUserForLevel(null);
+                fetchUsers(pagination.currentPage);
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to adjust user EXP');
+        } finally {
+            setAdjustLoading(false);
+        }
+    };
+
     // Client-side search (temporary until backend supports it)
     const filteredUsers = users.filter(user =>
         user.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -291,6 +332,7 @@ export default function UsersPage() {
                                     <TableRow className="hover:bg-transparent border-slate-700/50">
                                         <TableHead>User</TableHead>
                                         <TableHead>Role</TableHead>
+                                        <TableHead>Levels</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Joined</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
@@ -318,6 +360,18 @@ export default function UsersPage() {
                                                 <div className="flex items-center gap-1.5">
                                                     {(user.role === 'admin' || user.role === 'superAdmin' || user.role === 'owner') && <ShieldCheck className="h-3 w-3 text-primary" />}
                                                     <span className={(user.role === 'admin' || user.role === 'superAdmin' || user.role === 'owner') ? "text-primary font-bold" : ""}>{user.role}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col gap-1 text-xs">
+                                                    <span className="inline-flex items-center gap-1 font-semibold text-amber-400">
+                                                        💎 Lv.{user.wealthLevel || user.level || 1}
+                                                        <span className="text-slate-500 font-normal">({user.wealthExp || 0} EXP)</span>
+                                                    </span>
+                                                    <span className="inline-flex items-center gap-1 font-semibold text-pink-400">
+                                                        🌸 Lv.{user.charmLevel || 1}
+                                                        <span className="text-slate-500 font-normal">({user.charmExp || 0} EXP)</span>
+                                                    </span>
                                                 </div>
                                             </TableCell>
                                             <TableCell>
@@ -350,6 +404,21 @@ export default function UsersPage() {
                                                         title="Add Coins"
                                                     >
                                                         <Coins className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+                                                        onClick={() => {
+                                                            setSelectedUserForLevel(user);
+                                                            setLevelType('wealth');
+                                                            setExpDelta('');
+                                                            setAdjustReason('');
+                                                            setIsLevelModalOpen(true);
+                                                        }}
+                                                        title="Manage Level & EXP"
+                                                    >
+                                                        <Award className="h-4 w-4" />
                                                     </Button>
                                                     <Button
                                                         variant="ghost"
@@ -505,6 +574,102 @@ export default function UsersPage() {
                         <Button variant="outline" onClick={() => setIsAddCoinsOpen(false)}>Cancel</Button>
                         <Button onClick={handleAddCoins} className="bg-yellow-600 hover:bg-yellow-500 text-white">
                             <Coins className="mr-2 h-4 w-4" /> Add Coins
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Adjust Level & EXP Dialog */}
+            <Dialog open={isLevelModalOpen} onOpenChange={setIsLevelModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Award className="h-5 w-5 text-purple-400" /> Adjust User Level & EXP
+                        </DialogTitle>
+                        <DialogDescription>
+                            Configure Wealth or Charm progression for <span className="font-semibold text-slate-200">{selectedUserForLevel?.name}</span>. All manual adjustments are audited and recalculate user tier automatically.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        {/* Current User Status Summary */}
+                        <div className="grid grid-cols-2 gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+                            <div>
+                                <div className="text-xs text-slate-400">Wealth Level</div>
+                                <div className="text-base font-bold text-amber-400 flex items-center gap-1">
+                                    💎 Lv.{selectedUserForLevel?.wealthLevel || selectedUserForLevel?.level || 1}
+                                    <span className="text-xs text-slate-400 font-normal">({selectedUserForLevel?.wealthExp || 0} EXP)</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-xs text-slate-400">Charm Level</div>
+                                <div className="text-base font-bold text-pink-400 flex items-center gap-1">
+                                    🌸 Lv.{selectedUserForLevel?.charmLevel || 1}
+                                    <span className="text-xs text-slate-400 font-normal">({selectedUserForLevel?.charmExp || 0} EXP)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Progression System Toggle */}
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label className="text-right text-sm text-slate-400">System</label>
+                            <div className="col-span-3 flex gap-2">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={levelType === 'wealth' ? 'default' : 'outline'}
+                                    className={levelType === 'wealth' ? 'bg-amber-600 hover:bg-amber-500 text-white' : ''}
+                                    onClick={() => setLevelType('wealth')}
+                                >
+                                    💎 Wealth
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={levelType === 'charm' ? 'default' : 'outline'}
+                                    className={levelType === 'charm' ? 'bg-pink-600 hover:bg-pink-500 text-white' : ''}
+                                    onClick={() => setLevelType('charm')}
+                                >
+                                    🌸 Charm
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* EXP Delta Input */}
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label htmlFor="exp-delta" className="text-right text-sm text-slate-400">EXP Delta</label>
+                            <Input
+                                id="exp-delta"
+                                type="number"
+                                className="col-span-3"
+                                value={expDelta}
+                                onChange={(e) => setExpDelta(e.target.value)}
+                                placeholder="e.g. +5000 or -1000"
+                            />
+                        </div>
+
+                        {/* Reason / Audit Note */}
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label htmlFor="adjust-reason" className="text-right text-sm text-slate-400">Reason</label>
+                            <Input
+                                id="adjust-reason"
+                                type="text"
+                                className="col-span-3"
+                                value={adjustReason}
+                                onChange={(e) => setAdjustReason(e.target.value)}
+                                placeholder="Audit note (e.g. Event bonus / compensation)"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsLevelModalOpen(false)} disabled={adjustLoading}>
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleAdjustExp}
+                            disabled={adjustLoading}
+                            className={levelType === 'wealth' ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-pink-600 hover:bg-pink-500 text-white'}
+                        >
+                            {adjustLoading ? 'Applying...' : 'Apply EXP Adjustment'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
