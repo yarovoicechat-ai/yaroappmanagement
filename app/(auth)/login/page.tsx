@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -59,7 +59,7 @@ export default function LoginPage() {
                 <Card className="bg-[#0d1222]/85 border-white/10 backdrop-blur-2xl shadow-2xl shadow-black/80 rounded-3xl overflow-hidden">
                     <CardHeader className="text-center pb-2 pt-6">
                         <div className="relative mx-auto mb-3 h-16 w-16 overflow-hidden rounded-2xl border-2 border-pink-500/40 bg-slate-950 shadow-[0_0_24px_rgba(236,72,153,0.35)] p-0.5">
-                            <Image src="/logo.png" alt="Dark Moon Logo" width={64} height={64} className="rounded-[14px] object-cover" priority />
+                            <Image src="/logo.png" alt="YARO Logo" width={64} height={64} className="rounded-[14px] object-cover" priority />
                         </div>
                         <CardTitle className="text-xl font-bold text-white tracking-tight">
                             Console Access

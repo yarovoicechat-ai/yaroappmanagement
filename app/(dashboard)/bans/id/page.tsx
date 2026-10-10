@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
@@ -184,7 +184,7 @@ export default function IdBansPage() {
                     setVerifiedUser({
                         userId: cleanedId,
                         name: `Pre-Registered Account #${cleanedId}`,
-                        email: `user_${cleanedId}@darkmoon.app`,
+                        email: `user_${cleanedId}@yaroapp.in`,
                         isBlocked: false,
                         isMock: true
                     });

@@ -6,11 +6,15 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'api.darkmoon.app',
+        hostname: 'api.yaroapp.in',
       },
       {
         protocol: 'https',
-        hostname: 'darkmoon.app',
+        hostname: 'yaroapp.in',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
       },
     ],
   },

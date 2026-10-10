@@ -4,8 +4,8 @@ import { Providers } from "@/components/Providers";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "Dark Moon App Operations",
-  description: "App Operations and Management Center for Dark Moon",
+  title: "YARO App Operations",
+  description: "App Operations and Management Center for YARO",
 };
 
 export default function RootLayout({

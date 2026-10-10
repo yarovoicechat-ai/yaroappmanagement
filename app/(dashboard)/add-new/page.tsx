@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -99,7 +99,7 @@ export default function AddNewEntityPage() {
                                     <label className="text-sm font-semibold text-slate-300">Email Address</label>
                                     <Input
                                         type="email"
-                                        placeholder="e.g. testing@darkmoon.app"
+                                        placeholder="e.g. testing@yaroapp.in"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
