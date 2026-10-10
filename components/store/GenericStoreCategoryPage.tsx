@@ -213,9 +213,9 @@ export default function GenericStoreCategoryPage({
   const handleUploadAnimationFile = async (file: File | undefined) => {
     if (!file) return;
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
-    const allowed = ['svga', 'gif', 'webp', 'png', 'mp4'];
+    const allowed = ['svga', 'gif', 'webp', 'png', 'jpg', 'jpeg', 'mp4'];
     if (!allowed.includes(ext)) {
-      toast.error(`Invalid format .${ext}. Allowed: .svga, .gif, .webp, .png, .mp4`);
+      toast.error(`Invalid format .${ext}. Allowed: .svga, .gif, .webp, .png, .jpg, .jpeg, .mp4`);
       return;
     }
 
@@ -227,8 +227,15 @@ export default function GenericStoreCategoryPage({
       const url = res.data?.url || (res as any).url;
       if (!url) throw new Error('Animation URL not returned');
 
-      setFormData(prev => ({ ...prev, animationUrl: url, animationFileName: file.name }));
-      toast.success(`Animation asset (.${ext}) uploaded!`);
+      setFormData(prev => ({
+        ...prev,
+        animationUrl: url,
+        animationFileName: file.name,
+        // Auto-fill preview image if empty and uploading an image format
+        image: prev.image || (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext) ? url : prev.image),
+        imageName: prev.imageName || (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext) ? file.name : prev.imageName),
+      }));
+      toast.success(`Theme asset (.${ext}) uploaded!`);
     } catch (err: any) {
       toast.error(err?.message || 'Failed to upload animation');
     } finally {
@@ -253,6 +260,9 @@ export default function GenericStoreCategoryPage({
       metadata.isFree = formData.isFree;
     }
 
+    const resolvedImage = formData.image || formData.animationUrl;
+    const resolvedAnimation = formData.animationUrl || formData.image;
+
     const payload = {
       name: formData.name.trim(),
       category: categoryName,
@@ -266,9 +276,9 @@ export default function GenericStoreCategoryPage({
       validity: formData.isFree ? 'Permanent' : formData.validity,
       badgeText: formData.isFree ? 'FREE' : formData.badgeText,
       previewColor: formData.previewColor,
-      imageUrl: formData.image,
-      image: formData.image,
-      animationUrl: formData.animationUrl,
+      imageUrl: resolvedImage,
+      image: resolvedImage,
+      animationUrl: resolvedAnimation,
       desc: formData.desc || `Exclusive ${categoryTitle}: ${formData.name}`,
       isActive: formData.isActive,
       metadata,
@@ -774,21 +784,31 @@ export default function GenericStoreCategoryPage({
 
                 <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
                   <label className="block text-xs font-semibold text-slate-200 mb-1">
-                    Animation File (.svga, .gif, .webp, .mp4)
+                    Animation File / Theme Asset (.svga, .gif, .webp, .png, .jpg, .mp4)
                   </label>
                   <div className="flex items-center gap-3 mt-3">
                     <label className="flex-1 flex flex-col items-center justify-center p-3 border border-dashed border-slate-700 hover:border-cyan-500/50 rounded-xl cursor-pointer bg-slate-900/40 transition">
                       <Film size={20} className="text-cyan-400 mb-1" />
                       <span className="text-[11px] text-slate-300 font-medium truncate max-w-[140px]">
-                        {uploadingField === 'animation' ? 'Uploading...' : formData.animationFileName || 'Upload Animation'}
+                        {uploadingField === 'animation' ? 'Uploading...' : formData.animationFileName || 'Upload Asset / Image'}
                       </span>
                       <input
                         type="file"
-                        accept=".svga,.gif,.webp,.png,.mp4"
+                        accept=".svga,.gif,.webp,.png,.jpg,.jpeg,.mp4"
                         className="hidden"
                         onChange={e => handleUploadAnimationFile(e.target.files?.[0])}
                       />
                     </label>
+
+                    {formData.animationUrl && (
+                      <div className="w-14 h-14 rounded-xl border border-slate-800 bg-slate-900 p-1 flex items-center justify-center shrink-0 overflow-hidden">
+                        {formData.animationUrl.match(/\.(mp4|webm)$/i) ? (
+                          <video src={formData.animationUrl} className="w-full h-full object-cover rounded-lg" autoPlay loop muted />
+                        ) : (
+                          <img src={formData.animationUrl} alt="Animation Preview" className="w-full h-full object-contain" />
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
