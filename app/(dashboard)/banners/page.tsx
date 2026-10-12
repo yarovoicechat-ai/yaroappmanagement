@@ -26,6 +26,7 @@ interface Banner {
     _id: string;
     title: string;
     imageUrl: string;
+    placement?: 'home' | 'oneToOne' | 'party';
     linkUrl: string;
     targetType: 'none' | 'internal' | 'external';
     targetScreen: string;
@@ -40,6 +41,7 @@ interface EditFormState {
     _id: string;
     title: string;
     imageUrl: string;
+    placement: 'home' | 'oneToOne' | 'party';
     linkUrl: string;
     targetType: 'none' | 'internal' | 'external';
     targetScreen: string;
@@ -66,6 +68,7 @@ export default function BannersPage() {
 
     // Form states for create
     const [title, setTitle] = useState('');
+    const [placement, setPlacement] = useState<'home' | 'oneToOne' | 'party'>('home');
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState('');
     const [linkName, setLinkName] = useState('');
@@ -223,6 +226,7 @@ export default function BannersPage() {
             const response = await apiClient.post('/api/admin/banners', {
                 title,
                 imageUrl: uploadedImageUrl,
+                placement,
                 linkUrl: targetType === 'external' ? linkName : '',
                 targetType,
                 targetScreen: targetType === 'internal' ? targetScreen : '',
@@ -234,6 +238,7 @@ export default function BannersPage() {
             if (response.success) {
                 toast.success('Banner created successfully');
                 setTitle('');
+                setPlacement('home');
                 setImageFile(null);
                 setImagePreview('');
                 setLinkName('');
@@ -258,6 +263,7 @@ export default function BannersPage() {
             _id: banner._id,
             title: banner.title,
             imageUrl: banner.imageUrl,
+            placement: banner.placement || 'home',
             linkUrl: banner.linkUrl || '',
             targetType: banner.targetType || (banner.linkUrl ? 'external' : 'none'),
             targetScreen: banner.targetScreen || '',
@@ -292,6 +298,7 @@ export default function BannersPage() {
             const response = await apiClient.patch(`/api/admin/banners/${editingBanner._id}`, {
                 title: editingBanner.title,
                 imageUrl,
+                placement: editingBanner.placement,
                 linkUrl: editingBanner.targetType === 'external' ? editingBanner.linkUrl : '',
                 targetType: editingBanner.targetType,
                 targetScreen: editingBanner.targetType === 'internal' ? editingBanner.targetScreen : '',
@@ -473,6 +480,9 @@ export default function BannersPage() {
                                         <TableCell className="py-3.5">
                                             <div className="space-y-1">
                                                 <p className="font-bold text-slate-100 text-sm">{banner.title}</p>
+                                                <span className="inline-flex rounded-md border border-violet-500/20 bg-violet-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-300">
+                                                    {banner.placement === 'oneToOne' ? '1-to-1' : banner.placement === 'party' ? 'Party' : 'Home'}
+                                                </span>
                                                 {banner.targetType === 'internal' && banner.targetScreen ? (
                                                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">
                                                         <Smartphone size={11} /> App: {banner.targetScreen}
@@ -600,6 +610,20 @@ export default function BannersPage() {
                                         required
                                         className="bg-slate-900 border-slate-800 text-slate-100"
                                     />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Show Banner In *</label>
+                                    <select
+                                        required
+                                        className="h-10 w-full rounded-xl border border-slate-800 bg-slate-900 px-3 text-xs font-medium text-slate-200 focus:border-pink-500 focus:outline-none"
+                                        value={placement}
+                                        onChange={(e) => setPlacement(e.target.value as 'home' | 'oneToOne' | 'party')}
+                                    >
+                                        <option value="home">Home</option>
+                                        <option value="oneToOne">1-to-1</option>
+                                        <option value="party">Party</option>
+                                    </select>
                                 </div>
 
                                 {/* Image Upload & Preview */}
@@ -832,6 +856,20 @@ export default function BannersPage() {
                                         required
                                         className="bg-slate-900 border-slate-800 text-slate-100"
                                     />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Show Banner In *</label>
+                                    <select
+                                        required
+                                        className="h-10 w-full rounded-xl border border-slate-800 bg-slate-900 px-3 text-xs font-medium text-slate-200 focus:border-blue-500 focus:outline-none"
+                                        value={editingBanner.placement}
+                                        onChange={(e) => setEditingBanner({ ...editingBanner, placement: e.target.value as 'home' | 'oneToOne' | 'party' })}
+                                    >
+                                        <option value="home">Home</option>
+                                        <option value="oneToOne">1-to-1</option>
+                                        <option value="party">Party</option>
+                                    </select>
                                 </div>
 
                                 {/* Image */}
