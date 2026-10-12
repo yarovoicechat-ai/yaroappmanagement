@@ -38,6 +38,7 @@ const storeSubmenu: SubmenuItem[] = [
     { name: 'Frames', href: '/store/frames' },
     { name: 'Chat Bubbles', href: '/store/chat-bubbles' },
     { name: 'Themes: Store & Room Tools', href: '/store/themes' },
+    { name: 'Seat Skins: Store & Room Tools', href: '/store/seat-skins' },
     { name: 'Tassels', href: '/store/tassels' },
     { name: 'Entry', href: '/store/entry' },
     { name: 'Entrance Effects', href: '/store/entries' },

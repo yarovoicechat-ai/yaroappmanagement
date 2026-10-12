@@ -257,6 +257,7 @@ export default function GenericStoreCategoryPage({
     }
     if (enableThemePlacement) {
       metadata.themeLocation = formData.themeLocation;
+      metadata.seatSkinLocation = formData.themeLocation;
       metadata.isFree = formData.isFree;
     }
 
@@ -708,7 +709,7 @@ export default function GenericStoreCategoryPage({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-2xl bg-violet-500/5 border border-violet-500/20">
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                      Theme Location
+                      {categoryName === 'Seat Skin' ? 'Seat Skin Location' : 'Theme Location'}
                     </label>
                     <select
                       value={formData.themeLocation}
@@ -723,12 +724,16 @@ export default function GenericStoreCategoryPage({
                       <option value="BOTH">Store + Room Tool</option>
                     </select>
                     <p className="text-[10px] text-slate-500 mt-1">
-                      Room Tool themes appear inside the room owner Theme picker.
+                      {categoryName === 'Seat Skin'
+                        ? 'Room Tool seat skins appear inside the room owner Seat Skins picker.'
+                        : 'Room Tool themes appear inside the room owner Theme picker.'}
                     </p>
                   </div>
                   <label className="flex items-center justify-between gap-4 p-3 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer self-start">
                     <div>
-                      <div className="text-xs font-semibold text-white">Free Room Theme</div>
+                      <div className="text-xs font-semibold text-white">
+                        {categoryName === 'Seat Skin' ? 'Free Room Seat Skin' : 'Free Room Theme'}
+                      </div>
                       <div className="text-[10px] text-slate-500 mt-0.5">No purchase or inventory ownership required</div>
                     </div>
                     <input
