@@ -7,7 +7,7 @@ import {
     LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift,
     Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
     MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell, ShoppingBag, Car,
-    Heart, Flame,
+    Heart, Flame, Radio,
     type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -34,6 +34,7 @@ interface SidebarSection {
 
 const storeSubmenu: SubmenuItem[] = [
     { name: 'Store Overview', href: '/store' },
+    { name: '🎁 Asset Distribution', href: '/store/distribute' },
     { name: 'Unique ID', href: '/store/unique-ids' },
     { name: 'Frames', href: '/store/frames' },
     { name: 'Chat Bubbles', href: '/store/chat-bubbles' },
@@ -84,6 +85,8 @@ const sidebarSections: SidebarSection[] = [
     {
         title: 'App Content & Economy',
         items: [
+            { name: 'Live Rooms (Pin)', href: '/rooms', icon: Radio },
+            { name: 'Asset Distribution', href: '/store/distribute', icon: Sparkles },
             { name: 'CMS Editor', href: '/cms', icon: FileText },
             {
                 name: 'Store Management',

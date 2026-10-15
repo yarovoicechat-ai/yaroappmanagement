@@ -46,6 +46,9 @@ export type StoreCategory =
 export interface StoreItem {
   _id: string;
   name: string;
+  uniqueId?: string;
+  audience?: 'general' | 'employee' | 'vip' | 'event';
+  isStaffOnly?: boolean;
   category: string;
   price: number;
   priceOptions?: { days: number; diamonds: number }[];
@@ -94,6 +97,9 @@ export default function StoreManagementPage() {
   const [editingItem, setEditingItem] = useState<StoreItem | null>(null);
   const [formData, setFormData] = useState({
     name: '',
+    uniqueId: '',
+    audience: 'general' as 'general' | 'employee' | 'vip' | 'event',
+    isStaffOnly: false,
     category: 'Unique ID',
     price: 1000,
     price3Days: 150,
@@ -141,6 +147,9 @@ export default function StoreManagementPage() {
     setEditingItem(null);
     setFormData({
       name: '',
+      uniqueId: '',
+      audience: 'general',
+      isStaffOnly: false,
       category: selectedCategory === 'All' ? 'Unique ID' : selectedCategory,
       price: 2500,
       price3Days: 375,
@@ -167,6 +176,9 @@ export default function StoreManagementPage() {
     setEditingItem(item);
     setFormData({
       name: item.name,
+      uniqueId: item.uniqueId || '',
+      audience: (item.audience as any) || (item.isStaffOnly ? 'employee' : 'general'),
+      isStaffOnly: Boolean(item.isStaffOnly || item.audience === 'employee'),
       category: item.category,
       price: item.price,
       price3Days: durationPrice(item, 3),
@@ -198,6 +210,9 @@ export default function StoreManagementPage() {
 
     const payload = {
       name: formData.name.trim(),
+      uniqueId: formData.uniqueId.trim() || undefined,
+      audience: formData.audience,
+      isStaffOnly: formData.audience === 'employee' || formData.isStaffOnly,
       category: formData.category,
       price: Number(formData.price30Days) || 0,
       priceOptions: [
@@ -497,8 +512,18 @@ export default function StoreManagementPage() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h4 className="text-sm font-bold text-white truncate">{item.name}</h4>
+                          {item.uniqueId && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              ID: {item.uniqueId}
+                            </span>
+                          )}
+                          {(item.isStaffOnly || item.audience === 'employee') && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                              👔 Staff Only
+                            </span>
+                          )}
                           {!item.isActive && (
                             <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30">
                               Inactive
@@ -732,6 +757,22 @@ export default function StoreManagementPage() {
                         {selectedItem.isActive ? 'Active on App' : 'Disabled'}
                       </span>
                     </div>
+
+                    {selectedItem.uniqueId && (
+                      <div className="bg-slate-800/60 p-3 rounded-xl border border-amber-500/30">
+                        <span className="text-amber-400/80 block text-[10px]">Unique Asset ID</span>
+                        <span className="text-amber-300 font-mono font-black text-sm mt-0.5 block">
+                          #{selectedItem.uniqueId}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
+                      <span className="text-slate-400 block text-[10px]">Audience / Distribution</span>
+                      <span className="text-purple-300 font-bold text-sm mt-0.5 block capitalize">
+                        {selectedItem.audience || (selectedItem.isStaffOnly ? 'Staff Only' : 'General Store')}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -783,6 +824,51 @@ export default function StoreManagementPage() {
             </div>
 
             <form onSubmit={handleSaveItem} className="space-y-4 mt-6">
+              {/* Asset Identity: Unique ID & Audience */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+                <div>
+                  <label className="block text-xs font-semibold text-amber-300 mb-1">
+                    Unique Asset ID (e.g. 555, 1001)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Auto-generated if left empty"
+                    value={formData.uniqueId}
+                    onChange={e => setFormData({ ...formData, uniqueId: e.target.value.trim() })}
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-amber-300 font-mono placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Enter number to quickly grant this asset to staff/users.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-purple-300 mb-1">
+                    Audience & Visibility
+                  </label>
+                  <select
+                    value={formData.audience}
+                    onChange={e => {
+                      const aud = e.target.value as any;
+                      setFormData({
+                        ...formData,
+                        audience: aud,
+                        isStaffOnly: aud === 'employee',
+                      });
+                    }}
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="general">🌍 General Store (Public Catalog)</option>
+                    <option value="employee">👔 Employee / Staff Exclusive (Direct Grants Only)</option>
+                    <option value="vip">👑 VIP Exclusive</option>
+                    <option value="event">🎉 Event / Contest Exclusive</option>
+                  </select>
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    {formData.audience === 'employee' ? '⚠️ Hidden from regular store. For staff distribution only.' : 'Available for purchase in public app store.'}
+                  </p>
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-semibold text-slate-300 block mb-1.5">
                   Item Title / Name *

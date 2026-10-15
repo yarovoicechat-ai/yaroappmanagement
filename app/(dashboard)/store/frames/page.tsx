@@ -27,6 +27,9 @@ import { uploadToCloudinary } from '@/lib/cloudinary';
 export interface FrameItem {
   _id: string;
   name: string;
+  uniqueId?: string;
+  audience?: 'general' | 'employee' | 'vip' | 'event';
+  isStaffOnly?: boolean;
   category?: string;
   price: number;
   priceOptions?: { days: number; diamonds: number }[];
@@ -57,6 +60,9 @@ export default function StoreFramesPage() {
   // Form State
   const [formData, setFormData] = useState({
     name: '',
+    uniqueId: '',
+    audience: 'general' as 'general' | 'employee' | 'vip' | 'event',
+    isStaffOnly: false,
     price: 3500,
     price3Days: 525,
     price7Days: 1050,
@@ -140,6 +146,9 @@ export default function StoreFramesPage() {
     setEditingItem(null);
     setFormData({
       name: '',
+      uniqueId: '',
+      audience: 'general',
+      isStaffOnly: false,
       price: 3500,
       price3Days: 525,
       price7Days: 1050,
@@ -168,6 +177,9 @@ export default function StoreFramesPage() {
 
     setFormData({
       name: item.name || '',
+      uniqueId: item.uniqueId || '',
+      audience: (item.audience as any) || (item.isStaffOnly ? 'employee' : 'general'),
+      isStaffOnly: Boolean(item.isStaffOnly || item.audience === 'employee'),
       price: p30,
       price3Days: p3,
       price7Days: p7,
@@ -269,8 +281,8 @@ export default function StoreFramesPage() {
       toast.error('Frame name is required');
       return;
     }
-    if (!formData.image && !formData.animationUrl) {
-      toast.error('Please upload at least a preview image or animation file');
+    if (!formData.animationUrl) {
+      toast.error('Please upload the actual frame asset. The Store cover image is preview-only.');
       return;
     }
 
@@ -278,6 +290,9 @@ export default function StoreFramesPage() {
     const payload = {
       name: formData.name.trim(),
       category: 'Frames',
+      uniqueId: formData.uniqueId.trim() || undefined,
+      audience: formData.audience,
+      isStaffOnly: formData.audience === 'employee' || formData.isStaffOnly,
       price,
       priceOptions: [
         { days: 3, diamonds: Number(formData.price3Days) || Math.round(price * 0.15) },
@@ -498,7 +513,7 @@ export default function StoreFramesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredFrames.map(item => {
-            const displayUrl = (item.animationUrl && !item.animationUrl.includes('.svga') ? item.animationUrl : '') || item.imageUrl || item.image || '';
+            const displayUrl = item.imageUrl || item.image || (item.animationUrl && !item.animationUrl.includes('.svga') ? item.animationUrl : '');
             const p30 = item.priceOptions?.find(p => p.days === 30)?.diamonds ?? item.price;
             const p3 = item.priceOptions?.find(p => p.days === 3)?.diamonds ?? Math.round(p30 * 0.15);
 
@@ -510,9 +525,21 @@ export default function StoreFramesPage() {
                 <div>
                   {/* Top bar */}
                   <div className="flex items-center justify-between mb-3">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                      {item.badgeText || 'HOT'}
-                    </span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                        {item.badgeText || 'HOT'}
+                      </span>
+                      {item.uniqueId && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                          ID: {item.uniqueId}
+                        </span>
+                      )}
+                      {(item.isStaffOnly || item.audience === 'employee') && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                          👔 Staff Only
+                        </span>
+                      )}
+                    </div>
                     <button
                       onClick={() => handleToggleStatus(item)}
                       className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition ${
@@ -525,25 +552,16 @@ export default function StoreFramesPage() {
                     </button>
                   </div>
 
-                  {/* Frame Visual with Avatar Superimposed */}
-                  <div className="relative w-28 h-28 mx-auto my-3 flex items-center justify-center">
-                    {/* Placeholder Avatar */}
-                    <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center shadow-inner">
-                      <img
-                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop"
-                        alt="Demo Avatar"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    {/* Frame Superimposed */}
+                  {/* Store cover preview; it is not composited over a user's avatar. */}
+                  <div className="w-28 h-28 mx-auto my-3 flex items-center justify-center rounded-2xl bg-slate-950/70 border border-slate-800 p-2">
                     {displayUrl ? (
                       <img
                         src={displayUrl}
-                        alt={item.name}
-                        className="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-[0_4px_10px_rgba(244,63,94,0.35)]"
+                        alt={`${item.name} store cover`}
+                        className="w-full h-full object-contain"
                       />
                     ) : (
-                      <div className="absolute inset-0 border-2 border-dashed border-rose-500/30 rounded-full animate-spin" />
+                      <div className="w-16 h-16 border-2 border-dashed border-rose-500/30 rounded-full" />
                     )}
                   </div>
 
@@ -646,6 +664,51 @@ export default function StoreFramesPage() {
             </div>
 
             <form onSubmit={handleSaveFrame} className="p-6 space-y-5">
+              {/* Asset Identity: Unique ID & Audience */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+                <div>
+                  <label className="block text-xs font-semibold text-amber-300 mb-1">
+                    Unique Asset ID (e.g. 555, 1001)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Leave blank to auto-generate"
+                    value={formData.uniqueId}
+                    onChange={e => setFormData(prev => ({ ...prev, uniqueId: e.target.value.trim() }))}
+                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-amber-300 font-mono placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Used to distribute this item directly to staff/users via ID.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-purple-300 mb-1">
+                    Audience & Visibility
+                  </label>
+                  <select
+                    value={formData.audience}
+                    onChange={e => {
+                      const aud = e.target.value as any;
+                      setFormData(prev => ({
+                        ...prev,
+                        audience: aud,
+                        isStaffOnly: aud === 'employee',
+                      }));
+                    }}
+                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="general">🌍 General Store (Public Catalog)</option>
+                    <option value="employee">👔 Employee / Staff Exclusive (Direct Grants Only)</option>
+                    <option value="vip">👑 VIP Exclusive</option>
+                    <option value="event">🎉 Event / Contest Exclusive</option>
+                  </select>
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    {formData.audience === 'employee' ? '⚠️ Hidden from regular store. For staff distribution only.' : 'Available for purchase in public app store.'}
+                  </p>
+                </div>
+              </div>
+
               {/* Name & Badge */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -681,10 +744,10 @@ export default function StoreFramesPage() {
                 {/* 1. Preview Image (PNG/WebP with transparent center) */}
                 <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
                   <label className="block text-xs font-semibold text-slate-200 mb-1">
-                    Frame Preview Image (.png, .webp) <span className="text-rose-400">*</span>
+                    Store Cover Image (.png, .webp) <span className="text-rose-400">*</span>
                   </label>
                   <p className="text-[11px] text-slate-500 mb-3">
-                    High-res circular border with transparent center.
+                    Shown on the Store card and preview only. Upload the actual frame asset below to display it around avatars.
                   </p>
 
                   <div className="flex items-center gap-3">
@@ -717,7 +780,7 @@ export default function StoreFramesPage() {
                     Frame Animation File (SVGA / GIF / WebP) *
                   </label>
                   <p className="text-[11px] text-slate-400 mb-3">
-                    Asli frame jo avatar par ghumega & popup me play hoga (.svga, .gif).
+                    Actual avatar overlay (.svga, .gif, .webp, .png). Keep the center transparent so the user's photo stays visible.
                   </p>
 
                   <div className="flex flex-col gap-2">
@@ -780,18 +843,12 @@ export default function StoreFramesPage() {
                     {formData.animationUrl && !formData.animationUrl.includes('.svga') ? (
                       <img
                         src={formData.animationUrl}
-                        alt="Frame preview"
-                        className="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
-                      />
-                    ) : formData.image ? (
-                      <img
-                        src={formData.image}
-                        alt="Frame preview"
+                        alt="Actual frame asset preview"
                         className="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
                       />
                     ) : (
                       <div className="absolute inset-0 rounded-full border border-dashed border-amber-500/60 flex items-center justify-center pointer-events-none">
-                        <span className="text-[9px] font-mono text-amber-300 bg-slate-950/90 px-1 py-0.5 rounded">Preview Only</span>
+                        <span className="text-[9px] font-mono text-amber-300 bg-slate-950/90 px-1 py-0.5 rounded">Actual asset needed</span>
                       </div>
                     )}
                   </div>
@@ -799,8 +856,8 @@ export default function StoreFramesPage() {
                     <h4 className="text-xs font-semibold text-white">Live App Simulation</h4>
                     <p className="text-[11px] text-slate-400 mt-0.5">
                       {formData.animationUrl
-                        ? '✨ Avatar frame animation is active! This file will animate around user avatars.'
-                        : '⚠️ Frame Preview Image is uploaded. Avatar par animation frame lagane ke liye "Frame Animation File" attach karein.'}
+                        ? 'Actual frame asset is active and will render around user avatars.'
+                        : 'The Store cover is preview-only. Upload the actual frame asset to display it around avatars.'}
                     </p>
                   </div>
                 </div>
