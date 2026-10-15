@@ -6,11 +6,14 @@ const TabsContext = React.createContext<{
     onValueChange: (value: string) => void;
 } | null>(null);
 
-const Tabs = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & { defaultValue?: string, onValueChange?: (val: string) => void }>(
-    ({ className, defaultValue, onValueChange, children, ...props }, ref) => {
-        const [value, setValue] = React.useState(defaultValue || "");
+const Tabs = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & { value?: string; defaultValue?: string; onValueChange?: (val: string) => void }>(
+    ({ className, value: controlledValue, defaultValue, onValueChange, children, ...props }, ref) => {
+        const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue || "");
+        const isControlled = controlledValue !== undefined;
+        const value = isControlled ? controlledValue : uncontrolledValue;
+
         const handleValueChange = (val: string) => {
-            setValue(val);
+            if (!isControlled) setUncontrolledValue(val);
             if (onValueChange) onValueChange(val);
         };
 
@@ -24,6 +27,7 @@ const Tabs = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     }
 )
 Tabs.displayName = "Tabs"
+
 
 const TabsList = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
     ({ className, ...props }, ref) => (

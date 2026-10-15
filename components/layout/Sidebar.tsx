@@ -7,7 +7,7 @@ import {
     LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift,
     Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
     MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell, ShoppingBag, Car,
-    Heart, Flame, Radio,
+    Heart, Flame, Radio, Coins, Gem,
     type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -47,8 +47,6 @@ const storeSubmenu: SubmenuItem[] = [
     { name: 'Profile Cards', href: '/store/profile-cards' },
     { name: 'Room Cards', href: '/store/room-cards' },
     { name: 'Profile Entries', href: '/store/profile-entries' },
-    { name: 'VIP Packages', href: '/vip' },
-    { name: 'King of Kings', href: '/king-of-kings' },
 ];
 
 const levelSubmenu: SubmenuItem[] = [
@@ -93,16 +91,11 @@ const sidebarSections: SidebarSection[] = [
                 icon: ShoppingBag,
                 submenu: storeSubmenu,
             },
-            { name: 'VIP Program', href: '/vip', icon: Crown },
-            { name: 'King of Kings', href: '/king-of-kings', icon: Flame },
-            {
-                name: 'Levels',
-                icon: Award,
-                submenu: levelSubmenu,
-            },
-            { name: 'Family System', href: '/family', icon: Users },
-            { name: 'CP (Couple) System', href: '/cp', icon: Heart },
-            { name: 'Gifts', href: '/gifts', icon: Gift },
+            { name: 'Recharge Plans', href: '/plans/recharge', icon: Coins },
+            { name: 'Beans Plans', href: '/plans/beans', icon: Gem },
+            { name: 'SVIP Plan Builder', href: '/plans/svip', icon: Crown },
+            { name: 'VIP & SVIP Suite', href: '/vip-svip', icon: Crown },
+            { name: 'Identity & VIP Studio', href: '/identity-vip-studio', icon: Sparkles },
             { name: 'Avatars', href: '/avatars', icon: Award },
             { name: 'Banners', href: '/banners', icon: Layers },
             { name: 'Ads', href: '/ads', icon: Layers },

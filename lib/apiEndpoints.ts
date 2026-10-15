@@ -201,4 +201,42 @@ export const API_ENDPOINTS = {
         TOGGLE: '/api/system-config/toggle',
         UPDATE: '/api/system-config/update',
     },
+
+    // Recharge Plans
+    RECHARGE_PLANS: {
+        LIST: '/api/recharge-plans',
+        ITEM: (id: string) => `/api/recharge-plans/${id}`,
+        CREATE: '/api/recharge-plans',
+        UPDATE: (id: string) => `/api/recharge-plans/${id}`,
+        DELETE: (id: string) => `/api/recharge-plans/${id}`,
+        TOGGLE: (id: string) => `/api/recharge-plans/${id}/toggle`,
+    },
+
+    // Beans Plans
+    BEANS_PLANS: {
+        LIST: '/api/beans-plans',
+        ITEM: (id: string) => `/api/beans-plans/${id}`,
+        CREATE: '/api/beans-plans',
+        UPDATE: (id: string) => `/api/beans-plans/${id}`,
+        DELETE: (id: string) => `/api/beans-plans/${id}`,
+        TOGGLE: (id: string) => `/api/beans-plans/${id}/toggle`,
+    },
+
+    // VIP & SVIP Suite
+    VIP_SVIP: {
+        VIP_LIST: '/api/vip/admin/all',
+        VIP_CREATE: '/api/vip/admin/create',
+        VIP_UPDATE: (id: string) => `/api/vip/admin/${id}`,
+        VIP_DELETE: (id: string) => `/api/vip/admin/${id}`,
+        VIP_TOGGLE: (id: string) => `/api/vip/admin/${id}/toggle`,
+
+        SVIP_LIST: '/api/vip/admin/svip/all',
+        SVIP_CREATE: '/api/vip/admin/svip/create',
+        SVIP_UPDATE: (id: string) => `/api/vip/admin/svip/${id}`,
+        SVIP_DELETE: (id: string) => `/api/vip/admin/svip/${id}`,
+        SVIP_TOGGLE: (id: string) => `/api/vip/admin/svip/${id}/toggle`,
+
+        GRANT: '/api/vip/admin/grant',
+    },
 } as const;
+
