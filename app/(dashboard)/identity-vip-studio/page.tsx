@@ -45,6 +45,7 @@ import {
   Palette,
   FileCheck,
   ArrowRight,
+  UploadCloud,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/apiClient';
@@ -144,9 +145,11 @@ export default function IdentityVipStudioPage() {
   const [grantTargetUser, setGrantTargetUser] = useState('');
   const [grantDisplayId, setGrantDisplayId] = useState('Official');
   const [grantBadgeText, setGrantBadgeText] = useState('OFFICIAL');
+  const [grantBadgeUrl, setGrantBadgeUrl] = useState('');
   const [grantBadgeAnimation, setGrantBadgeAnimation] = useState('gold_rotate');
   const [grantDurationDays, setGrantDurationDays] = useState(30);
   const [grantReason, setGrantReason] = useState('Verified Official Representative');
+  const [isUploadingBadge, setIsUploadingBadge] = useState(false);
 
   // Name Effect Form State
   const [isEffectModalOpen, setIsEffectModalOpen] = useState(false);
@@ -188,6 +191,7 @@ export default function IdentityVipStudioPage() {
   const [previewUserId, setPreviewUserId] = useState('1000000002');
   const [previewDisplayId, setPreviewDisplayId] = useState('Official');
   const [previewIsOfficial, setPreviewIsOfficial] = useState(true);
+  const [previewEffectSlug, setPreviewEffectSlug] = useState('imperial-gold-shimmer');
   const [previewVipLevel, setPreviewVipLevel] = useState('SVIP 9');
 
   // Load Initial Data
@@ -222,6 +226,30 @@ export default function IdentityVipStudioPage() {
      OFFICIAL ID HANDLERS
   ========================================================================= */
 
+  const handleUploadBadgeFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    setIsUploadingBadge(true);
+
+    try {
+      toast.loading('Uploading animated badge asset...');
+      const res = await apiClient.post<any>('/api/uploads/file', formData);
+      toast.dismiss();
+      if (res.data?.url) {
+        setGrantBadgeUrl(res.data.url);
+        toast.success('Badge asset uploaded successfully!');
+      }
+    } catch (err: any) {
+      toast.dismiss();
+      toast.error('Badge upload failed: ' + (err.message || 'Error'));
+    } finally {
+      setIsUploadingBadge(false);
+    }
+  };
+
   const handleGrantOfficialId = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!grantTargetUser) {
@@ -234,6 +262,7 @@ export default function IdentityVipStudioPage() {
         userIdentifier: grantTargetUser.trim(),
         displayId: grantDisplayId.trim(),
         badgeText: grantBadgeText.trim(),
+        badgeUrl: grantBadgeUrl.trim(),
         badgeAnimationType: grantBadgeAnimation,
         durationDays: Number(grantDurationDays),
         reason: grantReason.trim(),
@@ -241,6 +270,7 @@ export default function IdentityVipStudioPage() {
       toast.success(`Official ID "${grantDisplayId}" successfully granted!`);
       setIsOfficialModalOpen(false);
       setGrantTargetUser('');
+      setGrantBadgeUrl('');
       loadStudioData();
     } catch (err: any) {
       toast.error(err.response?.data?.message || err.message || 'Failed to grant official ID');
@@ -626,10 +656,10 @@ export default function IdentityVipStudioPage() {
 
                   <div>
                     <label className="text-xs font-semibold text-slate-300 block mb-1">
-                      Official Display ID
+                      Official Display ID / Unique Vanity ID
                     </label>
                     <Input
-                      placeholder="e.g. Official, Staff, YaroHost"
+                      placeholder="e.g. Official, 600002, VIP, Staff"
                       value={grantDisplayId}
                       onChange={(e) => setGrantDisplayId(e.target.value)}
                       className="bg-slate-800/80 border-white/10 text-xs"
@@ -639,14 +669,38 @@ export default function IdentityVipStudioPage() {
 
                   <div>
                     <label className="text-xs font-semibold text-slate-300 block mb-1">
-                      Badge Text
+                      Badge Text / Title
                     </label>
                     <Input
-                      placeholder="e.g. OFFICIAL, VERIFIED"
+                      placeholder="e.g. OFFICIAL, VIP, STAFF"
                       value={grantBadgeText}
                       onChange={(e) => setGrantBadgeText(e.target.value)}
                       className="bg-slate-800/80 border-white/10 text-xs"
                     />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">
+                      Animated Badge Asset (Upload Icon / Animation)
+                    </label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="https://... or upload below"
+                        value={grantBadgeUrl}
+                        onChange={(e) => setGrantBadgeUrl(e.target.value)}
+                        className="bg-slate-800/80 border-white/10 text-xs"
+                      />
+                      <label className="cursor-pointer px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-lg text-xs font-semibold text-slate-200 flex items-center justify-center shrink-0">
+                        <UploadCloud className="w-4 h-4 mr-1 text-amber-400" />
+                        {isUploadingBadge ? 'Uploading...' : 'Upload'}
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*,.svga,.gif,.webp,.json"
+                          onChange={handleUploadBadgeFile}
+                        />
+                      </label>
+                    </div>
                   </div>
 
                   <div>
@@ -666,18 +720,53 @@ export default function IdentityVipStudioPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">
-                      Validity Duration (Days)
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-semibold text-slate-300">
+                        Validity Duration (Days)
+                      </label>
+                      <span className="text-[10px] text-amber-400 font-mono">
+                        Expires in {grantDurationDays} days
+                      </span>
+                    </div>
+
+                    {/* Quick Duration Preset Pills */}
+                    <div className="flex gap-1.5 mb-2">
+                      {[7, 30, 90, 180, 365].map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => setGrantDurationDays(d)}
+                          className={`px-2 py-1 rounded text-[10px] font-bold transition-colors ${
+                            grantDurationDays === d
+                              ? 'bg-amber-500 text-slate-950 font-black'
+                              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                          }`}
+                        >
+                          {d === 30 ? '1 Mo' : d === 90 ? '3 Mo' : d === 180 ? '6 Mo' : d === 365 ? '1 Yr' : `${d}d`}
+                        </button>
+                      ))}
+                    </div>
+
                     <Input
                       type="number"
                       min={1}
-                      max={365}
+                      max={730}
                       value={grantDurationDays}
                       onChange={(e) => setGrantDurationDays(Number(e.target.value))}
                       className="bg-slate-800/80 border-white/10 text-xs"
                       required
                     />
+                  </div>
+
+                  {/* Guaranteed ID Auto-Reversion Flow Explanatory Box */}
+                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 space-y-1">
+                    <div className="font-bold flex items-center gap-1.5 text-amber-300">
+                      <Shield className="w-3.5 h-3.5" />
+                      Permanent ID Preservation Guarantee
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      Target user's permanent numeric ID (e.g. 1000000002) is NEVER deleted or overwritten. During the {grantDurationDays} days validity, vanity ID & badge will display everywhere and both IDs will be searchable. Once time expires, the user automatically and seamlessly reverts back to 1000000002.
+                    </p>
                   </div>
 
                   <div>
@@ -698,7 +787,7 @@ export default function IdentityVipStudioPage() {
                     className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 font-bold hover:brightness-110 shadow-lg shadow-amber-500/20 text-xs h-10 mt-2"
                   >
                     <Crown className="w-4 h-4 mr-1.5" />
-                    Confirm Official Grant
+                    Confirm Official Grant ({grantDurationDays} Days)
                   </Button>
                 </form>
               </CardContent>
