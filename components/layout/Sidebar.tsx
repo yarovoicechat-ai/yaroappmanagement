@@ -7,7 +7,7 @@ import {
     LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift,
     Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
     MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell, ShoppingBag, Car,
-    Heart, Flame, Radio, Coins, Gem,
+    Heart, Flame, Radio, Coins, Gem, Hash,
     type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -35,7 +35,8 @@ interface SidebarSection {
 const storeSubmenu: SubmenuItem[] = [
     { name: 'Store Overview', href: '/store' },
     { name: '🎁 Asset Distribution', href: '/store/distribute' },
-    { name: 'Unique ID', href: '/store/unique-ids' },
+    { name: 'User Unique IDs', href: '/users/unique-ids' },
+    { name: 'Unique ID Catalog', href: '/store/unique-ids' },
     { name: 'Frames', href: '/store/frames' },
     { name: 'Chat Bubbles', href: '/store/chat-bubbles' },
     { name: 'Themes: Store & Room Tools', href: '/store/themes' },
@@ -91,6 +92,7 @@ const sidebarSections: SidebarSection[] = [
                 icon: ShoppingBag,
                 submenu: storeSubmenu,
             },
+            { name: 'User Unique IDs', href: '/users/unique-ids', icon: Hash },
             { name: 'Recharge Plans', href: '/plans/recharge', icon: Coins },
             { name: 'Beans Plans', href: '/plans/beans', icon: Gem },
             { name: 'SVIP Plan Builder', href: '/plans/svip', icon: Crown },
