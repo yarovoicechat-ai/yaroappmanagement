@@ -110,6 +110,7 @@ export const API_ENDPOINTS = {
     GIFTS: {
         LIST: '/api/gift/admin-all',
         CREATE: '/api/gift/create',
+        UPDATE: (id: string) => `/api/gift/${id}`,
         TOGGLE: (id: string) => `/api/gift/${id}/toggle`,
         DELETE: (id: string) => `/api/gift/${id}`,
     },
