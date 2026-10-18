@@ -22,7 +22,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/Dialog";
-import { Radio, Lock, Unlock, ShieldAlert, VolumeX, Trash2, Search, Users, Shield, Pin, PinOff, Star } from "lucide-react";
+import { Radio, Lock, Unlock, ShieldAlert, VolumeX, Trash2, Search, Users, Shield, Pin, PinOff, Star, Crown, EyeOff, Sparkles, CheckCircle2, UserCheck, RefreshCw } from "lucide-react";
 import { toast } from 'sonner';
 import { Pagination } from "@/components/ui/Pagination";
 import { apiClient } from '@/lib/apiClient';
@@ -44,9 +44,64 @@ export default function RoomsPage() {
         limit: 10
     });
 
+    const [globalManagers, setGlobalManagers] = useState<any[]>([]);
+    const [newManagerId, setNewManagerId] = useState('');
+    const [loadingManagers, setLoadingManagers] = useState(false);
+
     useEffect(() => {
         fetchRooms(pagination.currentPage);
+        fetchGlobalManagers();
     }, [pagination.currentPage]);
+
+    const fetchGlobalManagers = async () => {
+        try {
+            setLoadingManagers(true);
+            const res = await apiClient.get<any>('/api/admin/room-managers');
+            if (res.success && res.data) {
+                setGlobalManagers(Array.isArray(res.data) ? res.data : []);
+            }
+        } catch (err: any) {
+            console.warn('Could not load global room managers:', err);
+        } finally {
+            setLoadingManagers(false);
+        }
+    };
+
+    const handleGrantManager = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const id = newManagerId.trim();
+        if (!/^\d+$/.test(id)) {
+            toast.error('Enter a valid numeric user ID (e.g. 1000000002)');
+            return;
+        }
+        try {
+            setLoadingManagers(true);
+            const res = await apiClient.post('/api/admin/room-managers', { userId: id });
+            if (!res.success) throw new Error(res.message || 'Failed to grant official room access');
+            toast.success(`Official Room Controller access granted to User ID ${id}!`);
+            setNewManagerId('');
+            fetchGlobalManagers();
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to grant access');
+        } finally {
+            setLoadingManagers(false);
+        }
+    };
+
+    const handleRevokeManager = async (userId: number) => {
+        if (!confirm(`Are you sure you want to revoke Official Controller status from User ID ${userId}?`)) return;
+        try {
+            setLoadingManagers(true);
+            const res = await apiClient.delete(`/api/admin/room-managers/${userId}`);
+            if (!res.success) throw new Error(res.message || 'Failed to revoke access');
+            toast.success(`Official Room Controller status revoked from ID ${userId}`);
+            fetchGlobalManagers();
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to revoke access');
+        } finally {
+            setLoadingManagers(false);
+        }
+    };
 
     const fetchRooms = async (page: number) => {
         try {
@@ -283,6 +338,155 @@ export default function RoomsPage() {
                 totalPages={pagination.totalPages}
                 onPageChange={(page) => setPagination(p => ({ ...p, currentPage: page }))}
             />
+
+            {/* Global Room Managers (Official Room Controllers) Card */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
+                <Card className="lg:col-span-2 bg-slate-900/60 border-white/10 rounded-2xl">
+                    <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-white/5">
+                        <div>
+                            <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+                                <Crown className="w-5 h-5 text-amber-400" />
+                                Official Global Room Controllers ({globalManagers.length})
+                            </CardTitle>
+                            <p className="text-xs text-slate-400 mt-1">
+                                Designated app IDs authorized to manage, edit, and moderate ANY room as full Owner across the entire platform.
+                            </p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={fetchGlobalManagers}
+                            disabled={loadingManagers}
+                            className="bg-slate-800/60 border-white/10 text-white text-xs"
+                        >
+                            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loadingManagers ? 'animate-spin' : ''}`} />
+                            Refresh
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <Table>
+                            <TableHeader className="bg-slate-950/40">
+                                <TableRow className="border-white/5">
+                                    <TableHead className="text-slate-400 text-xs">Official User ID</TableHead>
+                                    <TableHead className="text-slate-400 text-xs">Name / Username</TableHead>
+                                    <TableHead className="text-slate-400 text-xs">Special Powers</TableHead>
+                                    <TableHead className="text-right text-slate-400 text-xs">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {globalManagers.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center py-10 text-slate-500 text-xs">
+                                            No Global Room Managers configured yet. Grant access using the form on the right.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    globalManagers.map((mgr) => (
+                                        <TableRow key={mgr.userId} className="border-white/5 hover:bg-white/[0.02]">
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center font-bold text-xs text-amber-400 font-mono">
+                                                        👑
+                                                    </div>
+                                                    <div>
+                                                        <span className="font-mono font-bold text-amber-300 text-sm">
+                                                            {mgr.userId}
+                                                        </span>
+                                                        <span className="ml-2 text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-bold uppercase">
+                                                            CONTROLLER
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-xs font-semibold text-white">{mgr.name || 'User'}</div>
+                                                <div className="text-[10px] text-slate-400 font-mono">@{mgr.userName || mgr.userId}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-wrap gap-1 text-[10px]">
+                                                    <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2 py-0.5 rounded-full font-medium">
+                                                        Room Edit ✏️
+                                                    </span>
+                                                    <span className="bg-red-500/10 text-red-300 border border-red-500/20 px-2 py-0.5 rounded-full font-medium">
+                                                        Room Ban 🚫
+                                                    </span>
+                                                    <span className="bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded-full font-medium">
+                                                        Stealth Mode 👻
+                                                    </span>
+                                                    <span className="bg-sky-500/10 text-sky-300 border border-sky-500/20 px-2 py-0.5 rounded-full font-medium">
+                                                        Immunity 🛡️
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    onClick={() => handleRevokeManager(mgr.userId)}
+                                                    className="h-7 text-xs bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/30"
+                                                >
+                                                    Revoke Power
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+
+                {/* Quick Grant Form */}
+                <Card className="bg-slate-900/60 border-white/10 rounded-2xl">
+                    <CardHeader className="border-b border-white/5 pb-4">
+                        <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                            <UserCheck className="w-5 h-5 text-amber-400" />
+                            Grant Global Controller Power
+                        </CardTitle>
+                        <p className="text-xs text-slate-400">
+                            Give an authorized user numeric ID the ability to manage and edit any voice room as owner.
+                        </p>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        <form onSubmit={handleGrantManager} className="space-y-4">
+                            <div>
+                                <label className="text-xs font-semibold text-slate-300 block mb-1">
+                                    Target App User Numeric ID
+                                </label>
+                                <Input
+                                    placeholder="e.g. 1000000002"
+                                    value={newManagerId}
+                                    onChange={(e) => setNewManagerId(e.target.value)}
+                                    className="bg-slate-800 border-white/10 text-xs font-mono"
+                                    required
+                                />
+                            </div>
+
+                            <div className="p-3 rounded-xl bg-slate-950/60 border border-white/5 text-[11px] space-y-2 text-slate-300">
+                                <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    Active Powers Granted:
+                                </div>
+                                <ul className="space-y-1 list-disc list-inside text-slate-400">
+                                    <li><strong className="text-slate-200">Full Room Edit:</strong> Title, About, Cover, Seats (8/9/12/16), Mode, PIN, Themes, Seat Skins.</li>
+                                    <li><strong className="text-slate-200">Room Ban & Terminate:</strong> Direct power to ban abusive rooms from room tools.</li>
+                                    <li><strong className="text-slate-200">Stealth / Ghost Join:</strong> Enter rooms invisibly with zero broadcast.</li>
+                                    <li><strong className="text-slate-200">Anti-Kick Immunity:</strong> Regular hosts cannot kick, mute, or ban this ID.</li>
+                                </ul>
+                            </div>
+
+                            <Button
+                                type="submit"
+                                disabled={loadingManagers || !newManagerId.trim()}
+                                className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 font-bold hover:brightness-110 shadow-lg shadow-amber-500/20 text-xs h-10"
+                            >
+                                <Crown className="w-4 h-4 mr-1.5" />
+                                Grant Official Controller Access
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            </div>
 
             {/* Moderation dialog */}
             <Dialog open={isActionOpen} onOpenChange={setIsActionOpen}>

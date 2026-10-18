@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   ShoppingBag,
   Sparkles,
@@ -360,7 +361,21 @@ export default function StoreManagementPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link
+              href="/store/unique-id-levels"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 text-sm font-semibold transition shadow-md"
+            >
+              <Layers className="w-4 h-4" />
+              <span>Unique ID Levels</span>
+            </Link>
+            <Link
+              href="/store/unique-ids"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-sm font-semibold transition shadow-md"
+            >
+              <Tag className="w-4 h-4" />
+              <span>Unique IDs</span>
+            </Link>
             <button
               onClick={handleResetCatalog}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-sm font-semibold transition shadow-md"
