@@ -87,6 +87,7 @@ const sidebarSections: SidebarSection[] = [
     {
         title: 'Device & Security Control',
         items: [
+            { name: 'Official ID Powers', href: '/official-id-powers', icon: Zap },
             { name: 'Device Limits & Bans', href: '/bans/device', icon: Smartphone },
             { name: 'ID & Account Bans', href: '/bans/id', icon: ShieldCheck }
         ]
