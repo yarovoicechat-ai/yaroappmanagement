@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Switch } from '@/components/ui/Switch';
-import { Save, PhoneCall, Gift, Radio, Shield, ShieldCheck, WalletCards, Settings } from 'lucide-react';
+import { Save, PhoneCall, Gift, Radio, Shield, ShieldCheck, WalletCards, Settings, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/apiClient';
 
@@ -136,9 +137,18 @@ export default function SettingsPage() {
             <Field label="Agora App Certificate" help={settings.agoraCertificateConfigured ? 'Certificate is configured. Leave blank to keep the existing encrypted value.' : 'Certificate is not configured.'}>
               <Input type="password" maxLength={32} autoComplete="new-password" placeholder={settings.agoraCertificateConfigured ? '••••••••••••••••••••••••••••••••' : 'Enter 32-character certificate'} value={agoraCertificate} onChange={e => setAgoraCertificate(e.target.value.trim())} />
             </Field>
-            <div className="flex items-center gap-2 text-xs">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" />
-              <span className="text-muted-foreground">Certificate encrypted hai aur API/panel me plaintext kabhi return nahi hota.</span>
+            <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5 text-xs">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                <span className="text-muted-foreground">Certificate AES-256 encrypted at rest.</span>
+              </div>
+              <Link
+                href="/settings/communication/agora"
+                className="px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 font-bold transition flex items-center gap-1.5"
+              >
+                <Zap className="h-3.5 w-3.5" />
+                Multi-Project Failover Manager →
+              </Link>
             </div>
           </CardContent>
         </Card>

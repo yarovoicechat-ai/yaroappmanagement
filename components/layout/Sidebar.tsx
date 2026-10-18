@@ -7,7 +7,7 @@ import {
     LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift,
     Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
     MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell, ShoppingBag, Car,
-    Heart, Flame, Radio, Coins, Gem, Hash,
+    Heart, Flame, Radio, Coins, Gem, Hash, Zap,
     type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -66,6 +66,14 @@ const sidebarSections: SidebarSection[] = [
             { name: 'Feature Flags', href: '/feature-flags', icon: Sliders },
             { name: 'Screen Security & Code', href: '/screen-security', icon: ShieldCheck },
             { name: 'App Settings', href: '/settings', icon: Settings },
+            {
+                name: 'Communication Services',
+                icon: Radio,
+                submenu: [
+                    { name: 'Agora Project Manager', href: '/settings/communication/agora' },
+                ],
+            },
+            { name: 'Agora Project Manager', href: '/settings/communication/agora', icon: Zap },
             { name: 'System Logs', href: '/logs', icon: Terminal }
         ]
     },

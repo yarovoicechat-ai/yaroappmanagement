@@ -239,5 +239,23 @@ export const API_ENDPOINTS = {
 
         GRANT: '/api/vip/admin/grant',
     },
+
+    // Agora Multi-Project Manager & Failover
+    AGORA: {
+        PROJECTS: '/api/management/agora/projects',
+        CREATE: '/api/management/agora/projects',
+        UPDATE: (id: string) => `/api/management/agora/projects/${id}`,
+        DELETE: (id: string) => `/api/management/agora/projects/${id}`,
+        TEST: (id: string) => `/api/management/agora/projects/${id}/test`,
+        ACTIVATE: (id: string) => `/api/management/agora/projects/${id}/activate`,
+        DISABLE: (id: string) => `/api/management/agora/projects/${id}/disable`,
+        ENABLE: (id: string) => `/api/management/agora/projects/${id}/enable`,
+        ROLLBACK: '/api/management/agora/rollback',
+        USAGE: '/api/management/agora/usage',
+        USAGE_HISTORY: '/api/management/agora/usage/history',
+        SYNC_USAGE: '/api/management/agora/usage/sync',
+        SWITCH_HISTORY: '/api/management/agora/switch-history',
+        SWITCH_POLICY: '/api/management/agora/switch-policy',
+    },
 } as const;
 
