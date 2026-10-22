@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
-    LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift,
+    LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift, FileCheck,
     Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
     MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell, ShoppingBag, Car,
     Heart, Flame, Radio, Coins, Gem, Hash, Zap,
@@ -122,6 +122,7 @@ const sidebarSections: SidebarSection[] = [
         items: [
             { name: 'Campaign Center', href: '/notifications/campaigns', icon: Bell },
             { name: 'Events', href: '/events', icon: FileText },
+            { name: 'Staff Approval Requests', href: '/staff-requests', icon: FileCheck },
             { name: 'System Messages', href: '/messages/system', icon: MessageCircle },
             { name: 'Activity Messages', href: '/messages/activity', icon: MessageCircle }
         ]
