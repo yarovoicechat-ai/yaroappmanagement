@@ -169,14 +169,38 @@ export default function Home() {
             </div>
 
             {/* Quick Access Grid */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                 <QuickAccessCard
-                    title="Store & Items"
-                    description="Unique IDs, Bubbles, Themes, Tassels, Mic Waves, Frames, VIP"
-                    icon={ShoppingBag}
-                    href="/store"
+                    title="King of Kings (KOK)"
+                    description="Nobility ranks, anti-kick privilege & car entrance effects"
+                    icon={Crown}
+                    href="/king-of-kings"
+                    color="from-amber-500/20 via-yellow-500/10 to-transparent hover:border-amber-500/40"
+                    iconColor="text-amber-400 bg-amber-500/10 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
+                />
+                <QuickAccessCard
+                    title="VIP Center & SVIP"
+                    description="VIP packages, SVIP elite tiers & royal privilege controls"
+                    icon={Sparkles}
+                    href="/vip-svip?tab=svip"
+                    color="from-purple-500/20 via-violet-500/10 to-transparent hover:border-purple-500/40"
+                    iconColor="text-purple-400 bg-purple-500/10 border-purple-500/30 shadow-[0_0_12px_rgba(168,85,247,0.25)]"
+                />
+                <QuickAccessCard
+                    title="SVIP Plan Builder"
+                    description="Create & customize SVIP tiers, duration, sound waves & badge"
+                    icon={Award}
+                    href="/plans/svip"
                     color="from-pink-500/20 via-rose-500/10 to-transparent hover:border-pink-500/40"
                     iconColor="text-pink-400 bg-pink-500/10 border-pink-500/30 shadow-[0_0_12px_rgba(236,72,153,0.25)]"
+                />
+                <QuickAccessCard
+                    title="Store & Items"
+                    description="Unique IDs, Bubbles, Themes, Tassels, Mic Waves, Frames"
+                    icon={ShoppingBag}
+                    href="/store"
+                    color="from-indigo-500/20 via-blue-500/10 to-transparent hover:border-indigo-500/40"
+                    iconColor="text-indigo-400 bg-indigo-500/10 border-indigo-500/30"
                 />
                 <QuickAccessCard
                     title="CMS Editor"
@@ -193,14 +217,6 @@ export default function Home() {
                     href="/settings"
                     color="from-cyan-500/15 to-blue-500/5 hover:border-cyan-500/40"
                     iconColor="text-cyan-400 bg-cyan-500/10 border-cyan-500/30"
-                />
-                <QuickAccessCard
-                    title="VIP Program"
-                    description="Configure exclusive privilege tiers & host perks"
-                    icon={Crown}
-                    href="/vip"
-                    color="from-amber-500/15 to-orange-500/5 hover:border-amber-500/40"
-                    iconColor="text-amber-400 bg-amber-500/10 border-amber-500/30"
                 />
             </div>
 

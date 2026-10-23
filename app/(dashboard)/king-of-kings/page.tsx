@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Crown,
   Sparkles,
@@ -206,6 +207,13 @@ export default function KingOfKingsAdminPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link href="/vip-svip?tab=svip">
+            <button className="px-4 py-2 bg-purple-600/20 text-purple-300 border border-purple-500/40 rounded-xl hover:bg-purple-600/30 text-xs font-semibold flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              VIP Center & SVIP
+            </button>
+          </Link>
+
           <button
             onClick={fetchPlans}
             disabled={loading}

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -194,6 +195,13 @@ export default function VipSvipManagementPage() {
     const [previewShowEntrance, setPreviewShowEntrance] = useState(true);
 
     useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const tabParam = params.get('tab');
+            if (tabParam === 'svip' || tabParam === 'vip' || tabParam === 'grant' || tabParam === 'preview') {
+                setActiveTab(tabParam as any);
+            }
+        }
         fetchCatalog();
     }, []);
 
@@ -541,6 +549,24 @@ export default function VipSvipManagementPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
+                    <Link href="/king-of-kings">
+                        <Button
+                            variant="outline"
+                            className="border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-semibold"
+                        >
+                            <Crown size={16} className="mr-1.5 text-amber-400" />
+                            King of Kings
+                        </Button>
+                    </Link>
+                    <Link href="/plans/svip">
+                        <Button
+                            variant="outline"
+                            className="border-violet-500/40 bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 font-semibold"
+                        >
+                            <Sparkles size={16} className="mr-1.5 text-violet-400" />
+                            SVIP Plan Builder
+                        </Button>
+                    </Link>
                     <Button
                         variant="outline"
                         onClick={fetchCatalog}

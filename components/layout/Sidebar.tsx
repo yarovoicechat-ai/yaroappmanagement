@@ -57,6 +57,15 @@ const levelSubmenu: SubmenuItem[] = [
     { name: 'Charm Level (Host)', href: '/levels/charm' },
 ];
 
+const vipCenterSubmenu: SubmenuItem[] = [
+    { name: 'VIP Center Overview', href: '/vip-svip' },
+    { name: '👑 SVIP Elite Tiers', href: '/vip-svip?tab=svip' },
+    { name: '💎 SVIP Plan Builder', href: '/plans/svip' },
+    { name: '⭐ VIP Packages', href: '/vip-svip?tab=vip' },
+    { name: '🛡️ Grant VIP / SVIP', href: '/vip-svip?tab=grant' },
+    { name: '🎬 Live Studio Simulator', href: '/vip-svip?tab=preview' },
+];
+
 const sidebarSections: SidebarSection[] = [
     {
         title: 'Core Console',
@@ -108,7 +117,13 @@ const sidebarSections: SidebarSection[] = [
             { name: 'Unique ID Levels', href: '/store/unique-id-levels', icon: Layers },
             { name: 'Recharge Plans', href: '/plans/recharge', icon: Coins },
             { name: 'Beans Plans', href: '/plans/beans', icon: Gem },
-            { name: 'SVIP Plan Builder', href: '/plans/svip', icon: Crown },
+            { name: 'King of Kings (KOK)', href: '/king-of-kings', icon: Crown },
+            {
+                name: 'VIP Center (SVIP & VIP)',
+                icon: Crown,
+                submenu: vipCenterSubmenu,
+            },
+            { name: 'SVIP Plan Builder', href: '/plans/svip', icon: Sparkles },
             { name: 'VIP & SVIP Suite', href: '/vip-svip', icon: Crown },
             { name: 'Identity & VIP Studio', href: '/identity-vip-studio', icon: Sparkles },
             { name: 'Avatars', href: '/avatars', icon: Award },
