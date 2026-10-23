@@ -7,7 +7,7 @@ import {
     LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift, FileCheck,
     Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
     MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell, ShoppingBag, Car,
-    Heart, Flame, Radio, Coins, Gem, Hash, Zap,
+    Heart, Flame, Radio, Coins, Gem, Hash, Zap, Briefcase,
     type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -115,6 +115,7 @@ const sidebarSections: SidebarSection[] = [
             },
             { name: 'User Unique IDs', href: '/users/unique-ids', icon: Hash },
             { name: 'Unique ID Levels', href: '/store/unique-id-levels', icon: Layers },
+            { name: 'App BD & Agency Access', href: '/bd-agency-access', icon: Briefcase },
             { name: 'Recharge Plans', href: '/plans/recharge', icon: Coins },
             { name: 'Beans Plans', href: '/plans/beans', icon: Gem },
             { name: 'King of Kings (KOK)', href: '/king-of-kings', icon: Crown },
