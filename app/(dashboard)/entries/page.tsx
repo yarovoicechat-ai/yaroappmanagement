@@ -86,9 +86,23 @@ export default function EntriesManagementPage() {
       const res = await apiClient.get(API_ENDPOINTS.ENTRY_EFFECTS.LIST);
       let list: EntryEffectItem[] = [];
       if (res && res.data) {
-        list = Array.isArray(res.data) ? res.data : (res.data.items || []);
-      }
-      setEntries(list);
+      const DUMMY_NAMES = [
+        'king arrival',
+        'vip phantom',
+        'diamond lord',
+        'legend beast',
+        'star guest',
+        'royal phantom rolls',
+        'golden dragon descent',
+        'cyber hypercar',
+      ];
+      const isDummy = (item: any) => {
+        const name = String(item?.name || '').toLowerCase().trim();
+        const img = String(item?.image || item?.imageUrl || '');
+        return DUMMY_NAMES.includes(name) || img.includes('unsplash.com');
+      };
+
+      setEntries(list.filter(item => !isDummy(item)));
     } catch (err: any) {
       console.warn('Failed to load entry effects:', err);
       // Fallback: load from store category Entry
@@ -96,19 +110,36 @@ export default function EntriesManagementPage() {
         const storeRes = await apiClient.get(API_ENDPOINTS.STORE.ITEMS, { category: 'Entry' });
         if (storeRes && storeRes.data) {
           const rawItems = Array.isArray(storeRes.data) ? storeRes.data : (storeRes.data.items || []);
-          const mapped: EntryEffectItem[] = rawItems.map((item: any) => ({
-            _id: item._id,
-            name: item.name,
-            tagText: item.metadata?.banner || '👑 VIP HAS ENTERED',
-            animationType: item.metadata?.animationType || 'VIP_ENTRANCE',
-            image: item.imageUrl || item.image || '',
-            imageUrl: item.imageUrl || item.image || '',
-            animationUrl: item.animationUrl || '',
-            price: item.price || 15000,
-            duration: item.metadata?.duration || 3200,
-            isActive: item.isActive,
-            isVip: true,
-          }));
+          const DUMMY_NAMES = [
+            'king arrival',
+            'vip phantom',
+            'diamond lord',
+            'legend beast',
+            'star guest',
+            'royal phantom rolls',
+            'golden dragon descent',
+            'cyber hypercar',
+          ];
+          const isDummy = (item: any) => {
+            const name = String(item?.name || '').toLowerCase().trim();
+            const img = String(item?.image || item?.imageUrl || '');
+            return DUMMY_NAMES.includes(name) || img.includes('unsplash.com');
+          };
+          const mapped: EntryEffectItem[] = rawItems
+            .filter((item: any) => !isDummy(item))
+            .map((item: any) => ({
+              _id: item._id,
+              name: item.name,
+              tagText: item.metadata?.banner || '👑 VIP HAS ENTERED',
+              animationType: item.metadata?.animationType || 'VIP_ENTRANCE',
+              image: item.imageUrl || item.image || '',
+              imageUrl: item.imageUrl || item.image || '',
+              animationUrl: item.animationUrl || '',
+              price: item.price || 15000,
+              duration: item.metadata?.duration || 3200,
+              isActive: item.isActive,
+              isVip: true,
+            }));
           setEntries(mapped);
         }
       } catch (_) {

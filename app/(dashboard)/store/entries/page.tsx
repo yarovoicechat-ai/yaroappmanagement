@@ -147,7 +147,26 @@ export default function StoreEntriesPage() {
         }
       } catch (_) {}
 
-      setEntries(list);
+      // Filter out dummy entries so panel only shows real ones
+      const DUMMY_NAMES = [
+        'king arrival',
+        'vip phantom',
+        'diamond lord',
+        'legend beast',
+        'star guest',
+        'royal phantom rolls',
+        'golden dragon descent',
+        'cyber hypercar',
+      ];
+      const realOnlyList = list.filter((item: EntryItem) => {
+        const name = String(item.name || '').toLowerCase().trim();
+        const img = String(item.image || item.icon || '');
+        if (DUMMY_NAMES.includes(name)) return false;
+        if (img.includes('unsplash.com')) return false;
+        return true;
+      });
+
+      setEntries(realOnlyList);
     } catch (err: any) {
       toast.error(err?.message || 'Failed to fetch entry effects');
     } finally {
