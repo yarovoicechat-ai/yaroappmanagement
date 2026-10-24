@@ -23,6 +23,9 @@ import { apiClient } from '@/lib/apiClient';
 interface AppAccessUser {
     _id: string;
     userId: number;
+    meethiId?: string;
+    uniqueId?: string;
+    customDisplayId?: string;
     name: string;
     userName?: string;
     avatar?: string;
@@ -185,7 +188,7 @@ export default function BdAgencyAccessPage() {
                 <CardContent className="space-y-4">
                     <form onSubmit={handleLookupUser} className="flex gap-2 max-w-md">
                         <Input
-                            placeholder="Enter User ID (e.g. 1000000002)"
+                            placeholder="Enter User ID, Meethi ID, or Username"
                             value={lookupInput}
                             onChange={(e) => setLookupInput(e.target.value)}
                             className="bg-white dark:bg-slate-950"
@@ -210,11 +213,13 @@ export default function BdAgencyAccessPage() {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <span className="font-bold text-slate-900 dark:text-slate-100">{selectedUser.name || 'Unnamed'}</span>
-                                        <Badge variant="outline" className="text-xs">ID: {selectedUser.userId}</Badge>
+                                        <Badge variant="outline" className="text-xs">
+                                            ID: {selectedUser.userId || selectedUser.meethiId || selectedUser.uniqueId}
+                                        </Badge>
                                         <Badge variant="secondary" className="capitalize text-xs">{selectedUser.role || 'user'}</Badge>
                                     </div>
                                     <p className="text-xs text-slate-500 mt-0.5">
-                                        Username: {selectedUser.userName || '—'}
+                                        Username: {selectedUser.userName || '—'} {selectedUser.meethiId ? `(Meethi ID: ${selectedUser.meethiId})` : ''}
                                     </p>
                                 </div>
                             </div>
@@ -403,7 +408,7 @@ export default function BdAgencyAccessPage() {
                                         </TableCell>
                                         <TableCell>
                                             <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                                {u.userId}
+                                                {u.userId || u.meethiId || u.uniqueId}
                                             </span>
                                         </TableCell>
                                         <TableCell>
