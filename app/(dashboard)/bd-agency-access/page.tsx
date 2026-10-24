@@ -53,19 +53,18 @@ export default function BdAgencyAccessPage() {
     const fetchUsers = useCallback(async (query = searchQuery, filter = filterType) => {
         setLoading(true);
         try {
-            const params: any = {};
-            if (query.trim()) params.search = query.trim();
-            if (filter !== 'all') params.filter = filter;
+            const params: Record<string, string> = {};
+            if (query && query.trim()) params.search = query.trim();
+            if (filter && filter !== 'all') params.filter = filter;
 
-            const res = await apiClient.get<any>('/api/admin/app-access/users', { params });
-            if (res.data?.success && Array.isArray(res.data?.data)) {
-                setUsers(res.data.data);
-            } else {
-                setUsers([]);
-            }
+            const res = await apiClient.get<any>('/api/admin/app-access/users', params);
+            const userList = Array.isArray(res?.data)
+                ? res.data
+                : (Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res) ? res : []));
+            setUsers(userList);
         } catch (err: any) {
             console.error('Error fetching app access users:', err);
-            toast.error(err.response?.data?.message || 'Could not load users list');
+            toast.error(err.response?.data?.message || err.message || 'Could not load users list');
         } finally {
             setLoading(false);
         }
@@ -82,25 +81,28 @@ export default function BdAgencyAccessPage() {
 
     const handleLookupUser = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!lookupInput.trim()) {
-            toast.error('Please enter a User ID or Name to search');
+        const term = lookupInput.trim();
+        if (!term) {
+            toast.error('Please enter a User ID, Yaro ID, or Name to search');
             return;
         }
 
         setLookupLoading(true);
         try {
-            const res = await apiClient.get<any>('/api/admin/app-access/users', {
-                params: { search: lookupInput.trim() },
-            });
-            if (res.data?.success && Array.isArray(res.data?.data) && res.data.data.length > 0) {
-                setSelectedUser(res.data.data[0]);
-                toast.success(`Found user: ${res.data.data[0].name || res.data.data[0].userId}`);
+            const res = await apiClient.get<any>('/api/admin/app-access/users', { search: term });
+            const userList = Array.isArray(res?.data)
+                ? res.data
+                : (Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res) ? res : []));
+
+            if (userList.length > 0) {
+                setSelectedUser(userList[0]);
+                toast.success(`Found user: ${userList[0].name || userList[0].userName || userList[0].userId}`);
             } else {
                 setSelectedUser(null);
                 toast.error('User not found. Check the ID and try again.');
             }
         } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Failed to search user');
+            toast.error(err.response?.data?.message || err.message || 'Failed to search user');
         } finally {
             setLookupLoading(false);
         }
@@ -118,8 +120,8 @@ export default function BdAgencyAccessPage() {
                 enabled: nextStatus,
             });
 
-            if (res.data?.success) {
-                toast.success(res.data.message || `App ${type.toUpperCase()} access updated`);
+            if (res?.success || res?.data?.success) {
+                toast.success(res?.message || res?.data?.message || `App ${type.toUpperCase()} access updated`);
                 
                 // Update selectedUser if matched
                 if (selectedUser && String(selectedUser.userId) === String(userId)) {
@@ -141,9 +143,11 @@ export default function BdAgencyAccessPage() {
                         return u;
                     })
                 );
+            } else {
+                toast.error(res?.message || res?.data?.message || 'Failed to update access');
             }
         } catch (err: any) {
-            toast.error(err.response?.data?.message || `Failed to update ${type} access`);
+            toast.error(err.response?.data?.message || err.message || 'Failed to update user access');
         } finally {
             setTogglingType(null);
         }
@@ -188,7 +192,7 @@ export default function BdAgencyAccessPage() {
                 <CardContent className="space-y-4">
                     <form onSubmit={handleLookupUser} className="flex gap-2 max-w-md">
                         <Input
-                            placeholder="Enter User ID, Meethi ID, or Username"
+                            placeholder="Enter User ID, Yaro ID, or Username"
                             value={lookupInput}
                             onChange={(e) => setLookupInput(e.target.value)}
                             className="bg-white dark:bg-slate-950"
@@ -219,7 +223,7 @@ export default function BdAgencyAccessPage() {
                                         <Badge variant="secondary" className="capitalize text-xs">{selectedUser.role || 'user'}</Badge>
                                     </div>
                                     <p className="text-xs text-slate-500 mt-0.5">
-                                        Username: {selectedUser.userName || '—'} {selectedUser.meethiId ? `(Meethi ID: ${selectedUser.meethiId})` : ''}
+                                        Username: {selectedUser.userName || '—'} {selectedUser.meethiId ? `(Yaro ID: ${selectedUser.meethiId})` : ''}
                                     </p>
                                 </div>
                             </div>
@@ -381,7 +385,11 @@ export default function BdAgencyAccessPage() {
                             ) : users.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center py-10 text-slate-500">
-                                        No users found with active BD or Agency app access.
+                                        {filterType === 'agency'
+                                            ? 'No users found with active Agency app access.'
+                                            : filterType === 'bd'
+                                            ? 'No users found with active BD app access.'
+                                            : 'No users found.'}
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -407,9 +415,14 @@ export default function BdAgencyAccessPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                                {u.userId || u.meethiId || u.uniqueId}
-                                            </span>
+                                            <div className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                                ID: {u.userId || u.meethiId || u.uniqueId}
+                                            </div>
+                                            {u.meethiId && String(u.meethiId) !== String(u.userId) && (
+                                                <div className="text-[10px] text-indigo-500 font-mono">
+                                                    Yaro ID: {u.meethiId}
+                                                </div>
+                                            )}
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="outline" className="capitalize text-xs">
