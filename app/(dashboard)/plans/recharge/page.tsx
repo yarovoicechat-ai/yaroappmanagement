@@ -350,8 +350,8 @@ export default function RechargePlansPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-purple-400">
-                            {stats.maxDiamonds.toLocaleString()} 💎
+                        <div className="text-2xl font-bold text-amber-400 flex items-center">
+                            {stats.maxDiamonds.toLocaleString()} <img src="/icons/diamond.png" className="w-6 h-6 inline-block object-contain ml-1.5" alt="Diamonds" />
                         </div>
                         <p className="text-xs text-slate-500 mt-1">Max package capacity</p>
                     </CardContent>
