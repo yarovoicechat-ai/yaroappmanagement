@@ -86,6 +86,8 @@ export default function EntriesManagementPage() {
       const res = await apiClient.get(API_ENDPOINTS.ENTRY_EFFECTS.LIST);
       let list: EntryEffectItem[] = [];
       if (res && res.data) {
+        list = Array.isArray(res.data) ? res.data : (res.data.items || []);
+      }
       const DUMMY_NAMES = [
         'king arrival',
         'vip phantom',
