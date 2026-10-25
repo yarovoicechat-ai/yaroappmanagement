@@ -87,8 +87,9 @@ export default function KingOfKingsAdminPage() {
     setLoading(true);
     try {
       const res = await apiClient.get<any>('/api/king-plans/admin');
-      if (res.data?.success && res.data.plans) {
-        setPlans(res.data.plans);
+      const plans = res?.data?.plans || res?.plans || (Array.isArray(res?.data) ? res.data : []);
+      if (plans && Array.isArray(plans)) {
+        setPlans(plans);
         if (!selectedPlan && res.data.plans.length > 0) {
           setSelectedPlan(res.data.plans[0]);
         } else if (selectedPlan) {
@@ -114,7 +115,7 @@ export default function KingOfKingsAdminPage() {
     setLoading(true);
     try {
       const res = await apiClient.post<any>('/api/king-plans/admin/reseed');
-      if (res.data?.success) {
+      if (res?.success || res?.data?.success) {
         toast.success('Successfully reseeded all 5 King of Kings tiers!');
         fetchPlans();
       }
@@ -161,7 +162,7 @@ export default function KingOfKingsAdminPage() {
     setLoading(true);
     try {
       const res = await apiClient.put<any>(`/api/king-plans/admin/${editingPlan._id}`, editingPlan);
-      if (res.data?.success) {
+      if (res?.success || res?.data?.success) {
         toast.success(`Nobility plan "${editingPlan.name}" updated successfully!`);
         setIsEditModalOpen(false);
         fetchPlans();
