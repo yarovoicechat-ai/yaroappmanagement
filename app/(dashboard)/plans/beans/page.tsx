@@ -359,8 +359,8 @@ export default function BeansPlansPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-amber-400">
-                            {stats.maxBeans.toLocaleString()} 🫘
+                        <div className="text-2xl font-bold text-amber-400 flex items-center">
+                            {stats.maxBeans.toLocaleString()} <img src="/icons/beans.png" className="w-6 h-6 inline-block object-contain ml-1.5" alt="Beans" />
                         </div>
                         <p className="text-xs text-slate-500 mt-1">Maximum bulk tier</p>
                     </CardContent>
