@@ -87,13 +87,13 @@ export default function KingOfKingsAdminPage() {
     setLoading(true);
     try {
       const res = await apiClient.get<any>('/api/king-plans/admin');
-      const plans = res?.data?.plans || res?.plans || (Array.isArray(res?.data) ? res.data : []);
-      if (plans && Array.isArray(plans)) {
-        setPlans(plans);
-        if (!selectedPlan && res.data.plans.length > 0) {
-          setSelectedPlan(res.data.plans[0]);
+      const loadedPlans = res?.data?.plans || (res as any)?.plans || (Array.isArray(res?.data) ? res.data : []);
+      if (loadedPlans && Array.isArray(loadedPlans)) {
+        setPlans(loadedPlans);
+        if (!selectedPlan && loadedPlans.length > 0) {
+          setSelectedPlan(loadedPlans[0]);
         } else if (selectedPlan) {
-          const updated = res.data.plans.find((p: KingPlanItem) => p._id === selectedPlan._id);
+          const updated = loadedPlans.find((p: KingPlanItem) => p._id === selectedPlan._id);
           if (updated) setSelectedPlan(updated);
         }
       }

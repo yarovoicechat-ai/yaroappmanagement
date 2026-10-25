@@ -15,9 +15,18 @@ import {
   Coins,
   Check,
   X,
+  UploadCloud,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/apiClient';
+
+interface CharmRewardItem {
+  type: 'frame' | 'entry' | 'badge' | 'tag' | 'vehicle' | 'micWave' | 'theme';
+  name: string;
+  imageUrl?: string;
+  animationUrl?: string;
+  durationDays?: number;
+}
 
 interface CharmLevelItem {
   _id: string;
@@ -26,8 +35,12 @@ interface CharmLevelItem {
   minCalls: number;
   minMinutes: number;
   coinPerMinute: number;
-  charmPointsRequired: number;
-  badge: string;
+  charmPointsRequired?: number;
+  levelTag?: string;
+  badge?: string;
+  badgeIcon?: string;
+  badgeAnimation?: string;
+  rewards?: CharmRewardItem[];
   rewardText?: string;
 }
 
@@ -42,6 +55,7 @@ const DEFAULT_CHARM_LEVELS: CharmLevelItem[] = Array.from({ length: 15 }, (_, i)
     coinPerMinute: 20 + lvl * 5,
     charmPointsRequired: Math.round(Math.pow(lvl, 2) * 800),
     badge: lvl >= 10 ? '👑 Super Idol' : lvl >= 5 ? '🌟 Star Host' : '🌸 Rising Host',
+    levelTag: lvl >= 10 ? '👑 Super Idol' : lvl >= 5 ? '🌟 Star Host' : '🌸 Rising Host',
     rewardText: lvl % 3 === 0 ? `Idol Voice Aura Lv.${lvl}` : undefined,
   };
 });
@@ -50,6 +64,7 @@ export default function CharmLevelsPage() {
   const [levels, setLevels] = useState<CharmLevelItem[]>(DEFAULT_CHARM_LEVELS);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [uploadingAsset, setUploadingAsset] = useState<string | null>(null);
 
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,28 +78,38 @@ export default function CharmLevelsPage() {
     coinPerMinute: 20,
     charmPointsRequired: 1000,
     badge: 'Rising Host',
+    levelTag: 'Rising Host',
+    badgeIcon: '',
+    badgeAnimation: '',
+    rewards: [],
   });
 
   const fetchCharmLevels = async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get('/api/admin/host-levels').catch(() => null);
+      const res = await apiClient.get('/api/admin/levels').catch(() => null);
       if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
         setLevels(
           res.data.map((l: any) => ({
-            _id: l._id || `charm_${l.level}`,
+            _id: l._id,
             level: l.level,
             name: l.name || `Charm Host Lv.${l.level}`,
             minCalls: l.minCalls || 0,
             minMinutes: l.minMinutes || 0,
             coinPerMinute: l.coinPerMinute || 20,
             charmPointsRequired: (l.minMinutes || 0) * 60 + (l.minCalls || 0) * 10,
-            badge: l.level >= 10 ? '👑 Super Idol' : '🌸 Rising Star',
+            badge: l.levelTag || (l.level >= 10 ? '👑 Super Idol' : '🌸 Rising Star'),
+            levelTag: l.levelTag || '',
+            badgeIcon: l.badgeIcon || '',
+            badgeAnimation: l.badgeAnimation || '',
+            rewards: l.rewards || [],
             rewardText: l.rewards?.[0]?.name,
           }))
         );
       }
-    } catch (_) {
+    } catch (err: any) {
+      console.error('Failed to fetch charm levels:', err);
+      toast.error('Failed to load charm levels');
     } finally {
       setLoading(false);
     }
@@ -94,9 +119,34 @@ export default function CharmLevelsPage() {
     fetchCharmLevels();
   }, []);
 
+  const uploadAsset = async (targetField: 'badgeIcon' | 'badgeAnimation', file?: File) => {
+    if (!file) return;
+    try {
+      setUploadingAsset(targetField);
+      const body = new FormData();
+      body.append('file', file);
+      const response = await apiClient.uploadFile<{ url: string }>('/api/upload/file', body);
+      const url = response.data?.url;
+      if (!url) throw new Error('Upload URL missing');
+      setFormData(prev => ({ ...prev, [targetField]: url }));
+      toast.success(`${targetField === 'badgeIcon' ? 'Badge Icon' : 'Animation'} uploaded`);
+    } catch (error: any) {
+      toast.error(error.message || 'Asset upload failed');
+    } finally {
+      setUploadingAsset(null);
+    }
+  };
+
   const handleOpenEditModal = (item: CharmLevelItem) => {
     setEditingItem(item);
-    setFormData({ ...item });
+    setFormData({
+      ...item,
+      badge: item.levelTag || item.badge || '',
+      levelTag: item.levelTag || item.badge || '',
+      badgeIcon: item.badgeIcon || '',
+      badgeAnimation: item.badgeAnimation || '',
+      rewards: item.rewards ? [...item.rewards] : [],
+    });
     setIsModalOpen(true);
   };
 
@@ -104,7 +154,7 @@ export default function CharmLevelsPage() {
     setEditingItem(null);
     const nextLvl = levels.length > 0 ? Math.max(...levels.map(l => l.level)) + 1 : 1;
     setFormData({
-      _id: `charm_${nextLvl}`,
+      _id: '',
       level: nextLvl,
       name: `Charm Idol Lv.${nextLvl}`,
       minCalls: nextLvl * 5,
@@ -112,25 +162,68 @@ export default function CharmLevelsPage() {
       coinPerMinute: 20 + nextLvl * 5,
       charmPointsRequired: Math.round(Math.pow(nextLvl, 2) * 800),
       badge: '🌸 Star Host',
+      levelTag: '🌸 Star Host',
+      badgeIcon: '',
+      badgeAnimation: '',
+      rewards: [],
     });
     setIsModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingItem) {
-      setLevels(prev => prev.map(l => (l.level === editingItem.level ? formData : l)));
-      toast.success(`Charm Level ${formData.level} updated!`);
-    } else {
-      setLevels(prev => [...prev, formData].sort((a, b) => a.level - b.level));
-      toast.success(`Charm Level ${formData.level} added!`);
+    const payload = {
+      level: Number(formData.level),
+      name: formData.name.trim(),
+      minCalls: Number(formData.minCalls) || 0,
+      minMinutes: Number(formData.minMinutes) || 0,
+      coinPerMinute: Number(formData.coinPerMinute) || 20,
+      levelTag: (formData.levelTag || formData.badge || '').trim(),
+      badgeIcon: formData.badgeIcon?.trim() || '',
+      badgeAnimation: formData.badgeAnimation?.trim() || '',
+      rewards: formData.rewards || [],
+    };
+
+    try {
+      if (editingItem && editingItem._id && !editingItem._id.startsWith('charm_')) {
+        const res = await apiClient.patch(`/api/admin/levels/${editingItem._id}`, payload);
+        if (res.success) {
+          toast.success(`Charm Level ${formData.level} updated!`);
+          fetchCharmLevels();
+        } else {
+          toast.error(res.message || 'Failed to update level');
+        }
+      } else {
+        const res = await apiClient.post('/api/admin/levels', payload);
+        if (res.success) {
+          toast.success(`Charm Level ${formData.level} created!`);
+          fetchCharmLevels();
+        } else {
+          toast.error(res.message || 'Failed to create level');
+        }
+      }
+      setIsModalOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save charm level');
     }
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (level: number) => {
-    setLevels(prev => prev.filter(l => l.level !== level));
-    toast.success(`Charm Level ${level} deleted`);
+  const handleDelete = async (item: CharmLevelItem) => {
+    if (!confirm(`Are you sure you want to delete Charm Level ${item.level}?`)) return;
+    try {
+      if (item._id && !item._id.startsWith('charm_')) {
+        const res = await apiClient.delete(`/api/admin/levels/${item._id}`);
+        if (res.success) {
+          toast.success(`Charm Level ${item.level} deleted`);
+          fetchCharmLevels();
+          return;
+        }
+      }
+      setLevels(prev => prev.filter(l => l.level !== item.level));
+      toast.success(`Charm Level ${item.level} removed`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete charm level');
+    }
   };
 
   const filteredLevels = levels.filter(l => {
@@ -243,7 +336,7 @@ export default function CharmLevelsPage() {
                   </td>
                   <td className="p-3.5 font-semibold text-white">{lvl.name}</td>
                   <td className="p-3.5 font-mono text-pink-400 font-bold">
-                    {lvl.charmPointsRequired.toLocaleString()} 🌸
+                    {(lvl.charmPointsRequired || 0).toLocaleString()} 🌸
                   </td>
                   <td className="p-3.5 text-slate-300">{lvl.minCalls} calls</td>
                   <td className="p-3.5 text-slate-300">{lvl.minMinutes} mins</td>
@@ -256,7 +349,7 @@ export default function CharmLevelsPage() {
                       <Edit2 size={13} />
                     </button>
                     <button
-                      onClick={() => handleDelete(lvl.level)}
+                      onClick={() => handleDelete(lvl)}
                       className="p-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
                     >
                       <Trash2 size={13} />
@@ -272,7 +365,7 @@ export default function CharmLevelsPage() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-slate-900 border border-pink-500/30 rounded-3xl p-6 shadow-2xl">
+          <div className="max-w-md w-full bg-slate-900 border border-pink-500/30 rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
               <Heart size={18} className="text-pink-400" />
               {editingItem ? `Edit Charm Level ${formData.level}` : 'Create Charm Level'}
@@ -291,11 +384,11 @@ export default function CharmLevelsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">Badge Title</label>
+                  <label className="block text-xs text-slate-300 mb-1">Badge Title / Tag</label>
                   <input
                     type="text"
                     value={formData.badge}
-                    onChange={e => setFormData(prev => ({ ...prev, badge: e.target.value }))}
+                    onChange={e => setFormData(prev => ({ ...prev, badge: e.target.value, levelTag: e.target.value }))}
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white"
                   />
                 </div>
@@ -310,6 +403,59 @@ export default function CharmLevelsPage() {
                   onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white"
                 />
+              </div>
+
+              {/* Badge Asset Uploads */}
+              <div className="p-3 rounded-2xl border border-pink-500/30 bg-pink-500/5 space-y-3">
+                <p className="text-xs font-bold text-pink-300">Charm Badge & Animation Assets</p>
+                <div>
+                  <label className="block text-[11px] text-slate-400 mb-1">Badge Icon (PNG/JPG/WebP)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Icon URL"
+                      value={formData.badgeIcon || ''}
+                      onChange={e => setFormData(prev => ({ ...prev, badgeIcon: e.target.value }))}
+                      className="flex-1 px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white"
+                    />
+                    {formData.badgeIcon && (
+                      <div className="w-8 h-8 rounded-lg border border-slate-700 bg-slate-950 overflow-hidden shrink-0 flex items-center justify-center">
+                        <img src={formData.badgeIcon} alt="" className="w-full h-full object-contain" />
+                      </div>
+                    )}
+                  </div>
+                  <label className="mt-1.5 flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-pink-500/40 p-1.5 text-[11px] text-pink-300 hover:bg-pink-500/10">
+                    <UploadCloud size={13} /> {uploadingAsset === 'badgeIcon' ? 'Uploading...' : 'Upload Badge Icon'}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      className="hidden"
+                      disabled={uploadingAsset !== null}
+                      onChange={e => uploadAsset('badgeIcon', e.target.files?.[0])}
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-slate-400 mb-1">Animation (.svga, .gif)</label>
+                  <input
+                    type="text"
+                    placeholder="SVGA Animation URL"
+                    value={formData.badgeAnimation || ''}
+                    onChange={e => setFormData(prev => ({ ...prev, badgeAnimation: e.target.value }))}
+                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white"
+                  />
+                  <label className="mt-1.5 flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-pink-500/40 p-1.5 text-[11px] text-pink-300 hover:bg-pink-500/10">
+                    <UploadCloud size={13} /> {uploadingAsset === 'badgeAnimation' ? 'Uploading...' : 'Upload SVGA File'}
+                    <input
+                      type="file"
+                      accept=".svga,image/gif,image/webp"
+                      className="hidden"
+                      disabled={uploadingAsset !== null}
+                      onChange={e => uploadAsset('badgeAnimation', e.target.files?.[0])}
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
