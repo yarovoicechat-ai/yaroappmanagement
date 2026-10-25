@@ -36,6 +36,8 @@ export interface GenericStoreItem {
   animationUrl?: string;
   desc?: string;
   isActive: boolean;
+  isStaffOnly?: boolean;
+  audience?: string;
   metadata?: Record<string, any>;
   createdAt?: string;
 }
@@ -51,6 +53,7 @@ interface Props {
   extraFieldKey?: string;
   extraFieldPlaceholder?: string;
   enableThemePlacement?: boolean;
+  enableTargetLocation?: boolean;
 }
 
 export default function GenericStoreCategoryPage({
@@ -64,6 +67,7 @@ export default function GenericStoreCategoryPage({
   extraFieldKey,
   extraFieldPlaceholder,
   enableThemePlacement = false,
+  enableTargetLocation = false,
 }: Props) {
   const [items, setItems] = useState<GenericStoreItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,6 +96,9 @@ export default function GenericStoreCategoryPage({
     desc: '',
     extraValue: '',
     themeLocation: 'STORE' as 'STORE' | 'ROOM_TOOL' | 'BOTH',
+    targetLocation: 'STORE' as 'STORE' | 'STAFF' | 'VIP_SVIP' | 'LEVEL',
+    tagText: '',
+    tagColor: themeColor || '#F59E0B',
     isFree: false,
     isActive: true,
   });
@@ -136,6 +143,9 @@ export default function GenericStoreCategoryPage({
       desc: '',
       extraValue: '',
       themeLocation: 'STORE',
+      targetLocation: 'STORE',
+      tagText: '',
+      tagColor: themeColor || '#F59E0B',
       isFree: false,
       isActive: true,
     });
@@ -168,6 +178,11 @@ export default function GenericStoreCategoryPage({
       themeLocation: (['STORE', 'ROOM_TOOL', 'BOTH'].includes(String(item.metadata?.themeLocation || '').toUpperCase())
         ? String(item.metadata?.themeLocation).toUpperCase()
         : 'STORE') as 'STORE' | 'ROOM_TOOL' | 'BOTH',
+      targetLocation: (['STORE', 'STAFF', 'VIP_SVIP', 'LEVEL'].includes(String(item.metadata?.targetLocation || '').toUpperCase())
+        ? String(item.metadata?.targetLocation).toUpperCase()
+        : (item.isStaffOnly ? 'STAFF' : 'STORE')) as 'STORE' | 'STAFF' | 'VIP_SVIP' | 'LEVEL',
+      tagText: item.metadata?.tagText || item.badgeText || '',
+      tagColor: item.metadata?.tagColor || item.previewColor || themeColor || '#F59E0B',
       isFree: Boolean(item.metadata?.isFree || item.price === 0),
       isActive: item.isActive !== false,
     });
@@ -260,26 +275,37 @@ export default function GenericStoreCategoryPage({
       metadata.seatSkinLocation = formData.themeLocation;
       metadata.isFree = formData.isFree;
     }
+    if (enableTargetLocation) {
+      metadata.targetLocation = formData.targetLocation;
+      metadata.tagText = formData.tagText.trim() || formData.name.trim();
+      metadata.tagColor = formData.tagColor || formData.previewColor || themeColor;
+      if (formData.targetLocation === 'STAFF') {
+        metadata.isStaffOnly = true;
+      }
+    }
 
     const resolvedImage = formData.image || formData.animationUrl;
     const resolvedAnimation = formData.animationUrl || formData.image;
+    const isStaff = enableTargetLocation && formData.targetLocation === 'STAFF';
 
     const payload = {
       name: formData.name.trim(),
       category: categoryName,
-      price,
+      price: isStaff ? 0 : price,
       priceOptions: [
-        { days: 3, diamonds: formData.isFree ? 0 : Math.max(0, Number(formData.price3Days) || Math.round(price * 0.15)) },
-        { days: 7, diamonds: formData.isFree ? 0 : Math.max(0, Number(formData.price7Days) || Math.round(price * 0.3)) },
-        { days: 15, diamonds: formData.isFree ? 0 : Math.max(0, Number(formData.price15Days) || Math.round(price * 0.55)) },
-        { days: 30, diamonds: price },
+        { days: 3, diamonds: (formData.isFree || isStaff) ? 0 : Math.max(0, Number(formData.price3Days) || Math.round(price * 0.15)) },
+        { days: 7, diamonds: (formData.isFree || isStaff) ? 0 : Math.max(0, Number(formData.price7Days) || Math.round(price * 0.3)) },
+        { days: 15, diamonds: (formData.isFree || isStaff) ? 0 : Math.max(0, Number(formData.price15Days) || Math.round(price * 0.55)) },
+        { days: 30, diamonds: isStaff ? 0 : price },
       ],
-      validity: formData.isFree ? 'Permanent' : formData.validity,
-      badgeText: formData.isFree ? 'FREE' : formData.badgeText,
-      previewColor: formData.previewColor,
+      validity: (formData.isFree || isStaff) ? 'Permanent' : formData.validity,
+      badgeText: isStaff ? 'STAFF' : formData.isFree ? 'FREE' : formData.badgeText,
+      previewColor: formData.tagColor || formData.previewColor,
       imageUrl: resolvedImage,
       image: resolvedImage,
       animationUrl: resolvedAnimation,
+      audience: formData.targetLocation === 'STAFF' ? 'employee' : formData.targetLocation === 'VIP_SVIP' ? 'vip' : 'general',
+      isStaffOnly: formData.targetLocation === 'STAFF',
       desc: formData.desc || `Exclusive ${categoryTitle}: ${formData.name}`,
       isActive: formData.isActive,
       metadata,
@@ -565,6 +591,47 @@ export default function GenericStoreCategoryPage({
                         )}
                       </div>
                     )}
+                    {enableTargetLocation && (
+                      <div className="mt-2 flex items-center justify-center gap-1.5 flex-wrap">
+                        <span
+                          className="px-2 py-0.5 rounded text-[10px] font-semibold border flex items-center gap-1"
+                          style={{
+                            backgroundColor:
+                              item.metadata?.targetLocation === 'STAFF' ? 'rgba(239, 68, 68, 0.15)' :
+                              item.metadata?.targetLocation === 'VIP_SVIP' ? 'rgba(234, 179, 8, 0.15)' :
+                              item.metadata?.targetLocation === 'LEVEL' ? 'rgba(6, 182, 212, 0.15)' :
+                              'rgba(139, 92, 246, 0.15)',
+                            color:
+                              item.metadata?.targetLocation === 'STAFF' ? '#F87171' :
+                              item.metadata?.targetLocation === 'VIP_SVIP' ? '#FBBF24' :
+                              item.metadata?.targetLocation === 'LEVEL' ? '#22D3EE' :
+                              '#A78BFA',
+                            borderColor:
+                              item.metadata?.targetLocation === 'STAFF' ? 'rgba(239, 68, 68, 0.3)' :
+                              item.metadata?.targetLocation === 'VIP_SVIP' ? 'rgba(234, 179, 8, 0.3)' :
+                              item.metadata?.targetLocation === 'LEVEL' ? 'rgba(6, 182, 212, 0.3)' :
+                              'rgba(139, 92, 246, 0.3)',
+                          }}
+                        >
+                          {item.metadata?.targetLocation === 'STAFF' ? '🛡️ Staff' :
+                           item.metadata?.targetLocation === 'VIP_SVIP' ? '👑 VIP/SVIP' :
+                           item.metadata?.targetLocation === 'LEVEL' ? '⭐ Level' :
+                           '🏪 Store'}
+                        </span>
+                        {item.metadata?.tagText && (
+                          <span
+                            className="px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm truncate max-w-[120px]"
+                            style={{
+                              background: item.metadata?.tagColor
+                                ? `linear-gradient(135deg, ${item.metadata.tagColor}, #0F172A)`
+                                : '#1E293B',
+                            }}
+                          >
+                            {item.metadata.tagText}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Pricing */}
@@ -702,6 +769,112 @@ export default function GenericStoreCategoryPage({
                     onChange={e => setFormData(prev => ({ ...prev, extraValue: e.target.value }))}
                     className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none"
                   />
+                </div>
+              )}
+
+              {enableTargetLocation && (
+                <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <Sparkles size={14} className="text-amber-400" />
+                        Target Location / Role Scope (SABHI K LIYE)
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        Select which app system, role, or feature this {categoryName} belongs to
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                    {[
+                      { id: 'STORE', label: '🏪 Store (Mall)', desc: 'Buy with Diamonds in App' },
+                      { id: 'STAFF', label: '🛡️ Staff Tag / Badge', desc: 'Admin, BD, Agency, Official' },
+                      { id: 'VIP_SVIP', label: '👑 VIP / SVIP', desc: 'VIP & SVIP Exclusive' },
+                      { id: 'LEVEL', label: '⭐ Level Reward', desc: 'Wealth / Charm Milestones' },
+                    ].map(loc => {
+                      const selected = formData.targetLocation === loc.id;
+                      return (
+                        <button
+                          key={loc.id}
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              targetLocation: loc.id as any,
+                              isFree: loc.id === 'STAFF' ? true : prev.isFree,
+                              price: loc.id === 'STAFF' ? 0 : prev.price,
+                            }));
+                          }}
+                          className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                            selected
+                              ? 'bg-amber-500/20 border-amber-400 text-white shadow-md'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="text-xs font-bold text-white">{loc.label}</div>
+                          <div className="text-[10px] text-slate-400 mt-1">{loc.desc}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {formData.targetLocation === 'STAFF' && (
+                    <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
+                      <span className="font-bold">🛡️ Staff Only:</span> 100% Free for official staff. Excluded from general app store catalog.
+                    </div>
+                  )}
+
+                  {categoryName === 'Tag' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-slate-800/80">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">
+                          Tag Text Banner (Room Chat & User Card)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 👑 OFFICIAL, 🛡️ STAFF, 💎 VIP 1, 🔥 STAR"
+                          value={formData.tagText}
+                          onChange={e => setFormData(prev => ({ ...prev, tagText: e.target.value }))}
+                          className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">
+                          Tag Accent Color
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={formData.tagColor || '#F59E0B'}
+                            onChange={e => setFormData(prev => ({ ...prev, tagColor: e.target.value }))}
+                            className="w-10 h-10 rounded-xl bg-transparent cursor-pointer border border-slate-800 p-0.5"
+                          />
+                          <input
+                            type="text"
+                            placeholder="#F59E0B"
+                            value={formData.tagColor}
+                            onChange={e => setFormData(prev => ({ ...prev, tagColor: e.target.value }))}
+                            className="flex-1 px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Live preview */}
+                      <div className="md:col-span-2 p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+                        <span className="text-xs text-slate-400 font-medium">Live Tag Banner Preview:</span>
+                        <div
+                          className="px-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-lg flex items-center gap-1.5 border border-white/20"
+                          style={{
+                            background: `linear-gradient(135deg, ${formData.tagColor || '#F59E0B'}, #0F172A)`,
+                            boxShadow: `0 4px 14px ${formData.tagColor || '#F59E0B'}40`,
+                          }}
+                        >
+                          {formData.tagText || formData.name || '🏷️ PREVIEW TAG'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

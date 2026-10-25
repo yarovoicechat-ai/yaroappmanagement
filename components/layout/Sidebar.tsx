@@ -49,6 +49,8 @@ const storeSubmenu: SubmenuItem[] = [
     { name: 'Profile Cards', href: '/store/profile-cards' },
     { name: 'Room Cards', href: '/store/room-cards' },
     { name: 'Profile Entries', href: '/store/profile-entries' },
+    { name: 'Badges', href: '/store/badges' },
+    { name: 'Tags', href: '/store/tags' },
 ];
 
 const levelSubmenu: SubmenuItem[] = [
