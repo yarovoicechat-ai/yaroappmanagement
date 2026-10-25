@@ -125,12 +125,27 @@ export const API_ENDPOINTS = {
         TOGGLE: (id: string) => `/api/admin/banners/${id}/toggle`,
     },
 
-    // Levels Management
+    // Levels Management (Wealth & Charm)
     LEVELS_MGMT: {
         LIST: '/api/admin/levels',
+        BY_TYPE: (type?: string) => type ? `/api/admin/levels?type=${type}` : '/api/admin/levels',
         CREATE: '/api/admin/levels',
         UPDATE: (id: string) => `/api/admin/levels/${id}`,
         DELETE: (id: string) => `/api/admin/levels/${id}`,
+    },
+
+    // Unique ID Requests (Level Perk Approvals)
+    UNIQUE_ID_REQUESTS: {
+        LIST: (status?: string, search?: string) => {
+            const params = new URLSearchParams();
+            if (status && status !== 'all') params.append('status', status);
+            if (search) params.append('search', search);
+            const qs = params.toString();
+            return `/api/admin/unique-id-requests${qs ? `?${qs}` : ''}`;
+        },
+        CHECK: (requestedId: string) => `/api/admin/unique-id-requests/check/${requestedId}`,
+        APPROVE: (id: string) => `/api/admin/unique-id-requests/${id}/approve`,
+        REJECT: (id: string) => `/api/admin/unique-id-requests/${id}/reject`,
     },
 
     // Reports Management
