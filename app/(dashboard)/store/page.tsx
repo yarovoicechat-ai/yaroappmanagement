@@ -38,9 +38,9 @@ export type StoreCategory =
   | 'Chat Bubble'
   | 'Mic Wave'
   | 'Frames'
+  | 'Entrance'
   | 'Entry'
   | 'Theme'
-  | 'Tassel'
   | 'VIP'
   | 'King of Kings';
 
@@ -78,9 +78,9 @@ const CATEGORIES: { label: StoreCategory; icon: any; color: string }[] = [
   { label: 'Chat Bubble', icon: Zap, color: 'text-cyan-400' },
   { label: 'Mic Wave', icon: Radio, color: 'text-emerald-400' },
   { label: 'Frames', icon: Sparkles, color: 'text-rose-400' },
-  { label: 'Entry', icon: Car, color: 'text-orange-400' },
+  { label: 'Entrance', icon: Car, color: 'text-cyan-400' },
+  { label: 'Entry', icon: Sparkles, color: 'text-orange-400' },
   { label: 'Theme', icon: Palette, color: 'text-purple-400' },
-  { label: 'Tassel', icon: Layers, color: 'text-amber-300' },
   { label: 'VIP', icon: Crown, color: 'text-yellow-400' },
   { label: 'King of Kings', icon: Crown, color: 'text-amber-300' },
 ];
@@ -728,11 +728,11 @@ export default function StoreManagementPage() {
                     </div>
                   )}
 
-                  {selectedItem.category === 'Tassel' && (
+                  {selectedItem.category === 'Entrance' && (
                     <div className="w-full text-center">
-                      <Layers className="w-10 h-10 text-amber-300 mx-auto mb-2" />
+                      <Car className="w-10 h-10 text-cyan-400 mx-auto mb-2" />
                       <p className="text-white font-black text-sm">{selectedItem.name}</p>
-                      <p className="text-slate-300 text-xs">Profile Silk Tassel Badge</p>
+                      <p className="text-slate-300 text-xs">Room Entrance Ride & Effect</p>
                     </div>
                   )}
                 </div>
