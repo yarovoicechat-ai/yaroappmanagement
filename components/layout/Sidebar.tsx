@@ -34,7 +34,6 @@ interface SidebarSection {
 
 const storeSubmenu: SubmenuItem[] = [
     { name: 'Store Overview', href: '/store' },
-    { name: '🎁 Asset Distribution', href: '/store/distribute' },
     { name: '🎁 Virtual Gifts (💎)', href: '/gifts' },
     { name: 'User Unique IDs', href: '/users/unique-ids' },
     { name: 'Unique ID Catalog', href: '/store/unique-ids' },
@@ -107,8 +106,6 @@ const sidebarSections: SidebarSection[] = [
         title: 'App Content & Economy',
         items: [
             { name: 'Virtual Gifts (💎)', href: '/gifts', icon: Gift },
-            { name: 'Live Rooms (Pin)', href: '/rooms', icon: Radio },
-            { name: 'Asset Distribution', href: '/store/distribute', icon: Sparkles },
             { name: 'CMS Editor', href: '/cms', icon: FileText },
             {
                 name: 'Store Management',
@@ -141,7 +138,6 @@ const sidebarSections: SidebarSection[] = [
             { name: 'Campaign Center', href: '/notifications/campaigns', icon: Bell },
             { name: 'Events', href: '/events', icon: FileText },
             { name: 'Staff Approval Requests', href: '/staff-requests', icon: FileCheck },
-            { name: 'System Messages', href: '/messages/system', icon: MessageCircle },
             { name: 'Activity Messages', href: '/messages/activity', icon: MessageCircle }
         ]
     }
