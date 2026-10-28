@@ -178,7 +178,7 @@ export default function WithdrawalsPage() {
                                                     <DollarSign className="h-3 w-3 mr-1" />
                                                     {w.amount}
                                                 </div>
-                                                <div className="text-xs text-slate-500">{w.coinsDeducted} coins</div>
+                                                <div className="text-xs text-slate-500">{w.coinsDeducted} {w.economyVersion ? `earned Beans (${w.economyVersion})` : 'legacy coins'}</div>
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="capitalize border-slate-700 text-slate-300">

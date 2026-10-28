@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -49,6 +50,7 @@ const defaults: AppSettings = {
 };
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   const [settings, setSettings] = useState<AppSettings>(defaults);
   const [agoraCertificate, setAgoraCertificate] = useState('');
   const [loading, setLoading] = useState(true);
@@ -94,6 +96,7 @@ export default function SettingsPage() {
         <Button onClick={() => void save()} disabled={saving}><Save className="h-4 w-4 mr-2" />{saving ? 'Saving…' : 'Save All'}</Button>
       </div>
 
+      {user?.role === 'owner' && <Link href="/settings/economy" className="block border rounded-xl p-4 hover:bg-muted">Manage versioned Beans, calling, gifts, salary and agency economy</Link>}
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="glass-card">
           <CardHeader><CardTitle className="flex gap-2"><PhoneCall className="h-5 w-5" />Calling & Platform Commission</CardTitle></CardHeader>

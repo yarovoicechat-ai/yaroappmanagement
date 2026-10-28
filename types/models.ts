@@ -148,6 +148,7 @@ export interface PaginatedResponse<T> {
 }
 
 export interface Withdrawal {
+    economyVersion?: string;
     _id: string;
     userId: number;
     amount: number;

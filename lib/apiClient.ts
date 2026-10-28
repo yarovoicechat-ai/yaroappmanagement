@@ -1,6 +1,6 @@
 // API Client with automatic token injection, local fallback, XHR progress for large build uploads
 
-const getApiBaseUrl = () => {
+export const getApiBaseUrl = () => {
     if (typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
         return process.env.NEXT_PUBLIC_LOCAL_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3101';
     }

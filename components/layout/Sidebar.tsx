@@ -75,6 +75,7 @@ const sidebarSections: SidebarSection[] = [
             { name: 'App Releases (APK)', href: '/app-releases', icon: Download },
             { name: 'Feature Flags', href: '/feature-flags', icon: Sliders },
             { name: 'Screen Security & Code', href: '/screen-security', icon: ShieldCheck },
+            { name: 'Team & Hosting Targets', href: '/team', icon: Users },
             { name: 'App Settings', href: '/settings', icon: Settings },
             {
                 name: 'Communication Services',
@@ -239,6 +240,7 @@ export default function Sidebar() {
                             </h3>
                             <div className="space-y-1 pt-1">
                                 {section.items.map((item) => {
+                                    if (item.href === '/team' && !['owner', 'operator', 'superAdmin', 'admin', 'bdLeader', 'bd-leader', 'bd', 'agency', 'host'].includes(String(user?.role))) return null;
                                     const hasSubmenu = !!item.submenu;
                                     const isExpanded = !!expandedMenus[item.name];
                                     const isActive = item.href ? (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))) : false;
