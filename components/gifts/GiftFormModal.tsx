@@ -239,7 +239,7 @@ export default function GiftFormModal({
             return;
         }
 
-        if (!diamond || Number(diamond) <= 0) {
+        if (!Number.isFinite(Number(diamond)) || Number(diamond) <= 0) {
             toast.error('Diamond Price must be greater than 0 (डायमंड कीमत 0 से अधिक होनी चाहिए)');
             return;
         }
@@ -273,6 +273,12 @@ export default function GiftFormModal({
 
         try {
             setSaving(true);
+            if (isCreatingNewCategory) {
+                const result = await apiClient.post(API_ENDPOINTS.GIFTS.CREATE_CATEGORY, { name: targetCategory });
+                if (!result.success) throw new Error(result.message || 'Could not create gift category');
+                const created = result.data as any;
+                payload.category = created?.name || targetCategory;
+            }
             let res;
             if (gift?._id) {
                 res = await apiClient.put((API_ENDPOINTS.GIFTS as any).UPDATE(gift._id), payload);
@@ -375,7 +381,7 @@ export default function GiftFormModal({
                                     >
                                         {combinedCategories.map(cat => (
                                             <option key={cat} value={cat}>
-                                                {cat} Category
+                                                {cat.toLowerCase() === 'popular' ? '?? Popular' : cat} Category
                                             </option>
                                         ))}
                                         <option value="__NEW__" className="text-pink-400 font-bold">

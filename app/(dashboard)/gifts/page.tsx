@@ -26,6 +26,11 @@ import GiftFormModal, { GiftFormData } from '@/components/gifts/GiftFormModal';
 
 export default function GiftsPage() {
     const [gifts, setGifts] = useState<GiftFormData[]>([]);
+    const [categoryNames, setCategoryNames] = useState<string[]>(['Popular']);
+    const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+    const [categoryName, setCategoryName] = useState('');
+    const [categoryIcon, setCategoryIcon] = useState('??');
+    const [savingCategory, setSavingCategory] = useState(false);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [showAddDialog, setShowAddDialog] = useState(false);
@@ -42,7 +47,13 @@ export default function GiftsPage() {
     const fetchGifts = async () => {
         try {
             setLoading(true);
-            const res = await apiClient.get(API_ENDPOINTS.GIFTS.LIST);
+            const [res, categories] = await Promise.all([
+                apiClient.get(API_ENDPOINTS.GIFTS.LIST),
+                apiClient.get(API_ENDPOINTS.GIFTS.CATEGORIES),
+            ]);
+            if (categories.success && Array.isArray(categories.data)) {
+                setCategoryNames(categories.data.map((item: any) => item.name).filter(Boolean));
+            }
             if (res.success && res.data) {
                 setGifts((res.data as any) || []);
             }
@@ -54,8 +65,22 @@ export default function GiftsPage() {
     };
 
     const existingCategories = Array.from(
-        new Set(['Popular', 'Luxury', 'Romantic', 'Special', ...gifts.map(g => g.category).filter(Boolean)])
+        new Set(['Popular', ...categoryNames, ...gifts.map(g => g.category).filter(Boolean)])
     );
+
+    const createCategory = async () => {
+        if (!categoryName.trim() || savingCategory) return;
+        setSavingCategory(true);
+        try {
+            const result = await apiClient.post(API_ENDPOINTS.GIFTS.CREATE_CATEGORY, { name: categoryName.trim(), icon: categoryIcon.trim() || '??' });
+            if (!result.success) throw new Error(result.message || 'Could not create category');
+            setCategoryNames(current => Array.from(new Set([...current, (result.data as any)?.name || categoryName.trim()])));
+            setCategoryDialogOpen(false);
+            setCategoryName('');
+            toast.success('Category saved. It is now available when adding gifts and in the app.');
+        } catch (error: any) { toast.error(error.message || 'Could not create category'); }
+        finally { setSavingCategory(false); }
+    };
 
     const openCreateModal = () => {
         setEditingGift(null);
@@ -659,6 +684,14 @@ export default function GiftsPage() {
             )}
 
             {/* Reusable Comprehensive Add / Edit Gift Modal */}
+            <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+                <DialogContent>
+                    <DialogHeader><DialogTitle>Add Gift Category</DialogTitle><DialogDescription>Create a category before adding its gifts.</DialogDescription></DialogHeader>
+                    <Input aria-label="Category name" placeholder="Category name" value={categoryName} onChange={event => setCategoryName(event.target.value)} maxLength={80} />
+                    <Input aria-label="Category indicator" placeholder="Indicator, e.g. ??" value={categoryIcon} onChange={event => setCategoryIcon(event.target.value)} maxLength={20} />
+                    <Button onClick={createCategory} disabled={savingCategory || !categoryName.trim()}>{savingCategory ? 'Saving...' : 'Save Category'}</Button>
+                </DialogContent>
+            </Dialog>
             <GiftFormModal
                 open={showAddDialog}
                 onOpenChange={setShowAddDialog}

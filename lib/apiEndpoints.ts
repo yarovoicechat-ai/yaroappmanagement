@@ -108,6 +108,8 @@ export const API_ENDPOINTS = {
 
     // Gifts
     GIFTS: {
+        CATEGORIES: '/api/gifts/categories',
+        CREATE_CATEGORY: '/api/gift/categories',
         LIST: '/api/gift/admin-all',
         CREATE: '/api/gift/create',
         UPDATE: (id: string) => `/api/gift/${id}`,
