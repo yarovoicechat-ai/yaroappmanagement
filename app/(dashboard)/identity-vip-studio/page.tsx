@@ -243,7 +243,7 @@ export default function IdentityVipStudioPage() {
 
     try {
       toast.loading('Uploading animated badge asset...');
-      const res = await apiClient.post<any>('/api/uploads/file', formData);
+      const res = await apiClient.uploadFile<any>('/api/upload/file', formData);
       toast.dismiss();
       if (res.data?.url) {
         setGrantBadgeUrl(res.data.url);

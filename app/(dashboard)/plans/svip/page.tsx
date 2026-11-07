@@ -31,9 +31,14 @@ import {
   Zap,
   Gift,
   Trophy,
+  Mic,
+  Award,
+  Users,
+  Car,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/apiClient';
+import { suggestAssetName } from '@/lib/aiAssetName';
 
 export interface PrivilegeItem {
   key: string;
@@ -173,6 +178,7 @@ export default function SvipPlansPage() {
   });
 
   const [previewPlan, setPreviewPlan] = useState<SvipPlanItem | null>(null);
+  const [simulatorPreviewOption, setSimulatorPreviewOption] = useState<'tag' | 'bubble' | 'frame' | 'room_card' | 'mic_theme' | 'badge'>('tag');
   const [uploadingField, setUploadingField] = useState<string | null>(null);
 
   const fetchPlans = async () => {
@@ -180,11 +186,12 @@ export default function SvipPlansPage() {
     try {
       const res = await apiClient.get<any>('/api/svip-plans/admin/all');
       if (res.data?.plans) {
-        setPlans(res.data.plans);
-        if (!previewPlan && res.data.plans.length > 0) {
-          setPreviewPlan(res.data.plans[0]);
+        const filtered = res.data.plans.filter((p: SvipPlanItem) => p.level <= 5);
+        setPlans(filtered);
+        if (!previewPlan && filtered.length > 0) {
+          setPreviewPlan(filtered[0]);
         } else if (previewPlan) {
-          const match = res.data.plans.find((p: SvipPlanItem) => p._id === previewPlan._id);
+          const match = filtered.find((p: SvipPlanItem) => p._id === previewPlan._id);
           if (match) setPreviewPlan(match);
         }
       }
@@ -209,9 +216,12 @@ export default function SvipPlansPage() {
 
     try {
       toast.loading('Uploading asset...');
-      const res = await apiClient.post<any>('/api/uploads/file', form);
+      const res = await apiClient.uploadFile<any>('/api/upload/file', form);
       toast.dismiss();
       if (res.data?.url) {
+        const suggestedName = fieldName === 'heroBadgeUrl'
+          ? await suggestAssetName(file, 'SVIP level badge')
+          : null;
         toast.success('Asset uploaded successfully!');
         if (fieldName.startsWith('tag.')) {
           const sub = fieldName.split('.')[1];
@@ -229,6 +239,7 @@ export default function SvipPlansPage() {
           setFormData((prev) => ({
             ...prev,
             [fieldName]: res.data.url,
+            ...(fieldName === 'heroBadgeUrl' && !(prev.name || '').trim() && suggestedName ? { name: suggestedName } : {}),
           }));
         }
       }
@@ -241,14 +252,14 @@ export default function SvipPlansPage() {
   };
 
   const handleReseed = async () => {
-    if (!confirm('Explicit Confirmation: This will reset all 13 SVIP tiers (VIP+ & SVIP 1-12) to default configuration with all 30 privileges. Proceed?')) {
+    if (!confirm('Explicit Confirmation: This will reset all SVIP tiers to match the 6 mobile app tiers (SVIP+ to SVIP 5) with exact pricing and privileges. Proceed?')) {
       return;
     }
     setLoading(true);
     try {
       const res = await apiClient.post<any>('/api/svip-plans/admin/reseed', { confirm: true });
       if (res.data?.success) {
-        toast.success(res.data.message || 'Successfully reseeded all 13 SVIP tiers!');
+        toast.success(res.data.message || 'Successfully reseeded SVIP tiers matching the mobile app!');
         fetchPlans();
       }
     } catch (err: any) {
@@ -423,11 +434,11 @@ export default function SvipPlansPage() {
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white flex items-center gap-3">
               SVIP Tier Builder
               <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-xs font-mono">
-                13 TIERS (VIP+ & SVIP 1-12)
+                6 TIERS (SVIP+ to SVIP 5)
               </Badge>
             </h1>
             <p className="text-sm md:text-base text-slate-400 mt-2 max-w-3xl">
-              Create, configure, and manage VIP+ (Level 0) through SVIP 12 tiers: prices, duration, renewal behavior, Hero Badge/Tag/Bubble asset uploads, 30 hexagonal exclusive privileges, and real-time mobile simulator.
+              Create, configure, and manage SVIP+ (Level 0) through SVIP 5 tiers strictly matching the YaroApp mobile application: pricing, duration, Hero Badge/Tag/Bubble asset uploads, 29 exclusive privileges, and real-time mobile simulator.
             </p>
           </div>
 
@@ -697,22 +708,102 @@ export default function SvipPlansPage() {
                     </p>
                   </div>
 
-                  {/* Tag & Bubble Preview Row */}
-                  <div className="grid grid-cols-2 gap-2 my-2">
-                    <div className="p-2 rounded-xl bg-stone-900/90 border border-white/5 text-center">
-                      <div className="text-[9px] text-stone-500 font-mono mb-1">SVIP Tag</div>
-                      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950">
-                        {previewPlan?.svipTagConfig?.text || 'SVIP'}
-                      </span>
-                    </div>
+                  {/* Interactive Preview Element Selector (matching SVIP.js) */}
+                  {(() => {
+                    const tierLevel = previewPlan?.level ?? 1;
+                    const allowedOptions: ('tag' | 'bubble' | 'frame' | 'room_card' | 'mic_theme' | 'badge')[] =
+                      tierLevel === 0 ? ['tag', 'bubble']
+                      : tierLevel === 1 || tierLevel === 2 ? ['tag', 'bubble', 'frame']
+                      : tierLevel === 3 ? ['tag', 'bubble', 'frame', 'room_card']
+                      : tierLevel === 4 ? ['tag', 'bubble', 'frame', 'room_card', 'mic_theme']
+                      : ['tag', 'bubble', 'frame', 'room_card', 'mic_theme', 'badge'];
 
-                    <div className="p-2 rounded-xl bg-stone-900/90 border border-white/5 text-center">
-                      <div className="text-[9px] text-stone-500 font-mono mb-1">SVIP Bubble</div>
-                      <div className="p-1 rounded bg-violet-950/80 border border-violet-500/30 text-[9px] text-white truncate font-medium">
-                        {previewPlan?.svipBubbleConfig?.bubbleName || 'Chat Message ✨'}
+                    return (
+                      <div className="space-y-2 my-2.5">
+                        <div className="flex items-center justify-around bg-stone-900/90 border border-white/5 rounded-xl p-1 text-[9px] font-bold">
+                          {allowedOptions.map((opt) => (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => setSimulatorPreviewOption(opt)}
+                              className={`px-2 py-1 rounded-lg font-bold capitalize transition-all ${
+                                simulatorPreviewOption === opt
+                                  ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black shadow'
+                                  : 'text-stone-400 hover:text-white'
+                              }`}
+                            >
+                              {opt.replace('_', ' ')}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Dynamic Preview Display Area */}
+                        <div className="p-3 rounded-2xl bg-stone-950 border border-amber-500/20 text-center relative overflow-hidden min-h-[85px] flex items-center justify-center">
+                          {simulatorPreviewOption === 'tag' && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-white font-bold">User Nickname</span>
+                              <span
+                                className="px-2.5 py-0.5 rounded-full text-[10px] font-black text-slate-950 shadow-md uppercase"
+                                style={{
+                                  background: `linear-gradient(to right, ${previewPlan?.svipTagConfig?.bgGradient?.[0] || '#F59E0B'}, ${previewPlan?.svipTagConfig?.bgGradient?.[1] || '#D97706'})`
+                                }}
+                              >
+                                {previewPlan?.svipTagConfig?.text || `SVIP ${tierLevel}`}
+                              </span>
+                            </div>
+                          )}
+
+                          {simulatorPreviewOption === 'bubble' && (
+                            <div
+                              className="px-3.5 py-2 rounded-2xl text-xs text-white shadow-lg border max-w-[200px]"
+                              style={{
+                                background: `linear-gradient(to right, ${previewPlan?.svipBubbleConfig?.bgGradient?.[0] || '#3A1F04'}, ${previewPlan?.svipBubbleConfig?.bgGradient?.[1] || '#78350F'})`,
+                                borderColor: previewPlan?.svipBubbleConfig?.borderColor || '#F59E0B'
+                              }}
+                            >
+                              <p className="text-[10px] font-medium leading-tight">
+                                {previewPlan?.svipBubbleConfig?.bubbleName || 'Noble chat bubble ✨'}
+                              </p>
+                            </div>
+                          )}
+
+                          {simulatorPreviewOption === 'frame' && (
+                            <div className="relative flex items-center justify-center">
+                              <div className="w-12 h-12 rounded-full border-2 border-amber-400 p-0.5 shadow-lg shadow-amber-500/30 flex items-center justify-center bg-gradient-to-br from-amber-500/20 to-yellow-600/30">
+                                <span className="text-lg">👤</span>
+                              </div>
+                              <div className="absolute -top-1.5 -right-1.5 text-xs">👑</div>
+                            </div>
+                          )}
+
+                          {simulatorPreviewOption === 'room_card' && (
+                            <div className="w-full p-2.5 rounded-xl bg-gradient-to-r from-purple-950 to-indigo-950 border border-purple-500/30 text-left">
+                              <div className="text-[10px] font-black text-purple-300 uppercase">Personal VIP Room Card</div>
+                              <div className="text-[8px] text-white/70">Exclusive high-status room background</div>
+                            </div>
+                          )}
+
+                          {simulatorPreviewOption === 'mic_theme' && (
+                            <div className="flex flex-col items-center">
+                              <div className="w-9 h-9 rounded-full border border-amber-400/80 bg-amber-500/20 flex items-center justify-center shadow-lg shadow-amber-500/40">
+                                <Mic className="w-4 h-4 text-amber-300" />
+                              </div>
+                              <span className="text-[8px] text-amber-300 font-bold mt-1">Luxury Mic Pedestal</span>
+                            </div>
+                          )}
+
+                          {simulatorPreviewOption === 'badge' && (
+                            <div className="flex flex-col items-center">
+                              <div className="w-10 h-10 rounded-full border-2 border-yellow-400 bg-gradient-to-br from-yellow-500/40 to-amber-700/40 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                                <Award className="w-5 h-5 text-yellow-300" />
+                              </div>
+                              <span className="text-[8px] text-yellow-300 font-black mt-1">Sovereign Lion Crest</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
 
                   {/* 30 Privileges Grid */}
                   <div className="mt-2">
@@ -797,14 +888,14 @@ export default function SvipPlansPage() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-slate-300 block mb-1">
-                      Tier Level (0 for VIP+, 1-12) *
+                      Tier Level (0 for SVIP+, 1 to 5) *
                     </label>
                     <Input
                       type="number"
                       min={0}
-                      max={99}
+                      max={5}
                       value={formData.level}
-                      onChange={(e) => setFormData({ ...formData, level: Number(e.target.value) })}
+                      onChange={(e) => setFormData({ ...formData, level: Math.min(5, Math.max(0, Number(e.target.value))) })}
                       className="bg-slate-800 border-white/10 text-xs"
                       required
                     />
@@ -815,7 +906,7 @@ export default function SvipPlansPage() {
                       Plan Name *
                     </label>
                     <Input
-                      placeholder="e.g. VIP+, SVIP 1 Knight, SVIP 12 Sovereign Emperor"
+                      placeholder="e.g. VIP+ Lynx, SVIP 1 Knight, SVIP 5 Sovereign Supreme"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="bg-slate-800 border-white/10 text-xs"

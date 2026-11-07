@@ -179,20 +179,12 @@ export default function Home() {
                     iconColor="text-amber-400 bg-amber-500/10 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
                 />
                 <QuickAccessCard
-                    title="VIP Center & SVIP"
-                    description="VIP packages, SVIP elite tiers & royal privilege controls"
+                    title="SVIP"
+                    description="Create, configure and delete SVIP plans"
                     icon={Sparkles}
-                    href="/vip-svip?tab=svip"
+                    href="/plans/svip"
                     color="from-purple-500/20 via-violet-500/10 to-transparent hover:border-purple-500/40"
                     iconColor="text-purple-400 bg-purple-500/10 border-purple-500/30 shadow-[0_0_12px_rgba(168,85,247,0.25)]"
-                />
-                <QuickAccessCard
-                    title="SVIP Plan Builder"
-                    description="Create & customize SVIP tiers, duration, sound waves & badge"
-                    icon={Award}
-                    href="/plans/svip"
-                    color="from-pink-500/20 via-rose-500/10 to-transparent hover:border-pink-500/40"
-                    iconColor="text-pink-400 bg-pink-500/10 border-pink-500/30 shadow-[0_0_12px_rgba(236,72,153,0.25)]"
                 />
                 <QuickAccessCard
                     title="Store & Items"
