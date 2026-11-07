@@ -250,11 +250,16 @@ interface KingPrivilegeItem {
 interface KingPlanItem {
   _id: string;
   tierKey: 'viscount' | 'count' | 'marquis' | 'duke' | 'king' | string;
+  slug?: string;
   name: string;
   level: number;
+  tierLevel?: number;
   title: string;
   coinsPrice: number;
+  priceCoins?: number;
   dailyRewardCoins: number;
+  dailyCoins?: number;
+  totalReturnCoins?: number;
   durationDays: number;
   rewardCount?: number;
   totalRewards?: number;
@@ -320,31 +325,50 @@ export default function KingOfKingsAdminPage() {
       const apiPlans = res?.data?.plans || res?.plans || (Array.isArray(res?.data) ? res.data : []);
       if (apiPlans && Array.isArray(apiPlans) && apiPlans.length > 0) {
         // Merge with APP_ROYAL_PRIVILEGES to guarantee all 15 royal privileges are populated
-        const merged = apiPlans.map((p: any) => {
-          const tierLevel = p.level || p.tierLevel || 1;
+        const merged: KingPlanItem[] = apiPlans.map((p: any) => {
+          const tierLevel = Number(p.level || p.tierLevel || 1);
+          const priceCoins = Number(p.coinsPrice ?? p.priceCoins ?? p.price ?? [99000, 249000, 499000, 999000, 1999000][tierLevel - 1] ?? 99000);
+          const dailyRewardCoins = Number(p.dailyRewardCoins ?? p.totalReturnCoins ?? p.dailyCoins ?? [1000, 2500, 6000, 15000, 35000][tierLevel - 1] ?? 1000);
+          const name = String(p.name || ['Viscount', 'Count', 'Marquis', 'Duke', 'King'][tierLevel - 1] || `Nobility ${tierLevel}`);
+          const title = String(p.title || `${name} Nobility`);
+          const tierKey = String(p.tierKey || p.slug || name.toLowerCase().replace(/\s+/g, '_'));
+
           const mappedPrivileges = APP_ROYAL_PRIVILEGES.map(appPriv => {
-            const existing = (p.privileges || []).find((pr: any) => pr.key === appPriv.key);
+            const existing = (Array.isArray(p.privileges) ? p.privileges : []).find((pr: any) => pr?.key === appPriv.key);
             return {
               key: appPriv.key,
               name: appPriv.name,
               desc: appPriv.desc,
               icon: appPriv.icon,
-              unlocked: existing ? existing.unlocked : tierLevel >= appPriv.level,
+              unlocked: existing ? Boolean(existing.unlocked ?? existing.isEnabled ?? true) : tierLevel >= appPriv.level,
             };
           });
 
           return {
             ...p,
-            tierKey: p.slug || p.tierKey || p.name.toLowerCase(),
+            _id: String(p._id || `tier_${tierLevel}`),
+            tierKey,
+            slug: String(p.slug || tierKey),
+            name,
+            title,
             level: tierLevel,
-            dailyRewardCoins: p.dailyRewardCoins || p.totalReturnCoins || p.dailyCoins || (tierLevel === 1 ? 1000 : tierLevel === 2 ? 2500 : tierLevel === 3 ? 6000 : tierLevel === 4 ? 15000 : 35000),
+            tierLevel,
+            coinsPrice: priceCoins,
+            priceCoins,
+            dailyRewardCoins,
+            dailyCoins: dailyRewardCoins,
+            totalReturnCoins: dailyRewardCoins,
+            durationDays: Number(p.durationDays || 30),
+            heroBadgeUrl: p.heroBadgeUrl || p.heroBadgePreviewUrl || (tierLevel === 1 || tierLevel === 2 ? '/king/viscount_badge.png' : 'https://cdn-icons-png.flaticon.com/512/2583/2583344.png'),
+            rewards: Array.isArray(p.rewards) ? p.rewards : [],
             privileges: mappedPrivileges,
+            isActive: p.isActive !== false,
           };
         });
 
         setPlans(merged);
         const match = merged.find((p: any) => p.tierKey === selectedPlan?.tierKey) || merged[0];
-        setSelectedPlan(match);
+        if (match) setSelectedPlan(match);
       }
     } catch {
       // Keep fallbacks active
@@ -412,8 +436,18 @@ export default function KingOfKingsAdminPage() {
 
     setLoading(true);
     try {
+      const payload = {
+        ...editingPlan,
+        priceCoins: Number(editingPlan.coinsPrice ?? editingPlan.priceCoins ?? 0),
+        coinsPrice: Number(editingPlan.coinsPrice ?? editingPlan.priceCoins ?? 0),
+        dailyCoins: Number(editingPlan.dailyRewardCoins ?? editingPlan.dailyCoins ?? 0),
+        dailyRewardCoins: Number(editingPlan.dailyRewardCoins ?? editingPlan.dailyCoins ?? 0),
+        tierLevel: Number(editingPlan.level ?? editingPlan.tierLevel ?? 1),
+        level: Number(editingPlan.level ?? editingPlan.tierLevel ?? 1),
+      };
+
       if (editingPlan._id && !editingPlan._id.includes('fallback')) {
-        const res = await apiClient.put<any>(`/api/king-plans/admin/${editingPlan._id}`, editingPlan);
+        const res = await apiClient.put<any>(`/api/king-plans/admin/${editingPlan._id}`, payload);
         if (res?.success || res?.data?.success) {
           toast.success(`Nobility plan "${editingPlan.name}" updated successfully!`);
           setIsEditModalOpen(false);
@@ -423,8 +457,8 @@ export default function KingOfKingsAdminPage() {
       }
 
       // Local update if fallback mode
-      setPlans(prev => prev.map(p => p.tierKey === editingPlan.tierKey ? ({ ...p, ...editingPlan } as KingPlanItem) : p));
-      setSelectedPlan(prev => prev.tierKey === editingPlan.tierKey ? ({ ...prev, ...editingPlan } as KingPlanItem) : prev);
+      setPlans(prev => prev.map(p => p.tierKey === editingPlan.tierKey ? ({ ...p, ...payload } as KingPlanItem) : p));
+      setSelectedPlan(prev => prev.tierKey === editingPlan.tierKey ? ({ ...prev, ...payload } as KingPlanItem) : prev);
       toast.success(`Nobility plan "${editingPlan.name}" saved!`);
       setIsEditModalOpen(false);
     } catch (err: any) {
@@ -441,8 +475,10 @@ export default function KingOfKingsAdminPage() {
     setEditingPlan({ ...editingPlan, privileges: updated });
   };
 
-  const currentTier = selectedPlan || plans[0];
-  const unlockedPrivilegesCount = currentTier?.privileges?.filter(p => p.unlocked).length || 0;
+  const currentTier = selectedPlan || plans[0] || FALLBACK_APP_KING_TIERS[0];
+  const unlockedPrivilegesCount = Array.isArray(currentTier?.privileges)
+    ? currentTier.privileges.filter(p => p?.unlocked).length
+    : 0;
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -501,7 +537,7 @@ export default function KingOfKingsAdminPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               {plans.map((p) => {
                 const isSelected = selectedPlan?.tierKey === p.tierKey;
-                const privsCount = p.privileges?.filter(pr => pr.unlocked).length || 0;
+                const privsCount = Array.isArray(p?.privileges) ? p.privileges.filter(pr => pr?.unlocked).length : 0;
 
                 return (
                   <div
@@ -516,7 +552,7 @@ export default function KingOfKingsAdminPage() {
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-[10px] font-black text-amber-400 font-mono uppercase">
-                          RANK {p.level}
+                          RANK {p.level ?? p.tierLevel ?? 1}
                         </span>
                         <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">
                           30D
@@ -525,13 +561,13 @@ export default function KingOfKingsAdminPage() {
 
                       <div className="text-sm font-black text-white">{p.name}</div>
                       <div className="text-[11px] text-amber-300 font-mono mt-0.5">
-                        🪙 {p.coinsPrice.toLocaleString()}
+                        🪙 {Number(p?.coinsPrice ?? p?.priceCoins ?? 0).toLocaleString()}
                       </div>
                     </div>
 
                     <div className="mt-3 pt-2 border-t border-white/5 space-y-1 text-[10px]">
                       <div className="text-slate-400">⭐ Privileges: <span className="text-amber-300 font-bold">{privsCount}/15</span></div>
-                      <div className="text-emerald-400 font-medium">🎁 +{p.dailyRewardCoins.toLocaleString()} bonus</div>
+                      <div className="text-emerald-400 font-medium">🎁 +{Number(p?.dailyRewardCoins ?? p?.dailyCoins ?? 0).toLocaleString()} bonus</div>
                     </div>
 
                     <button
@@ -560,13 +596,13 @@ export default function KingOfKingsAdminPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-black text-white">{currentTier.title}</h2>
+                      <h2 className="text-lg font-black text-white">{currentTier.title || ''}</h2>
                       <span className="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono font-bold">
-                        Rank {currentTier.level}
+                        Rank {currentTier.level ?? currentTier.tierLevel ?? 1}
                       </span>
                     </div>
                     <p className="text-xs text-slate-400 mt-1">
-                      Price: <span className="text-amber-300 font-bold font-mono">🪙 {currentTier.coinsPrice.toLocaleString()} coins</span> • One-Time Bonus: <span className="text-emerald-400 font-bold font-mono">🪙 {currentTier.dailyRewardCoins.toLocaleString()} coins</span> • Duration: 30 days
+                      Price: <span className="text-amber-300 font-bold font-mono">🪙 {Number(currentTier?.coinsPrice ?? currentTier?.priceCoins ?? 0).toLocaleString()} coins</span> • One-Time Bonus: <span className="text-emerald-400 font-bold font-mono">🪙 {Number(currentTier?.dailyRewardCoins ?? currentTier?.dailyCoins ?? 0).toLocaleString()} coins</span> • Duration: 30 days
                     </p>
                   </div>
                 </div>
@@ -690,12 +726,12 @@ export default function KingOfKingsAdminPage() {
             {/* Nobility Tabs Row (Viscount, Count, Marquis, Duke, King) */}
             <div className="flex items-center justify-around px-2 border-b border-[#2A1C0E] text-[11px] pt-2 pb-2 font-bold bg-[#140C04]">
               {['Viscount', 'Count', 'Marquis', 'Duke', 'King'].map((rank) => {
-                const isActive = currentTier?.name.toLowerCase() === rank.toLowerCase();
+                const isActive = (currentTier?.name || '').toLowerCase() === rank.toLowerCase();
                 return (
                   <button
                     key={rank}
                     onClick={() => {
-                      const match = plans.find(p => p.name.toLowerCase() === rank.toLowerCase());
+                      const match = plans.find(p => (p?.name || '').toLowerCase() === rank.toLowerCase());
                       if (match) setSelectedPlan(match);
                     }}
                     className={`pb-1 relative transition-colors ${
@@ -719,21 +755,21 @@ export default function KingOfKingsAdminPage() {
                 <div className="w-20 h-20 rounded-full border-2 border-[#FFE5A4] bg-gradient-to-b from-[#BA7B38] to-[#57371F] flex items-center justify-center relative shadow-lg shadow-amber-500/20">
                   <Crown className="w-10 h-10 text-[#F5D49A]" />
                   <div className="absolute -bottom-2 bg-gradient-to-r from-amber-700 via-yellow-600 to-amber-700 px-2.5 py-0.5 rounded-full border border-[#FDE047] text-[8px] font-black text-white uppercase tracking-wider shadow">
-                    NOBILITY {currentTier.level}
+                    NOBILITY {currentTier.level ?? currentTier.tierLevel ?? 1}
                   </div>
                 </div>
 
                 <div className="mt-3">
                   <span className="text-[9px] font-bold text-amber-500 tracking-[0.16em] uppercase">THE ROYAL COLLECTION</span>
-                  <h4 className="text-base font-black text-white">{currentTier.name}</h4>
-                  <p className="text-[11px] text-[#E9C889]">{currentTier.title}</p>
+                  <h4 className="text-base font-black text-white">{currentTier.name || ''}</h4>
+                  <p className="text-[11px] text-[#E9C889]">{currentTier.title || ''}</p>
                 </div>
 
                 {/* Daily Bonus Pill */}
                 <div className="mt-2.5 bg-[#2E1A07] border border-[#59340E] px-3 py-1 rounded-full flex items-center gap-1.5">
                   <Gift className="w-3 h-3 text-[#E9C889]" />
                   <span className="text-[10px] font-bold text-[#E9C889]">
-                    {currentTier.dailyRewardCoins.toLocaleString()} bonus coins
+                    {Number(currentTier?.dailyRewardCoins ?? currentTier?.dailyCoins ?? 0).toLocaleString()} bonus coins
                   </span>
                 </div>
                 <span className="text-[9px] text-[#8C6239] mt-1">30 days • bonus paid once</span>
@@ -742,7 +778,7 @@ export default function KingOfKingsAdminPage() {
               {/* Tier Indicators dots */}
               <div className="flex items-center justify-center gap-1.5 py-1">
                 {plans.map((p, idx) => {
-                  const isActive = p.tierKey === currentTier.tierKey;
+                  const isActive = (p?.tierKey || p?.slug || p?._id) === (currentTier?.tierKey || currentTier?.slug || currentTier?._id);
                   return (
                     <div
                       key={idx}
@@ -767,18 +803,18 @@ export default function KingOfKingsAdminPage() {
                 </div>
 
                 <p className="text-[9px] text-[#9A7A57]">
-                  Discover everything included with {currentTier.name}. Tap a benefit to explore.
+                  Discover everything included with {currentTier.name || 'Nobility'}. Tap a benefit to explore.
                 </p>
 
                 {/* 15 Privileges 3-col Grid strictly matching mobile app */}
                 <div className="grid grid-cols-3 gap-2">
                   {(currentTier.privileges || []).map((item, index) => {
-                    const isUnlocked = item.unlocked;
+                    const isUnlocked = item?.unlocked;
                     const appRef = APP_ROYAL_PRIVILEGES[index] || { icon: 'sparkles' };
 
                     return (
                       <div
-                        key={item.key || index}
+                        key={item?.key || index}
                         className="bg-[#241406] border border-[#3E230B] rounded-xl p-2 flex flex-col items-center text-center relative group"
                       >
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center relative mb-1.5 ${
@@ -797,10 +833,10 @@ export default function KingOfKingsAdminPage() {
                         <span className={`text-[9px] font-bold leading-tight line-clamp-1 w-full ${
                           isUnlocked ? 'text-[#F4DCB0]' : 'text-slate-500'
                         }`}>
-                          {item.name}
+                          {item?.name || ''}
                         </span>
                         <span className="text-[7.5px] text-[#8C6D4F] line-clamp-2 mt-0.5 leading-tight">
-                          {item.desc}
+                          {item?.desc || ''}
                         </span>
                       </div>
                     );
@@ -819,7 +855,7 @@ export default function KingOfKingsAdminPage() {
             <div className="p-3 bg-[#140C04] border-t border-amber-500/20 flex items-center justify-between">
               <div>
                 <div className="text-xs font-black text-[#FDE047] font-mono">
-                  🪙 {currentTier.coinsPrice.toLocaleString()} <span className="text-[9px] text-slate-400 font-normal">/ 30 days</span>
+                  🪙 {Number(currentTier?.coinsPrice ?? currentTier?.priceCoins ?? 0).toLocaleString()} <span className="text-[9px] text-slate-400 font-normal">/ 30 days</span>
                 </div>
                 <div className="text-[8px] text-[#A67C4A]">bonus paid once</div>
               </div>

@@ -413,9 +413,9 @@ export default function SvipPlansPage() {
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         return (
-          p.name.toLowerCase().includes(q) ||
-          p.planCode.toLowerCase().includes(q) ||
-          p.slug.toLowerCase().includes(q)
+          (p?.name || '').toLowerCase().includes(q) ||
+          (p?.planCode || '').toLowerCase().includes(q) ||
+          (p?.slug || '').toLowerCase().includes(q)
         );
       }
       return true;
@@ -565,11 +565,11 @@ export default function SvipPlansPage() {
 
                           <TableCell>
                             <div className="text-xs font-mono font-bold text-amber-400">
-                              {plan.price.toLocaleString()} 💎
+                              {Number(plan.price || 0).toLocaleString()} 💎
                             </div>
                             {plan.originalPrice ? (
                               <div className="text-[10px] text-slate-500 line-through">
-                                {plan.originalPrice.toLocaleString()} 💎 ({plan.discountPercent || 33}% OFF)
+                                {Number(plan.originalPrice).toLocaleString()} 💎 ({plan.discountPercent || 33}% OFF)
                               </div>
                             ) : null}
                           </TableCell>
@@ -840,7 +840,7 @@ export default function SvipPlansPage() {
                 <div className="pt-2 border-t border-white/10 flex items-center justify-between">
                   <div>
                     <div className="text-xs font-black text-amber-400">
-                      {previewPlan?.price.toLocaleString() || '99,000'} 💎
+                      {Number(previewPlan?.price ?? 99000).toLocaleString()} 💎
                     </div>
                     <div className="text-[9px] text-stone-500">
                       Validity: {previewPlan?.durationDays || 30} Days
