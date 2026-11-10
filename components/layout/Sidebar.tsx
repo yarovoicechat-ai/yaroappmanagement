@@ -113,6 +113,7 @@ const sidebarSections: SidebarSection[] = [
             { name: 'Beans Plans', href: '/plans/beans', icon: Gem },
             { name: 'King of Kings (KOK)', href: '/king-of-kings', icon: Crown },
             { name: 'SVIP', href: '/plans/svip', icon: Sparkles },
+            { name: 'VIP Entries & Frames', href: '/plans/vip-assets', icon: Crown },
             { name: 'Identity Studio', href: '/identity-vip-studio', icon: Sparkles },
             { name: 'Avatars', href: '/avatars', icon: Award },
             { name: 'Banners', href: '/banners', icon: Layers },
