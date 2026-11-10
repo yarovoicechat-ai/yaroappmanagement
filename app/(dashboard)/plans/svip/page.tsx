@@ -35,6 +35,12 @@ import {
   Award,
   Users,
   Car,
+  Tag,
+  MessageSquare,
+  Palette,
+  Hash,
+  Film,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient, getApiBaseUrl } from '@/lib/apiClient';
@@ -81,6 +87,14 @@ export interface SvipPlanItem {
     bgGradient: string[];
     iconUrl?: string;
     previewUrl?: string;
+    animationUrl?: string;
+    enabled: boolean;
+  };
+  profileBadgeConfig?: {
+    badgeName: string;
+    iconUrl?: string;
+    previewUrl?: string;
+    animationUrl?: string;
     enabled: boolean;
   };
   svipBubbleConfig?: {
@@ -90,6 +104,39 @@ export interface SvipPlanItem {
     bgGradient: string[];
     textColor: string;
     borderColor: string;
+    enabled: boolean;
+  };
+  profileCardConfig?: {
+    cardName: string;
+    previewUrl?: string;
+    animationUrl?: string;
+    enabled: boolean;
+  };
+  micWaveConfig?: {
+    previewUrl?: string;
+    animationUrl?: string;
+    enabled: boolean;
+  };
+  giftBroadcastConfig?: {
+    title: string;
+    previewUrl?: string;
+    animationUrl?: string;
+    enabled: boolean;
+  };
+  nameColorConfig?: {
+    color: string;
+    glowColor?: string;
+    enabled: boolean;
+  };
+  messageColorConfig?: {
+    color: string;
+    bubbleColor?: string;
+    enabled: boolean;
+  };
+  vipIdConfig?: {
+    vipIdPattern: string;
+    previewUrl?: string;
+    animationUrl?: string;
     enabled: boolean;
   };
   entryAnimationUrl?: string;
@@ -223,27 +270,21 @@ export default function SvipPlansPage() {
       const res = await apiClient.uploadFile<any>('/api/upload/file', form);
       toast.dismiss();
       if (res.data?.url) {
-        const suggestedName = fieldName === 'heroBadgeUrl'
-          ? await suggestAssetName(file, 'SVIP level badge')
-          : null;
+        const uploadedUrl = res.data.url;
         toast.success('Asset uploaded successfully!');
-        if (fieldName.startsWith('tag.')) {
-          const sub = fieldName.split('.')[1];
-          setFormData((prev) => ({
+        if (fieldName.includes('.')) {
+          const [parent, child] = fieldName.split('.');
+          setFormData((prev: any) => ({
             ...prev,
-            svipTagConfig: { ...prev.svipTagConfig!, [sub]: res.data.url },
-          }));
-        } else if (fieldName.startsWith('bubble.')) {
-          const sub = fieldName.split('.')[1];
-          setFormData((prev) => ({
-            ...prev,
-            svipBubbleConfig: { ...prev.svipBubbleConfig!, [sub]: res.data.url },
+            [parent]: {
+              ...(prev[parent] || {}),
+              [child]: uploadedUrl,
+            },
           }));
         } else {
-          setFormData((prev) => ({
+          setFormData((prev: any) => ({
             ...prev,
-            [fieldName]: res.data.url,
-            ...(fieldName === 'heroBadgeUrl' && !(prev.name || '').trim() && suggestedName ? { name: suggestedName } : {}),
+            [fieldName]: uploadedUrl,
           }));
         }
       }
@@ -300,18 +341,62 @@ export default function SvipPlansPage() {
       sortOrder: nextLevel,
       heroBadgeUrl: '',
       heroAnimationUrl: '',
+      entryAnimationUrl: '',
+      entryPreviewUrl: '',
+      avatarFrameUrl: '',
+      avatarFramePreviewUrl: '',
       svipTagConfig: {
-        text: nextLevel === 0 ? 'VIP+' : `SVIP ${nextLevel}`,
+        text: nextLevel === 0 ? 'VIP+' : `VIP ${nextLevel}`,
         bgGradient: ['#F59E0B', '#D97706'],
         iconUrl: '',
         previewUrl: '',
+        animationUrl: '',
+        enabled: true,
+      },
+      profileBadgeConfig: {
+        badgeName: nextLevel === 0 ? 'VIP+ Crest' : `VIP ${nextLevel} Crest`,
+        previewUrl: '',
+        animationUrl: '',
         enabled: true,
       },
       svipBubbleConfig: {
-        bubbleName: `SVIP ${nextLevel} Glass Bubble`,
+        bubbleName: nextLevel === 0 ? 'VIP+ Bubble' : `VIP ${nextLevel} Bubble`,
         bgGradient: ['#3A1F04', '#78350F'],
         textColor: '#FFFFFF',
         borderColor: '#F59E0B',
+        previewUrl: '',
+        animationUrl: '',
+        enabled: true,
+      },
+      profileCardConfig: {
+        cardName: nextLevel === 0 ? 'VIP+ Profile Card' : `VIP ${nextLevel} Card`,
+        previewUrl: '',
+        animationUrl: '',
+        enabled: true,
+      },
+      micWaveConfig: {
+        previewUrl: '',
+        animationUrl: '',
+        enabled: true,
+      },
+      giftBroadcastConfig: {
+        title: nextLevel === 0 ? 'VIP+ Announcement' : `VIP ${nextLevel} Announcement`,
+        previewUrl: '',
+        animationUrl: '',
+        enabled: true,
+      },
+      nameColorConfig: {
+        color: '#FFD700',
+        glowColor: '#F59E0B',
+        enabled: true,
+      },
+      messageColorConfig: {
+        color: '#FFFFFF',
+        bubbleColor: '#3B0764',
+        enabled: true,
+      },
+      vipIdConfig: {
+        vipIdPattern: '',
         previewUrl: '',
         animationUrl: '',
         enabled: true,
@@ -341,6 +426,61 @@ export default function SvipPlansPage() {
 
     setFormData({
       ...plan,
+      svipTagConfig: plan.svipTagConfig || {
+        text: plan.level === 0 ? 'VIP+' : `VIP ${plan.level}`,
+        bgGradient: ['#F59E0B', '#D97706'],
+        previewUrl: '',
+        animationUrl: '',
+        enabled: true,
+      },
+      profileBadgeConfig: plan.profileBadgeConfig || {
+        badgeName: `${plan.name} Crest`,
+        previewUrl: '',
+        animationUrl: '',
+        enabled: true,
+      },
+      svipBubbleConfig: plan.svipBubbleConfig || {
+        bubbleName: `${plan.name} Bubble`,
+        bgGradient: ['#3A1F04', '#78350F'],
+        textColor: '#FFFFFF',
+        borderColor: '#F59E0B',
+        previewUrl: '',
+        animationUrl: '',
+        enabled: true,
+      },
+      profileCardConfig: plan.profileCardConfig || {
+        cardName: `${plan.name} Profile Card`,
+        previewUrl: '',
+        animationUrl: '',
+        enabled: true,
+      },
+      micWaveConfig: plan.micWaveConfig || {
+        previewUrl: '',
+        animationUrl: '',
+        enabled: true,
+      },
+      giftBroadcastConfig: plan.giftBroadcastConfig || {
+        title: `${plan.name} Announcement`,
+        previewUrl: '',
+        animationUrl: '',
+        enabled: true,
+      },
+      nameColorConfig: plan.nameColorConfig || {
+        color: '#FFD700',
+        glowColor: '#F59E0B',
+        enabled: true,
+      },
+      messageColorConfig: plan.messageColorConfig || {
+        color: '#FFFFFF',
+        bubbleColor: '#3B0764',
+        enabled: true,
+      },
+      vipIdConfig: plan.vipIdConfig || {
+        vipIdPattern: '',
+        previewUrl: '',
+        animationUrl: '',
+        enabled: true,
+      },
       privileges: mergedPrivileges,
     });
     setIsModalOpen(true);
@@ -709,14 +849,31 @@ export default function SvipPlansPage() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 my-3">
+                  <div className="grid grid-cols-2 gap-2 my-3 max-h-48 overflow-y-auto pr-1">
                     {([
                       { label: 'VIP Entry', url: previewPlan?.entryPreviewUrl, active: previewPlan?.features?.enableEntryEffect !== false },
                       { label: 'VIP Frame', url: previewPlan?.avatarFramePreviewUrl, active: previewPlan?.features?.enableAvatarFrame !== false },
-                    ]).map(asset => <div key={asset.label} className="rounded-xl border border-white/10 p-2 text-center">
-                      {asset.url && asset.active ? <img src={asset.url.startsWith('/') ? getApiBaseUrl() + asset.url : asset.url} alt={asset.label} className="h-24 w-full object-contain" /> : <p className="text-xs text-slate-500 py-6">Not configured</p>}
-                      <span className="text-xs text-amber-300">{asset.label}</span>
-                    </div>)}
+                      { label: 'VIP Tag', url: previewPlan?.svipTagConfig?.previewUrl, active: previewPlan?.svipTagConfig?.enabled !== false },
+                      { label: 'VIP Badge', url: previewPlan?.profileBadgeConfig?.previewUrl, active: previewPlan?.profileBadgeConfig?.enabled !== false },
+                      { label: 'Chat Bubble', url: previewPlan?.svipBubbleConfig?.previewUrl, active: previewPlan?.svipBubbleConfig?.enabled !== false },
+                      { label: 'Profile Card', url: previewPlan?.profileCardConfig?.previewUrl, active: previewPlan?.profileCardConfig?.enabled !== false },
+                      { label: 'Mic Wave', url: previewPlan?.micWaveConfig?.previewUrl, active: previewPlan?.micWaveConfig?.enabled !== false },
+                      { label: 'Gift Broadcast', url: previewPlan?.giftBroadcastConfig?.previewUrl, active: previewPlan?.giftBroadcastConfig?.enabled !== false },
+                      { label: 'VIP ID', url: previewPlan?.vipIdConfig?.previewUrl, active: previewPlan?.vipIdConfig?.enabled !== false },
+                    ]).map((asset) => (
+                      <div key={asset.label} className="rounded-xl border border-white/10 p-2 text-center bg-stone-900/60">
+                        {asset.url && asset.active ? (
+                          <img
+                            src={asset.url.startsWith('/') ? getApiBaseUrl() + asset.url : asset.url}
+                            alt={asset.label}
+                            className="h-16 w-full object-contain mx-auto"
+                          />
+                        ) : (
+                          <p className="text-[10px] text-slate-500 py-4">Not configured</p>
+                        )}
+                        <span className="text-[10px] text-amber-300 font-semibold block truncate">{asset.label}</span>
+                      </div>
+                    ))}
                   </div>
                   {/* 30 Privileges Grid */}
                   <div className="mt-2">
@@ -916,24 +1073,897 @@ export default function SvipPlansPage() {
                 </div>
               </div>
 
+              {/* Section 3: VIP Cosmetics & Custom Assets Builder (Dual: Image & SVGA) */}
               <div className="space-y-4 pt-4 border-t border-white/5">
-                <h3 className="text-xs font-black uppercase text-amber-400">3. VIP Entry & Avatar Frame</h3>
-                <p className="text-xs text-slate-400">Save this tier to update its entry and frame in the app. Chat bubbles, badges and tags will be added later.</p>
-                {([
-                  { title: 'Room Entry', animation: 'entryAnimationUrl', preview: 'entryPreviewUrl', feature: 'enableEntryEffect' },
-                  { title: 'Avatar Frame', animation: 'avatarFrameUrl', preview: 'avatarFramePreviewUrl', feature: 'enableAvatarFrame' },
-                ] as const).map(asset => <div key={asset.animation} className="rounded-xl border border-white/10 p-4 space-y-3">
-                  <label className="flex gap-2 text-sm font-semibold">
-                    <input type="checkbox" checked={formData.features?.[asset.feature] !== false} onChange={event => setFormData(prev => ({ ...prev, features: { ...prev.features, [asset.feature]: event.target.checked } }))} />
-                    {asset.title} enabled
-                  </label>
-                  {formData[asset.preview] && <img src={String(formData[asset.preview]).startsWith('/') ? getApiBaseUrl() + formData[asset.preview] : formData[asset.preview]} alt={asset.title + ' preview'} className="h-32 w-32 object-contain bg-slate-950 rounded-lg" />}
-                  {([asset.preview, asset.animation] as const).map(field => <div key={field} className="space-y-1">
-                    <label className="text-xs text-slate-300" htmlFor={field}>{field === asset.preview ? 'PNG preview' : 'SVGA animation'}</label>
-                    <Input id={field} value={formData[field] || ''} onChange={event => setFormData(prev => ({ ...prev, [field]: event.target.value }))} placeholder="https://…" className="bg-slate-800 border-white/10 text-xs" />
-                    <input aria-label={'Upload ' + asset.title + ' ' + (field === asset.preview ? 'PNG' : 'SVGA')} type="file" accept={field === asset.preview ? '.png' : '.svga'} disabled={uploadingField !== null} onChange={event => handleFileUpload(event, field)} className="text-xs w-full" />
-                  </div>)}
-                </div>)}
+                <div>
+                  <h3 className="text-xs font-black uppercase text-amber-400 tracking-wider">
+                    3. VIP Cosmetics & Custom Assets Builder (Image & SVGA Options)
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Select and configure the assets included in this VIP tier. Each item provides options for both static Image (PNG/JPG preview) and animated SVGA file uploads or links.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* 1. VIP Tag */}
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-white">VIP Tag</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input
+                          type="checkbox"
+                          checked={formData.svipTagConfig?.enabled !== false}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            svipTagConfig: { ...(prev.svipTagConfig || { text: '', bgGradient: ['#F59E0B', '#D97706'], previewUrl: '', animationUrl: '' }), enabled: e.target.checked },
+                          }))}
+                          className="rounded accent-amber-500"
+                        />
+                        <span className={formData.svipTagConfig?.enabled !== false ? 'text-emerald-400 font-bold text-[11px]' : 'text-slate-500 text-[11px]'}>
+                          {formData.svipTagConfig?.enabled !== false ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] text-slate-300 block mb-1">Tag Display Text</label>
+                      <Input
+                        value={formData.svipTagConfig?.text || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          svipTagConfig: { ...(prev.svipTagConfig || { bgGradient: ['#F59E0B', '#D97706'], previewUrl: '', animationUrl: '', enabled: true }), text: e.target.value },
+                        }))}
+                        placeholder="e.g. VIP 1, VIP+"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">1. Tag Image (PNG/JPG Preview)</label>
+                      <div className="flex gap-2 items-center">
+                        {formData.svipTagConfig?.previewUrl && (
+                          <img
+                            src={String(formData.svipTagConfig.previewUrl).startsWith('/') ? getApiBaseUrl() + formData.svipTagConfig.previewUrl : formData.svipTagConfig.previewUrl}
+                            alt="Tag Preview"
+                            className="h-8 w-8 object-contain bg-slate-900 rounded border border-white/10 p-0.5"
+                          />
+                        )}
+                        <Input
+                          value={formData.svipTagConfig?.previewUrl || ''}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            svipTagConfig: { ...(prev.svipTagConfig || { text: '', bgGradient: [], animationUrl: '', enabled: true }), previewUrl: e.target.value },
+                          }))}
+                          placeholder="https://... or upload PNG"
+                          className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                        />
+                      </div>
+                      <input
+                        type="file"
+                        accept=".png,.jpg,.jpeg,.webp"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'svipTagConfig.previewUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">2. Tag SVGA Animation (.svga)</label>
+                      <Input
+                        value={formData.svipTagConfig?.animationUrl || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          svipTagConfig: { ...(prev.svipTagConfig || { text: '', bgGradient: [], previewUrl: '', enabled: true }), animationUrl: e.target.value },
+                        }))}
+                        placeholder="https://... or upload .svga"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                      <input
+                        type="file"
+                        accept=".svga"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'svipTagConfig.animationUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 2. VIP Badge */}
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Award className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-white">VIP Badge / Crest</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input
+                          type="checkbox"
+                          checked={formData.profileBadgeConfig?.enabled !== false}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            profileBadgeConfig: { ...(prev.profileBadgeConfig || { badgeName: '', previewUrl: '', animationUrl: '' }), enabled: e.target.checked },
+                          }))}
+                          className="rounded accent-amber-500"
+                        />
+                        <span className={formData.profileBadgeConfig?.enabled !== false ? 'text-emerald-400 font-bold text-[11px]' : 'text-slate-500 text-[11px]'}>
+                          {formData.profileBadgeConfig?.enabled !== false ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] text-slate-300 block mb-1">Badge Name</label>
+                      <Input
+                        value={formData.profileBadgeConfig?.badgeName || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          profileBadgeConfig: { ...(prev.profileBadgeConfig || { previewUrl: '', animationUrl: '', enabled: true }), badgeName: e.target.value },
+                        }))}
+                        placeholder="e.g. VIP 1 Crest"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">1. Badge Image (PNG/JPG Preview)</label>
+                      <div className="flex gap-2 items-center">
+                        {formData.profileBadgeConfig?.previewUrl && (
+                          <img
+                            src={String(formData.profileBadgeConfig.previewUrl).startsWith('/') ? getApiBaseUrl() + formData.profileBadgeConfig.previewUrl : formData.profileBadgeConfig.previewUrl}
+                            alt="Badge Preview"
+                            className="h-8 w-8 object-contain bg-slate-900 rounded border border-white/10 p-0.5"
+                          />
+                        )}
+                        <Input
+                          value={formData.profileBadgeConfig?.previewUrl || ''}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            profileBadgeConfig: { ...(prev.profileBadgeConfig || { badgeName: '', animationUrl: '', enabled: true }), previewUrl: e.target.value },
+                          }))}
+                          placeholder="https://... or upload PNG"
+                          className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                        />
+                      </div>
+                      <input
+                        type="file"
+                        accept=".png,.jpg,.jpeg,.webp"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'profileBadgeConfig.previewUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">2. Badge SVGA Animation (.svga)</label>
+                      <Input
+                        value={formData.profileBadgeConfig?.animationUrl || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          profileBadgeConfig: { ...(prev.profileBadgeConfig || { badgeName: '', previewUrl: '', enabled: true }), animationUrl: e.target.value },
+                        }))}
+                        placeholder="https://... or upload .svga"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                      <input
+                        type="file"
+                        accept=".svga"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'profileBadgeConfig.animationUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 3. Chat Bubbles */}
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-white">Chat Bubbles</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input
+                          type="checkbox"
+                          checked={formData.svipBubbleConfig?.enabled !== false}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            svipBubbleConfig: { ...(prev.svipBubbleConfig || { bubbleName: '', bgGradient: [], textColor: '#FFFFFF', borderColor: '#F59E0B', previewUrl: '', animationUrl: '' }), enabled: e.target.checked },
+                          }))}
+                          className="rounded accent-amber-500"
+                        />
+                        <span className={formData.svipBubbleConfig?.enabled !== false ? 'text-emerald-400 font-bold text-[11px]' : 'text-slate-500 text-[11px]'}>
+                          {formData.svipBubbleConfig?.enabled !== false ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[11px] text-slate-300 block mb-1">Bubble Name</label>
+                        <Input
+                          value={formData.svipBubbleConfig?.bubbleName || ''}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            svipBubbleConfig: { ...(prev.svipBubbleConfig || { bgGradient: [], textColor: '#FFFFFF', borderColor: '#F59E0B', previewUrl: '', animationUrl: '', enabled: true }), bubbleName: e.target.value },
+                          }))}
+                          placeholder="e.g. Amber Bubble"
+                          className="bg-slate-800 border-white/10 text-xs h-8"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] text-slate-300 block mb-1">Text Color</label>
+                        <Input
+                          value={formData.svipBubbleConfig?.textColor || '#FFFFFF'}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            svipBubbleConfig: { ...(prev.svipBubbleConfig || { bubbleName: '', bgGradient: [], borderColor: '#F59E0B', previewUrl: '', animationUrl: '', enabled: true }), textColor: e.target.value },
+                          }))}
+                          placeholder="#FFFFFF"
+                          className="bg-slate-800 border-white/10 text-xs h-8"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">1. Bubble Image (PNG/JPG Preview)</label>
+                      <div className="flex gap-2 items-center">
+                        {formData.svipBubbleConfig?.previewUrl && (
+                          <img
+                            src={String(formData.svipBubbleConfig.previewUrl).startsWith('/') ? getApiBaseUrl() + formData.svipBubbleConfig.previewUrl : formData.svipBubbleConfig.previewUrl}
+                            alt="Bubble Preview"
+                            className="h-8 w-8 object-contain bg-slate-900 rounded border border-white/10 p-0.5"
+                          />
+                        )}
+                        <Input
+                          value={formData.svipBubbleConfig?.previewUrl || ''}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            svipBubbleConfig: { ...(prev.svipBubbleConfig || { bubbleName: '', bgGradient: [], textColor: '#FFFFFF', borderColor: '#F59E0B', animationUrl: '', enabled: true }), previewUrl: e.target.value },
+                          }))}
+                          placeholder="https://... or upload PNG"
+                          className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                        />
+                      </div>
+                      <input
+                        type="file"
+                        accept=".png,.jpg,.jpeg,.webp"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'svipBubbleConfig.previewUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">2. Bubble SVGA Animation (.svga)</label>
+                      <Input
+                        value={formData.svipBubbleConfig?.animationUrl || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          svipBubbleConfig: { ...(prev.svipBubbleConfig || { bubbleName: '', bgGradient: [], textColor: '#FFFFFF', borderColor: '#F59E0B', previewUrl: '', enabled: true }), animationUrl: e.target.value },
+                        }))}
+                        placeholder="https://... or upload .svga"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                      <input
+                        type="file"
+                        accept=".svga"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'svipBubbleConfig.animationUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 4. Profile Card Theme */}
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-white">Profile Card Theme</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input
+                          type="checkbox"
+                          checked={formData.profileCardConfig?.enabled !== false}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            profileCardConfig: { ...(prev.profileCardConfig || { cardName: '', previewUrl: '', animationUrl: '' }), enabled: e.target.checked },
+                          }))}
+                          className="rounded accent-amber-500"
+                        />
+                        <span className={formData.profileCardConfig?.enabled !== false ? 'text-emerald-400 font-bold text-[11px]' : 'text-slate-500 text-[11px]'}>
+                          {formData.profileCardConfig?.enabled !== false ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] text-slate-300 block mb-1">Card Theme Name</label>
+                      <Input
+                        value={formData.profileCardConfig?.cardName || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          profileCardConfig: { ...(prev.profileCardConfig || { previewUrl: '', animationUrl: '', enabled: true }), cardName: e.target.value },
+                        }))}
+                        placeholder="e.g. VIP Royal Imperial Card"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">1. Card Image (PNG/JPG Preview)</label>
+                      <div className="flex gap-2 items-center">
+                        {formData.profileCardConfig?.previewUrl && (
+                          <img
+                            src={String(formData.profileCardConfig.previewUrl).startsWith('/') ? getApiBaseUrl() + formData.profileCardConfig.previewUrl : formData.profileCardConfig.previewUrl}
+                            alt="Card Preview"
+                            className="h-8 w-8 object-contain bg-slate-900 rounded border border-white/10 p-0.5"
+                          />
+                        )}
+                        <Input
+                          value={formData.profileCardConfig?.previewUrl || ''}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            profileCardConfig: { ...(prev.profileCardConfig || { cardName: '', animationUrl: '', enabled: true }), previewUrl: e.target.value },
+                          }))}
+                          placeholder="https://... or upload PNG"
+                          className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                        />
+                      </div>
+                      <input
+                        type="file"
+                        accept=".png,.jpg,.jpeg,.webp"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'profileCardConfig.previewUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">2. Card SVGA Animation (.svga)</label>
+                      <Input
+                        value={formData.profileCardConfig?.animationUrl || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          profileCardConfig: { ...(prev.profileCardConfig || { cardName: '', previewUrl: '', enabled: true }), animationUrl: e.target.value },
+                        }))}
+                        placeholder="https://... or upload .svga"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                      <input
+                        type="file"
+                        accept=".svga"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'profileCardConfig.animationUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 5. Mic Wave Effect */}
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Mic className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-white">Mic Wave Effect</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input
+                          type="checkbox"
+                          checked={formData.micWaveConfig?.enabled !== false}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            micWaveConfig: { ...(prev.micWaveConfig || { previewUrl: '', animationUrl: '' }), enabled: e.target.checked },
+                          }))}
+                          className="rounded accent-amber-500"
+                        />
+                        <span className={formData.micWaveConfig?.enabled !== false ? 'text-emerald-400 font-bold text-[11px]' : 'text-slate-500 text-[11px]'}>
+                          {formData.micWaveConfig?.enabled !== false ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">1. Mic Wave Image (PNG/JPG Preview)</label>
+                      <div className="flex gap-2 items-center">
+                        {formData.micWaveConfig?.previewUrl && (
+                          <img
+                            src={String(formData.micWaveConfig.previewUrl).startsWith('/') ? getApiBaseUrl() + formData.micWaveConfig.previewUrl : formData.micWaveConfig.previewUrl}
+                            alt="Mic Wave Preview"
+                            className="h-8 w-8 object-contain bg-slate-900 rounded border border-white/10 p-0.5"
+                          />
+                        )}
+                        <Input
+                          value={formData.micWaveConfig?.previewUrl || ''}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            micWaveConfig: { ...(prev.micWaveConfig || { animationUrl: '', enabled: true }), previewUrl: e.target.value },
+                          }))}
+                          placeholder="https://... or upload PNG"
+                          className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                        />
+                      </div>
+                      <input
+                        type="file"
+                        accept=".png,.jpg,.jpeg,.webp"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'micWaveConfig.previewUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">2. Mic Wave SVGA Animation (.svga)</label>
+                      <Input
+                        value={formData.micWaveConfig?.animationUrl || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          micWaveConfig: { ...(prev.micWaveConfig || { previewUrl: '', enabled: true }), animationUrl: e.target.value },
+                        }))}
+                        placeholder="https://... or upload .svga"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                      <input
+                        type="file"
+                        accept=".svga"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'micWaveConfig.animationUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 6. Gift Broadcast */}
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Gift className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-white">Gift Broadcast Banner</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input
+                          type="checkbox"
+                          checked={formData.giftBroadcastConfig?.enabled !== false}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            giftBroadcastConfig: { ...(prev.giftBroadcastConfig || { title: '', previewUrl: '', animationUrl: '' }), enabled: e.target.checked },
+                          }))}
+                          className="rounded accent-amber-500"
+                        />
+                        <span className={formData.giftBroadcastConfig?.enabled !== false ? 'text-emerald-400 font-bold text-[11px]' : 'text-slate-500 text-[11px]'}>
+                          {formData.giftBroadcastConfig?.enabled !== false ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] text-slate-300 block mb-1">Broadcast Title</label>
+                      <Input
+                        value={formData.giftBroadcastConfig?.title || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          giftBroadcastConfig: { ...(prev.giftBroadcastConfig || { previewUrl: '', animationUrl: '', enabled: true }), title: e.target.value },
+                        }))}
+                        placeholder="e.g. VIP Grand Send Announcement"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">1. Broadcast Image (PNG/JPG Preview)</label>
+                      <div className="flex gap-2 items-center">
+                        {formData.giftBroadcastConfig?.previewUrl && (
+                          <img
+                            src={String(formData.giftBroadcastConfig.previewUrl).startsWith('/') ? getApiBaseUrl() + formData.giftBroadcastConfig.previewUrl : formData.giftBroadcastConfig.previewUrl}
+                            alt="Broadcast Preview"
+                            className="h-8 w-8 object-contain bg-slate-900 rounded border border-white/10 p-0.5"
+                          />
+                        )}
+                        <Input
+                          value={formData.giftBroadcastConfig?.previewUrl || ''}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            giftBroadcastConfig: { ...(prev.giftBroadcastConfig || { title: '', animationUrl: '', enabled: true }), previewUrl: e.target.value },
+                          }))}
+                          placeholder="https://... or upload PNG"
+                          className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                        />
+                      </div>
+                      <input
+                        type="file"
+                        accept=".png,.jpg,.jpeg,.webp"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'giftBroadcastConfig.previewUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">2. Broadcast SVGA Animation (.svga)</label>
+                      <Input
+                        value={formData.giftBroadcastConfig?.animationUrl || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          giftBroadcastConfig: { ...(prev.giftBroadcastConfig || { title: '', previewUrl: '', enabled: true }), animationUrl: e.target.value },
+                        }))}
+                        placeholder="https://... or upload .svga"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                      <input
+                        type="file"
+                        accept=".svga"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'giftBroadcastConfig.animationUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 7. Name Colours */}
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Palette className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-white">Name Colours</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input
+                          type="checkbox"
+                          checked={formData.nameColorConfig?.enabled !== false}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            nameColorConfig: { ...(prev.nameColorConfig || { color: '#FFD700', glowColor: '#F59E0B' }), enabled: e.target.checked },
+                          }))}
+                          className="rounded accent-amber-500"
+                        />
+                        <span className={formData.nameColorConfig?.enabled !== false ? 'text-emerald-400 font-bold text-[11px]' : 'text-slate-500 text-[11px]'}>
+                          {formData.nameColorConfig?.enabled !== false ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[11px] text-slate-300 block mb-1">Primary Name Color</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={formData.nameColorConfig?.color || '#FFD700'}
+                            onChange={(e) => setFormData((prev) => ({
+                              ...prev,
+                              nameColorConfig: { ...(prev.nameColorConfig || { glowColor: '#F59E0B', enabled: true }), color: e.target.value },
+                            }))}
+                            className="h-8 w-8 rounded border border-white/10 bg-transparent cursor-pointer"
+                          />
+                          <Input
+                            value={formData.nameColorConfig?.color || '#FFD700'}
+                            onChange={(e) => setFormData((prev) => ({
+                              ...prev,
+                              nameColorConfig: { ...(prev.nameColorConfig || { glowColor: '#F59E0B', enabled: true }), color: e.target.value },
+                            }))}
+                            className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] text-slate-300 block mb-1">Name Glow Color</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={formData.nameColorConfig?.glowColor || '#F59E0B'}
+                            onChange={(e) => setFormData((prev) => ({
+                              ...prev,
+                              nameColorConfig: { ...(prev.nameColorConfig || { color: '#FFD700', enabled: true }), glowColor: e.target.value },
+                            }))}
+                            className="h-8 w-8 rounded border border-white/10 bg-transparent cursor-pointer"
+                          />
+                          <Input
+                            value={formData.nameColorConfig?.glowColor || '#F59E0B'}
+                            onChange={(e) => setFormData((prev) => ({
+                              ...prev,
+                              nameColorConfig: { ...(prev.nameColorConfig || { color: '#FFD700', enabled: true }), glowColor: e.target.value },
+                            }))}
+                            className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 8. Message Colours */}
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-white">Message Colours</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input
+                          type="checkbox"
+                          checked={formData.messageColorConfig?.enabled !== false}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            messageColorConfig: { ...(prev.messageColorConfig || { color: '#FFFFFF', bubbleColor: '#3B0764' }), enabled: e.target.checked },
+                          }))}
+                          className="rounded accent-amber-500"
+                        />
+                        <span className={formData.messageColorConfig?.enabled !== false ? 'text-emerald-400 font-bold text-[11px]' : 'text-slate-500 text-[11px]'}>
+                          {formData.messageColorConfig?.enabled !== false ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[11px] text-slate-300 block mb-1">Message Font Color</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={formData.messageColorConfig?.color || '#FFFFFF'}
+                            onChange={(e) => setFormData((prev) => ({
+                              ...prev,
+                              messageColorConfig: { ...(prev.messageColorConfig || { bubbleColor: '#3B0764', enabled: true }), color: e.target.value },
+                            }))}
+                            className="h-8 w-8 rounded border border-white/10 bg-transparent cursor-pointer"
+                          />
+                          <Input
+                            value={formData.messageColorConfig?.color || '#FFFFFF'}
+                            onChange={(e) => setFormData((prev) => ({
+                              ...prev,
+                              messageColorConfig: { ...(prev.messageColorConfig || { bubbleColor: '#3B0764', enabled: true }), color: e.target.value },
+                            }))}
+                            className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] text-slate-300 block mb-1">Bubble Background Tint</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={formData.messageColorConfig?.bubbleColor || '#3B0764'}
+                            onChange={(e) => setFormData((prev) => ({
+                              ...prev,
+                              messageColorConfig: { ...(prev.messageColorConfig || { color: '#FFFFFF', enabled: true }), bubbleColor: e.target.value },
+                            }))}
+                            className="h-8 w-8 rounded border border-white/10 bg-transparent cursor-pointer"
+                          />
+                          <Input
+                            value={formData.messageColorConfig?.bubbleColor || '#3B0764'}
+                            onChange={(e) => setFormData((prev) => ({
+                              ...prev,
+                              messageColorConfig: { ...(prev.messageColorConfig || { color: '#FFFFFF', enabled: true }), bubbleColor: e.target.value },
+                            }))}
+                            className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 9. VIP ID */}
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Hash className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-white">VIP ID</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input
+                          type="checkbox"
+                          checked={formData.vipIdConfig?.enabled !== false}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            vipIdConfig: { ...(prev.vipIdConfig || { vipIdPattern: '', previewUrl: '', animationUrl: '' }), enabled: e.target.checked },
+                          }))}
+                          className="rounded accent-amber-500"
+                        />
+                        <span className={formData.vipIdConfig?.enabled !== false ? 'text-emerald-400 font-bold text-[11px]' : 'text-slate-500 text-[11px]'}>
+                          {formData.vipIdConfig?.enabled !== false ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] text-slate-300 block mb-1">VIP ID Pattern / Format</label>
+                      <Input
+                        value={formData.vipIdConfig?.vipIdPattern || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          vipIdConfig: { ...(prev.vipIdConfig || { previewUrl: '', animationUrl: '', enabled: true }), vipIdPattern: e.target.value },
+                        }))}
+                        placeholder="e.g. VIP-8888 or 6-Digit Sovereign ID"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">1. VIP ID Badge Image (PNG/JPG Preview)</label>
+                      <div className="flex gap-2 items-center">
+                        {formData.vipIdConfig?.previewUrl && (
+                          <img
+                            src={String(formData.vipIdConfig.previewUrl).startsWith('/') ? getApiBaseUrl() + formData.vipIdConfig.previewUrl : formData.vipIdConfig.previewUrl}
+                            alt="VIP ID Preview"
+                            className="h-8 w-8 object-contain bg-slate-900 rounded border border-white/10 p-0.5"
+                          />
+                        )}
+                        <Input
+                          value={formData.vipIdConfig?.previewUrl || ''}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            vipIdConfig: { ...(prev.vipIdConfig || { vipIdPattern: '', animationUrl: '', enabled: true }), previewUrl: e.target.value },
+                          }))}
+                          placeholder="https://... or upload PNG"
+                          className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                        />
+                      </div>
+                      <input
+                        type="file"
+                        accept=".png,.jpg,.jpeg,.webp"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'vipIdConfig.previewUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">2. VIP ID SVGA Animation (.svga)</label>
+                      <Input
+                        value={formData.vipIdConfig?.animationUrl || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          vipIdConfig: { ...(prev.vipIdConfig || { vipIdPattern: '', previewUrl: '', enabled: true }), animationUrl: e.target.value },
+                        }))}
+                        placeholder="https://... or upload .svga"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                      <input
+                        type="file"
+                        accept=".svga"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'vipIdConfig.animationUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 10. Room Entry Arrival */}
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Car className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-white">Room Entry Arrival</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input
+                          type="checkbox"
+                          checked={formData.features?.enableEntryEffect !== false}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            features: { ...(prev.features || {}), enableEntryEffect: e.target.checked },
+                          }))}
+                          className="rounded accent-amber-500"
+                        />
+                        <span className={formData.features?.enableEntryEffect !== false ? 'text-emerald-400 font-bold text-[11px]' : 'text-slate-500 text-[11px]'}>
+                          {formData.features?.enableEntryEffect !== false ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">1. Entry Image (PNG/JPG Preview)</label>
+                      <div className="flex gap-2 items-center">
+                        {formData.entryPreviewUrl && (
+                          <img
+                            src={String(formData.entryPreviewUrl).startsWith('/') ? getApiBaseUrl() + formData.entryPreviewUrl : formData.entryPreviewUrl}
+                            alt="Entry Preview"
+                            className="h-8 w-8 object-contain bg-slate-900 rounded border border-white/10 p-0.5"
+                          />
+                        )}
+                        <Input
+                          value={formData.entryPreviewUrl || ''}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, entryPreviewUrl: e.target.value }))}
+                          placeholder="https://... or upload PNG"
+                          className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                        />
+                      </div>
+                      <input
+                        type="file"
+                        accept=".png,.jpg,.jpeg,.webp"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'entryPreviewUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">2. Entry SVGA Animation (.svga)</label>
+                      <Input
+                        value={formData.entryAnimationUrl || ''}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, entryAnimationUrl: e.target.value }))}
+                        placeholder="https://... or upload .svga"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                      <input
+                        type="file"
+                        accept=".svga"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'entryAnimationUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 11. Avatar Frame */}
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Crown className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-white">Avatar Frame</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <input
+                          type="checkbox"
+                          checked={formData.features?.enableAvatarFrame !== false}
+                          onChange={(e) => setFormData((prev) => ({
+                            ...prev,
+                            features: { ...(prev.features || {}), enableAvatarFrame: e.target.checked },
+                          }))}
+                          className="rounded accent-amber-500"
+                        />
+                        <span className={formData.features?.enableAvatarFrame !== false ? 'text-emerald-400 font-bold text-[11px]' : 'text-slate-500 text-[11px]'}>
+                          {formData.features?.enableAvatarFrame !== false ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">1. Frame Image (PNG/JPG Preview)</label>
+                      <div className="flex gap-2 items-center">
+                        {formData.avatarFramePreviewUrl && (
+                          <img
+                            src={String(formData.avatarFramePreviewUrl).startsWith('/') ? getApiBaseUrl() + formData.avatarFramePreviewUrl : formData.avatarFramePreviewUrl}
+                            alt="Frame Preview"
+                            className="h-8 w-8 object-contain bg-slate-900 rounded border border-white/10 p-0.5"
+                          />
+                        )}
+                        <Input
+                          value={formData.avatarFramePreviewUrl || ''}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, avatarFramePreviewUrl: e.target.value }))}
+                          placeholder="https://... or upload PNG"
+                          className="bg-slate-800 border-white/10 text-xs h-8 flex-1"
+                        />
+                      </div>
+                      <input
+                        type="file"
+                        accept=".png,.jpg,.jpeg,.webp"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'avatarFramePreviewUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-300 block">2. Frame SVGA Animation (.svga)</label>
+                      <Input
+                        value={formData.avatarFrameUrl || ''}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, avatarFrameUrl: e.target.value }))}
+                        placeholder="https://... or upload .svga"
+                        className="bg-slate-800 border-white/10 text-xs h-8"
+                      />
+                      <input
+                        type="file"
+                        accept=".svga"
+                        disabled={uploadingField !== null}
+                        onChange={(e) => handleFileUpload(e, 'avatarFrameUrl')}
+                        className="text-[10px] w-full text-slate-400"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Section 5: Privileges Configuration (30 Standard Perks) */}
