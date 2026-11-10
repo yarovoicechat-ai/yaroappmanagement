@@ -37,7 +37,7 @@ import {
   Car,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { apiClient } from '@/lib/apiClient';
+import { apiClient, getApiBaseUrl } from '@/lib/apiClient';
 import { suggestAssetName } from '@/lib/aiAssetName';
 
 export interface PrivilegeItem {
@@ -92,6 +92,11 @@ export interface SvipPlanItem {
     borderColor: string;
     enabled: boolean;
   };
+  entryAnimationUrl?: string;
+  entryPreviewUrl?: string;
+  avatarFrameUrl?: string;
+  avatarFramePreviewUrl?: string;
+  features?: Record<string, boolean>;
   privileges: PrivilegeItem[];
   status: 'active' | 'inactive' | 'draft';
   isActive: boolean;
@@ -114,7 +119,7 @@ const ALL_30_PRIVILEGES: Omit<PrivilegeItem, 'isEnabled' | 'isVisible'>[] = [
   { key: 'anti_kick', title: 'Anti-Kick Protection', description: 'Full immunity against room kicks', icon: 'shield', value: 'Immunity', unlockLevel: 3, sortOrder: 13, implementationStatus: 'supported' },
   { key: 'gif_avatar', title: 'GIF Avatar', description: 'Upload animated GIF profile avatar', icon: 'film', value: 'Animated GIF', unlockLevel: 3, sortOrder: 14, implementationStatus: 'supported' },
   { key: 'level_experience_speed', title: 'EXP Speed Boost', icon: 'flash', description: 'Accelerated EXP multiplier on gifts', value: '+50% EXP', unlockLevel: 3, sortOrder: 15, implementationStatus: 'supported' },
-  { key: 'svip_customized_gift', title: 'SVIP Custom Gift', icon: 'gift', description: 'Exclusive 3D luxury gifts', value: '3D Gifts', unlockLevel: 3, sortOrder: 16, implementationStatus: 'supported' },
+  { key: 'svip_customized_gift', title: 'VIP Custom Gift', icon: 'gift', description: 'Exclusive 3D luxury gifts', value: '3D Gifts', unlockLevel: 3, sortOrder: 16, implementationStatus: 'supported' },
   { key: 'upgrade_app_wide_notification', title: 'App-wide Notice', icon: 'megaphone', description: 'Global arrival fanfare banner', value: 'Global Banner', unlockLevel: 4, sortOrder: 17, implementationStatus: 'supported' },
   { key: 'unique_3_digit_sid', title: 'Unique 3-digit SID', icon: 'key', description: 'Rare 3-digit vanity Special ID', value: '3-Digit SID', unlockLevel: 4, sortOrder: 18, implementationStatus: 'supported' },
   { key: 'anti_ban_from_chatting', title: 'Anti-Ban Chat', icon: 'volume-high', description: 'Platform chat mute immunity', value: 'Mute Immunity', unlockLevel: 4, sortOrder: 19, implementationStatus: 'supported' },
@@ -178,7 +183,6 @@ export default function SvipPlansPage() {
   });
 
   const [previewPlan, setPreviewPlan] = useState<SvipPlanItem | null>(null);
-  const [simulatorPreviewOption, setSimulatorPreviewOption] = useState<'tag' | 'bubble' | 'frame' | 'room_card' | 'mic_theme' | 'badge'>('tag');
   const [uploadingField, setUploadingField] = useState<string | null>(null);
 
   const fetchPlans = async () => {
@@ -196,7 +200,7 @@ export default function SvipPlansPage() {
         }
       }
     } catch (err: any) {
-      toast.error('Failed to load SVIP plans: ' + (err.message || 'Error'));
+      toast.error('Failed to load VIP plans: ' + (err.message || 'Error'));
     } finally {
       setLoading(false);
     }
@@ -252,14 +256,14 @@ export default function SvipPlansPage() {
   };
 
   const handleReseed = async () => {
-    if (!confirm('Explicit Confirmation: This will reset all SVIP tiers to match the 6 mobile app tiers (SVIP+ to SVIP 5) with exact pricing and privileges. Proceed?')) {
+    if (!confirm('Explicit Confirmation: This will reset all VIP tiers to match the 6 mobile app tiers (VIP+ to VIP 5) with exact pricing and privileges. Proceed?')) {
       return;
     }
     setLoading(true);
     try {
       const res = await apiClient.post<any>('/api/svip-plans/admin/reseed', { confirm: true });
       if (res.data?.success) {
-        toast.success(res.data.message || 'Successfully reseeded SVIP tiers matching the mobile app!');
+        toast.success(res.data.message || 'Successfully reseeded VIP tiers matching the mobile app!');
         fetchPlans();
       }
     } catch (err: any) {
@@ -279,7 +283,7 @@ export default function SvipPlansPage() {
     }));
 
     setFormData({
-      name: nextLevel === 0 ? 'VIP+' : `SVIP ${nextLevel}`,
+      name: nextLevel === 0 ? 'VIP+' : `VIP ${nextLevel}`,
       planCode: nextLevel === 0 ? 'VIP_PLUS' : `SVIP_${nextLevel}`,
       slug: nextLevel === 0 ? 'vip-plus' : `svip-${nextLevel}`,
       level: nextLevel,
@@ -385,6 +389,7 @@ export default function SvipPlansPage() {
 
   const handleSaveForm = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (uploadingField !== null) { toast.error('Wait for the asset upload to finish.'); return; }
     if (!formData.name || formData.level === undefined || formData.price === undefined) {
       toast.error('Plan name, level, and price are required');
       return;
@@ -432,13 +437,13 @@ export default function SvipPlansPage() {
               <Crown className="w-4 h-4" /> Nobility Plan Studio
             </div>
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white flex items-center gap-3">
-              SVIP Tier Builder
+              VIP Tier Builder
               <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-xs font-mono">
-                6 TIERS (SVIP+ to SVIP 5)
+                6 TIERS (VIP+ to VIP 5)
               </Badge>
             </h1>
             <p className="text-sm md:text-base text-slate-400 mt-2 max-w-3xl">
-              Create, configure, and manage SVIP+ (Level 0) through SVIP 5 tiers strictly matching the YaroApp mobile application: pricing, duration, Hero Badge/Tag/Bubble asset uploads, 29 exclusive privileges, and real-time mobile simulator.
+              Create, configure, and manage VIP+ (Level 0) through VIP 5 tiers strictly matching the YaroApp mobile application: pricing, duration, entry and avatar frame uploads, 29 exclusive privileges, and real-time mobile simulator.
             </p>
           </div>
 
@@ -468,7 +473,7 @@ export default function SvipPlansPage() {
               className="bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 font-bold hover:brightness-110 shadow-lg shadow-amber-500/20 text-xs"
             >
               <Plus className="w-3.5 h-3.5 mr-1.5" />
-              Create Tier
+              Create VIP Tier
             </Button>
           </div>
         </div>
@@ -519,7 +524,7 @@ export default function SvipPlansPage() {
                   <TableRow className="border-white/5">
                     <TableHead className="text-slate-400 text-xs">Level & Name</TableHead>
                     <TableHead className="text-slate-400 text-xs">Pricing (💎)</TableHead>
-                    <TableHead className="text-slate-400 text-xs">Tag & Bubble</TableHead>
+                    <TableHead className="text-slate-400 text-xs">Entry & Frame</TableHead>
                     <TableHead className="text-slate-400 text-xs">Privileges</TableHead>
                     <TableHead className="text-slate-400 text-xs">Status</TableHead>
                     <TableHead className="text-right text-slate-400 text-xs">Actions</TableHead>
@@ -529,7 +534,7 @@ export default function SvipPlansPage() {
                   {filteredPlans.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-12 text-slate-500 text-sm">
-                        No SVIP plans found. Click &quot;1-Click Reseed&quot; or &quot;Create Tier&quot;.
+                        No VIP plans found. Click &quot;1-Click Reseed&quot; or &quot;Create VIP Tier&quot;.
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -577,10 +582,10 @@ export default function SvipPlansPage() {
                           <TableCell>
                             <div className="flex items-center gap-1.5">
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                {plan.svipTagConfig?.text || 'SVIP'}
+                                {plan.entryAnimationUrl && plan.features?.enableEntryEffect !== false ? 'Entry ready' : 'Entry off'}
                               </span>
                               <span className="px-2 py-0.5 rounded text-[10px] bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                                Bubble
+                                {plan.avatarFrameUrl && plan.features?.enableAvatarFrame !== false ? 'Frame ready' : 'Frame off'}
                               </span>
                             </div>
                           </TableCell>
@@ -651,7 +656,7 @@ export default function SvipPlansPage() {
             <CardHeader className="border-b border-white/5 py-3 flex flex-row items-center justify-between">
               <CardTitle className="text-xs font-bold text-white flex items-center gap-2">
                 <Smartphone className="w-4 h-4 text-amber-400" />
-                Live Mobile SVIP Simulator
+                Live Mobile VIP Simulator
               </CardTitle>
               {previewPlan && (
                 <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">
@@ -666,7 +671,7 @@ export default function SvipPlansPage() {
                   <div className="flex items-center justify-between pb-2 border-b border-white/5">
                     <span className="text-white text-xs font-bold">←</span>
                     <span className="text-amber-200 text-xs font-black tracking-wider uppercase">
-                      SVIP Nobility
+                      VIP Membership
                     </span>
                     <span className="text-amber-400 text-xs font-bold">?</span>
                   </div>
@@ -685,7 +690,7 @@ export default function SvipPlansPage() {
                               : 'bg-stone-900 text-stone-400 border border-stone-800'
                           }`}
                         >
-                          {p.level === 0 ? 'VIP+' : `SVIP ${p.level}`}
+                          {p.level === 0 ? 'VIP+' : `VIP ${p.level}`}
                         </div>
                       );
                     })}
@@ -694,117 +699,25 @@ export default function SvipPlansPage() {
                   {/* Hero Crest Section */}
                   <div className="rounded-2xl bg-gradient-to-b from-stone-900/80 to-stone-950 border border-amber-500/20 p-4 text-center relative my-2">
                     <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-tr from-amber-500/30 to-yellow-600/30 border border-amber-400/40 flex items-center justify-center font-black text-2xl text-amber-300 shadow-xl mb-1">
-                      {previewPlan?.heroBadgeUrl ? (
-                        <img src={previewPlan.heroBadgeUrl} alt="Badge" className="w-12 h-12 object-contain" />
-                      ) : (
-                        '👑'
-                      )}
+                      VIP
                     </div>
                     <h3 className="text-sm font-black text-amber-300">
-                      {previewPlan?.name || 'SVIP Tier'}
+                      {previewPlan?.name || 'VIP Tier'}
                     </h3>
                     <p className="text-[10px] text-stone-400 mt-0.5 line-clamp-1">
                       {previewPlan?.description}
                     </p>
                   </div>
 
-                  {/* Interactive Preview Element Selector (matching SVIP.js) */}
-                  {(() => {
-                    const tierLevel = previewPlan?.level ?? 1;
-                    const allowedOptions: ('tag' | 'bubble' | 'frame' | 'room_card' | 'mic_theme' | 'badge')[] =
-                      tierLevel === 0 ? ['tag', 'bubble']
-                      : tierLevel === 1 || tierLevel === 2 ? ['tag', 'bubble', 'frame']
-                      : tierLevel === 3 ? ['tag', 'bubble', 'frame', 'room_card']
-                      : tierLevel === 4 ? ['tag', 'bubble', 'frame', 'room_card', 'mic_theme']
-                      : ['tag', 'bubble', 'frame', 'room_card', 'mic_theme', 'badge'];
-
-                    return (
-                      <div className="space-y-2 my-2.5">
-                        <div className="flex items-center justify-around bg-stone-900/90 border border-white/5 rounded-xl p-1 text-[9px] font-bold">
-                          {allowedOptions.map((opt) => (
-                            <button
-                              key={opt}
-                              type="button"
-                              onClick={() => setSimulatorPreviewOption(opt)}
-                              className={`px-2 py-1 rounded-lg font-bold capitalize transition-all ${
-                                simulatorPreviewOption === opt
-                                  ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black shadow'
-                                  : 'text-stone-400 hover:text-white'
-                              }`}
-                            >
-                              {opt.replace('_', ' ')}
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* Dynamic Preview Display Area */}
-                        <div className="p-3 rounded-2xl bg-stone-950 border border-amber-500/20 text-center relative overflow-hidden min-h-[85px] flex items-center justify-center">
-                          {simulatorPreviewOption === 'tag' && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-white font-bold">User Nickname</span>
-                              <span
-                                className="px-2.5 py-0.5 rounded-full text-[10px] font-black text-slate-950 shadow-md uppercase"
-                                style={{
-                                  background: `linear-gradient(to right, ${previewPlan?.svipTagConfig?.bgGradient?.[0] || '#F59E0B'}, ${previewPlan?.svipTagConfig?.bgGradient?.[1] || '#D97706'})`
-                                }}
-                              >
-                                {previewPlan?.svipTagConfig?.text || `SVIP ${tierLevel}`}
-                              </span>
-                            </div>
-                          )}
-
-                          {simulatorPreviewOption === 'bubble' && (
-                            <div
-                              className="px-3.5 py-2 rounded-2xl text-xs text-white shadow-lg border max-w-[200px]"
-                              style={{
-                                background: `linear-gradient(to right, ${previewPlan?.svipBubbleConfig?.bgGradient?.[0] || '#3A1F04'}, ${previewPlan?.svipBubbleConfig?.bgGradient?.[1] || '#78350F'})`,
-                                borderColor: previewPlan?.svipBubbleConfig?.borderColor || '#F59E0B'
-                              }}
-                            >
-                              <p className="text-[10px] font-medium leading-tight">
-                                {previewPlan?.svipBubbleConfig?.bubbleName || 'Noble chat bubble ✨'}
-                              </p>
-                            </div>
-                          )}
-
-                          {simulatorPreviewOption === 'frame' && (
-                            <div className="relative flex items-center justify-center">
-                              <div className="w-12 h-12 rounded-full border-2 border-amber-400 p-0.5 shadow-lg shadow-amber-500/30 flex items-center justify-center bg-gradient-to-br from-amber-500/20 to-yellow-600/30">
-                                <span className="text-lg">👤</span>
-                              </div>
-                              <div className="absolute -top-1.5 -right-1.5 text-xs">👑</div>
-                            </div>
-                          )}
-
-                          {simulatorPreviewOption === 'room_card' && (
-                            <div className="w-full p-2.5 rounded-xl bg-gradient-to-r from-purple-950 to-indigo-950 border border-purple-500/30 text-left">
-                              <div className="text-[10px] font-black text-purple-300 uppercase">Personal VIP Room Card</div>
-                              <div className="text-[8px] text-white/70">Exclusive high-status room background</div>
-                            </div>
-                          )}
-
-                          {simulatorPreviewOption === 'mic_theme' && (
-                            <div className="flex flex-col items-center">
-                              <div className="w-9 h-9 rounded-full border border-amber-400/80 bg-amber-500/20 flex items-center justify-center shadow-lg shadow-amber-500/40">
-                                <Mic className="w-4 h-4 text-amber-300" />
-                              </div>
-                              <span className="text-[8px] text-amber-300 font-bold mt-1">Luxury Mic Pedestal</span>
-                            </div>
-                          )}
-
-                          {simulatorPreviewOption === 'badge' && (
-                            <div className="flex flex-col items-center">
-                              <div className="w-10 h-10 rounded-full border-2 border-yellow-400 bg-gradient-to-br from-yellow-500/40 to-amber-700/40 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                                <Award className="w-5 h-5 text-yellow-300" />
-                              </div>
-                              <span className="text-[8px] text-yellow-300 font-black mt-1">Sovereign Lion Crest</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
+                  <div className="grid grid-cols-2 gap-2 my-3">
+                    {([
+                      { label: 'VIP Entry', url: previewPlan?.entryPreviewUrl, active: previewPlan?.features?.enableEntryEffect !== false },
+                      { label: 'VIP Frame', url: previewPlan?.avatarFramePreviewUrl, active: previewPlan?.features?.enableAvatarFrame !== false },
+                    ]).map(asset => <div key={asset.label} className="rounded-xl border border-white/10 p-2 text-center">
+                      {asset.url && asset.active ? <img src={asset.url.startsWith('/') ? getApiBaseUrl() + asset.url : asset.url} alt={asset.label} className="h-24 w-full object-contain" /> : <p className="text-xs text-slate-500 py-6">Not configured</p>}
+                      <span className="text-xs text-amber-300">{asset.label}</span>
+                    </div>)}
+                  </div>
                   {/* 30 Privileges Grid */}
                   <div className="mt-2">
                     <div className="flex items-center justify-between mb-1.5">
@@ -873,10 +786,10 @@ export default function SvipPlansPage() {
 
             <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-1">
               <Crown className="w-5 h-5 text-amber-400" />
-              {editingPlanId ? `Edit ${formData.name}` : 'Create New SVIP Tier'}
+              {editingPlanId ? `Edit ${formData.name}` : 'Create New VIP Tier'}
             </h2>
             <p className="text-xs text-slate-400 mb-6">
-              Configure tier level, pricing, renewal threshold, Hero Badge/Tag/Bubble uploads, and toggle all 30 hexagonal exclusive privileges.
+              Configure tier level, pricing, renewal threshold, entry and avatar frame uploads, and toggle all 30 hexagonal exclusive privileges.
             </p>
 
             <form onSubmit={handleSaveForm} className="space-y-6">
@@ -888,7 +801,7 @@ export default function SvipPlansPage() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-slate-300 block mb-1">
-                      Tier Level (0 for SVIP+, 1 to 5) *
+                      Tier Level (0 for VIP+, 1 to 5) *
                     </label>
                     <Input
                       type="number"
@@ -906,7 +819,7 @@ export default function SvipPlansPage() {
                       Plan Name *
                     </label>
                     <Input
-                      placeholder="e.g. VIP+ Lynx, SVIP 1 Knight, SVIP 5 Sovereign Supreme"
+                      placeholder="e.g. VIP+ Lynx, VIP 1 Knight, VIP 5 Sovereign Supreme"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="bg-slate-800 border-white/10 text-xs"
@@ -1003,154 +916,24 @@ export default function SvipPlansPage() {
                 </div>
               </div>
 
-              {/* Section 3: Hero Badge & Animations */}
               <div className="space-y-4 pt-4 border-t border-white/5">
-                <h3 className="text-xs font-black uppercase text-amber-400 tracking-wider">
-                  3. Hero Badge & Animations
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">
-                      Hero Badge Icon URL (.png, .webp)
-                    </label>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="https://..."
-                        value={formData.heroBadgeUrl || ''}
-                        onChange={(e) => setFormData({ ...formData, heroBadgeUrl: e.target.value })}
-                        className="bg-slate-800 border-white/10 text-xs"
-                      />
-                      <label className="cursor-pointer px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-lg text-xs font-semibold text-slate-200 flex items-center justify-center shrink-0">
-                        <UploadCloud className="w-3.5 h-3.5 text-amber-400 mr-1" />
-                        Upload
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={(e) => handleFileUpload(e, 'heroBadgeUrl')}
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">
-                      Hero 3D / Animation URL (.svga, .gif, .json)
-                    </label>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="https://..."
-                        value={formData.heroAnimationUrl || ''}
-                        onChange={(e) => setFormData({ ...formData, heroAnimationUrl: e.target.value })}
-                        className="bg-slate-800 border-white/10 text-xs"
-                      />
-                      <label className="cursor-pointer px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-lg text-xs font-semibold text-slate-200 flex items-center justify-center shrink-0">
-                        <UploadCloud className="w-3.5 h-3.5 text-amber-400 mr-1" />
-                        Upload
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept=".svga,.gif,.webp,.json"
-                          onChange={(e) => handleFileUpload(e, 'heroAnimationUrl')}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 4: SVIP Tag & Bubble Customization */}
-              <div className="space-y-4 pt-4 border-t border-white/5">
-                <h3 className="text-xs font-black uppercase text-amber-400 tracking-wider">
-                  4. SVIP Tag & Bubble Customization
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2 bg-slate-950/40 p-3 rounded-xl border border-white/5">
-                    <span className="text-[11px] font-bold text-amber-300">SVIP Tag Config</span>
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">Tag Text</label>
-                      <Input
-                        placeholder="e.g. SVIP 1"
-                        value={formData.svipTagConfig?.text}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            svipTagConfig: { ...formData.svipTagConfig!, text: e.target.value },
-                          })
-                        }
-                        className="bg-slate-800 border-white/10 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">Icon Upload</label>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Icon URL"
-                          value={formData.svipTagConfig?.iconUrl || ''}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              svipTagConfig: { ...formData.svipTagConfig!, iconUrl: e.target.value },
-                            })
-                          }
-                          className="bg-slate-800 border-white/10 text-xs"
-                        />
-                        <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-lg text-xs text-slate-200 flex items-center justify-center shrink-0">
-                          <UploadCloud className="w-3.5 h-3.5 text-amber-400" />
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept="image/*"
-                            onChange={(e) => handleFileUpload(e, 'tag.iconUrl')}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 bg-slate-950/40 p-3 rounded-xl border border-white/5">
-                    <span className="text-[11px] font-bold text-violet-300">SVIP Bubble Config</span>
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">Bubble Name</label>
-                      <Input
-                        placeholder="e.g. Knight Amber Glass"
-                        value={formData.svipBubbleConfig?.bubbleName}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            svipBubbleConfig: { ...formData.svipBubbleConfig!, bubbleName: e.target.value },
-                          })
-                        }
-                        className="bg-slate-800 border-white/10 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">Preview / Animation Upload</label>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Bubble preview image/animation URL"
-                          value={formData.svipBubbleConfig?.previewUrl || ''}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              svipBubbleConfig: { ...formData.svipBubbleConfig!, previewUrl: e.target.value },
-                            })
-                          }
-                          className="bg-slate-800 border-white/10 text-xs"
-                        />
-                        <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-lg text-xs text-slate-200 flex items-center justify-center shrink-0">
-                          <UploadCloud className="w-3.5 h-3.5 text-violet-400" />
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept="image/*,.svga,.gif"
-                            onChange={(e) => handleFileUpload(e, 'bubble.previewUrl')}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <h3 className="text-xs font-black uppercase text-amber-400">3. VIP Entry & Avatar Frame</h3>
+                <p className="text-xs text-slate-400">Save this tier to update its entry and frame in the app. Chat bubbles, badges and tags will be added later.</p>
+                {([
+                  { title: 'Room Entry', animation: 'entryAnimationUrl', preview: 'entryPreviewUrl', feature: 'enableEntryEffect' },
+                  { title: 'Avatar Frame', animation: 'avatarFrameUrl', preview: 'avatarFramePreviewUrl', feature: 'enableAvatarFrame' },
+                ] as const).map(asset => <div key={asset.animation} className="rounded-xl border border-white/10 p-4 space-y-3">
+                  <label className="flex gap-2 text-sm font-semibold">
+                    <input type="checkbox" checked={formData.features?.[asset.feature] !== false} onChange={event => setFormData(prev => ({ ...prev, features: { ...prev.features, [asset.feature]: event.target.checked } }))} />
+                    {asset.title} enabled
+                  </label>
+                  {formData[asset.preview] && <img src={String(formData[asset.preview]).startsWith('/') ? getApiBaseUrl() + formData[asset.preview] : formData[asset.preview]} alt={asset.title + ' preview'} className="h-32 w-32 object-contain bg-slate-950 rounded-lg" />}
+                  {([asset.preview, asset.animation] as const).map(field => <div key={field} className="space-y-1">
+                    <label className="text-xs text-slate-300" htmlFor={field}>{field === asset.preview ? 'PNG preview' : 'SVGA animation'}</label>
+                    <Input id={field} value={formData[field] || ''} onChange={event => setFormData(prev => ({ ...prev, [field]: event.target.value }))} placeholder="https://…" className="bg-slate-800 border-white/10 text-xs" />
+                    <input aria-label={'Upload ' + asset.title + ' ' + (field === asset.preview ? 'PNG' : 'SVGA')} type="file" accept={field === asset.preview ? '.png' : '.svga'} disabled={uploadingField !== null} onChange={event => handleFileUpload(event, field)} className="text-xs w-full" />
+                  </div>)}
+                </div>)}
               </div>
 
               {/* Section 5: Privileges Configuration (30 Standard Perks) */}
@@ -1256,7 +1039,7 @@ export default function SvipPlansPage() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || uploadingField !== null}
                   className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 font-bold"
                 >
                   {editingPlanId ? 'Save Changes' : 'Publish Plan'}
