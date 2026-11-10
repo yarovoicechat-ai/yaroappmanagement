@@ -243,23 +243,26 @@ export default function BeansPlansPage() {
     // Live calculator calculation
     const calcResult = useMemo(() => {
         const match = plans.find(p => p.beans === calcBeans && p.isActive);
+        const withdrawalVal = (calcBeans / 200).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
         if (match) {
             return {
                 diamonds: match.diamonds,
                 bonus: match.bonusDiamonds || 0,
                 total: match.diamonds + (match.bonusDiamonds || 0),
-                ratio: ((match.diamonds / match.beans) * 100).toFixed(1) + '%',
+                ratio: ((match.diamonds / match.beans) * 100).toFixed(1) + '% (200 🫘 = 100 🪙)',
                 badge: match.badge,
+                withdrawalVal,
             };
         }
-        // General 90% fallback estimate
-        const estimated = Math.floor(calcBeans * 0.9);
+        // Standard 50% ratio (200 Beans = 100 Coins, 200 Beans = ₹1)
+        const estimated = Math.floor(calcBeans * 0.5);
         return {
             diamonds: estimated,
             bonus: 0,
             total: estimated,
-            ratio: '90.0%',
-            badge: 'Standard 90%',
+            ratio: '50.0% (200 🫘 = 100 🪙)',
+            badge: 'Standard 200:100',
+            withdrawalVal,
         };
     }, [plans, calcBeans]);
 
@@ -345,8 +348,8 @@ export default function BeansPlansPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-cyan-400">100 🫘 = 90 💎</div>
-                        <p className="text-xs text-slate-500 mt-1">Standard 90% return</p>
+                        <div className="text-2xl font-bold text-cyan-400">200 🫘 = 100 🪙</div>
+                        <p className="text-xs text-slate-500 mt-1">200 Beans = ₹1 Cashout</p>
                     </CardContent>
                 </Card>
 
@@ -694,25 +697,23 @@ export default function BeansPlansPage() {
                                 </div>
 
                                 <div className="flex items-center justify-between text-xs text-slate-400">
-                                    <span>Base Diamonds:</span>
+                                    <span>Coins Receive:</span>
                                     <span className="font-bold text-cyan-300 font-mono">
-                                        {calcResult.diamonds.toLocaleString()} 💎
+                                        {calcResult.total.toLocaleString()} 🪙
                                     </span>
                                 </div>
 
-                                {calcResult.bonus > 0 && (
-                                    <div className="flex items-center justify-between text-xs text-emerald-400">
-                                        <span>Bonus Yield:</span>
-                                        <span className="font-bold font-mono">
-                                            +{calcResult.bonus.toLocaleString()} 💎
-                                        </span>
-                                    </div>
-                                )}
+                                <div className="flex items-center justify-between text-xs text-emerald-400">
+                                    <span>Withdrawal Value:</span>
+                                    <span className="font-bold font-mono text-emerald-400">
+                                        ₹{calcResult.withdrawalVal} (200 🫘 = ₹1)
+                                    </span>
+                                </div>
 
                                 <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-                                    <span className="text-xs font-bold text-white uppercase">Total Credited:</span>
+                                    <span className="text-xs font-bold text-white uppercase">Coins Credited:</span>
                                     <span className="text-xl font-black text-amber-400 font-mono">
-                                        {calcResult.total.toLocaleString()} 💎
+                                        {calcResult.total.toLocaleString()} 🪙
                                     </span>
                                 </div>
                             </div>
