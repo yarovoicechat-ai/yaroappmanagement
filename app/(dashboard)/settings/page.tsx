@@ -52,16 +52,44 @@ const defaults: AppSettings = {
 export default function SettingsPage() {
   const { user } = useAuth();
   const [settings, setSettings] = useState<AppSettings>(defaults);
+  const [sysConfig, setSysConfig] = useState({ isFamilyEnabled: false, isCpEnabled: false, isInviteEarnEnabled: false });
   const [agoraCertificate, setAgoraCertificate] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    apiClient.get<AppSettings>('/api/admin/settings')
-      .then(res => setSettings({ ...defaults, ...(res.data || {}) }))
-      .catch((error: any) => toast.error(error?.message || 'Settings load nahi hue'))
-      .finally(() => setLoading(false));
+    Promise.allSettled([
+      apiClient.get<AppSettings>('/api/admin/settings'),
+      apiClient.get<any>('/api/system-config/public')
+    ]).then(([settingsRes, sysRes]) => {
+      if (settingsRes.status === 'fulfilled' && settingsRes.value.data) {
+        setSettings({ ...defaults, ...(settingsRes.value.data || {}) });
+      }
+      if (sysRes.status === 'fulfilled' && sysRes.value.data) {
+        setSysConfig({
+          isFamilyEnabled: Boolean(sysRes.value.data.isFamilyEnabled),
+          isCpEnabled: Boolean(sysRes.value.data.isCpEnabled),
+          isInviteEarnEnabled: Boolean(sysRes.value.data.isInviteEarnEnabled),
+        });
+      }
+    })
+    .catch((error: any) => toast.error(error?.message || 'Settings load nahi hue'))
+    .finally(() => setLoading(false));
   }, []);
+
+  const toggleFeature = async (feature: string, current: boolean) => {
+    try {
+      const next = !current;
+      await apiClient.post('/api/system-config/toggle', { feature, enabled: next });
+      setSysConfig(prev => ({
+        ...prev,
+        [feature === 'family' ? 'isFamilyEnabled' : feature === 'cp' ? 'isCpEnabled' : 'isInviteEarnEnabled']: next,
+      }));
+      toast.success(`${feature === 'family' ? 'Family Guild' : feature === 'cp' ? 'CP Space' : 'Invite & Earn'} visibility updated`);
+    } catch (err: any) {
+      toast.error(err?.message || 'Feature toggle failed');
+    }
+  };
 
   const numberField = (key: keyof AppSettings, value: string) => {
     setSettings(current => ({ ...current, [key]: Number(value) }));
@@ -153,6 +181,35 @@ export default function SettingsPage() {
                 Multi-Project Failover Manager →
               </Link>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle className="flex gap-2">
+              <Zap className="h-5 w-5 text-amber-400" />
+              App Features Live Visibility (CP, Family & Invite)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <Toggle
+              label="CP Space Feature"
+              help="Mobile app me CP Center & CP Profile card ko LIVE ya HIDE karta hai."
+              checked={sysConfig.isCpEnabled}
+              onChange={() => toggleFeature('cp', sysConfig.isCpEnabled)}
+            />
+            <Toggle
+              label="Family Guild Feature"
+              help="Mobile app me Family Guild & Club cards ko LIVE ya HIDE karta hai."
+              checked={sysConfig.isFamilyEnabled}
+              onChange={() => toggleFeature('family', sysConfig.isFamilyEnabled)}
+            />
+            <Toggle
+              label="Invite & Earn Feature"
+              help="Mobile app me Invite & Earn hero banner & service entry ko LIVE ya HIDE karta hai."
+              checked={sysConfig.isInviteEarnEnabled}
+              onChange={() => toggleFeature('inviteEarn', sysConfig.isInviteEarnEnabled)}
+            />
           </CardContent>
         </Card>
 
