@@ -87,6 +87,14 @@ export const API_ENDPOINTS = {
         SIGNATURE: '/api/upload/signature',
     },
 
+    // Room Reactions & Emojis
+    EMOJIS: {
+        LIST: '/api/emojis/admin/all',
+        PUBLIC_LIST: '/api/emojis',
+        UPSERT: '/api/emojis',
+        DELETE: (id: string) => `/api/emojis/${id}`,
+    },
+
     // Avatars
     AVATARS: {
         LIST: (gender: string) => `/api/avatar/${gender}`,

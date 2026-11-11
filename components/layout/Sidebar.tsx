@@ -7,7 +7,7 @@ import {
     LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift, FileCheck,
     Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
     MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell, ShoppingBag, Car,
-    Heart, Flame, Radio, Coins, Gem, Hash, Zap, Briefcase,
+    Heart, Flame, Radio, Coins, Gem, Hash, Zap, Briefcase, Smile,
     type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -99,6 +99,7 @@ const sidebarSections: SidebarSection[] = [
     {
         title: 'App Content & Economy',
         items: [
+            { name: 'Room Reactions / Emojis', href: '/emojis', icon: Smile },
             { name: 'Virtual Gifts (💎)', href: '/gifts', icon: Gift },
             { name: 'CMS Editor', href: '/cms', icon: FileText },
             {

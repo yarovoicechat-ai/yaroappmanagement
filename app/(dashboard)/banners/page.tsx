@@ -26,8 +26,8 @@ interface Banner {
     _id: string;
     title: string;
     imageUrl: string;
-    placements?: Array<'home' | 'oneToOne' | 'party'>;
-    placement?: 'home' | 'oneToOne' | 'party';
+    placements?: Array<'home' | 'oneToOne' | 'party' | 'me'>;
+    placement?: 'home' | 'oneToOne' | 'party' | 'me';
     linkUrl: string;
     targetType: 'none' | 'internal' | 'external';
     targetScreen: string;
@@ -42,7 +42,7 @@ interface EditFormState {
     _id: string;
     title: string;
     imageUrl: string;
-    placements: Array<'home' | 'oneToOne' | 'party'>;
+    placements: Array<'home' | 'oneToOne' | 'party' | 'me'>;
     linkUrl: string;
     targetType: 'none' | 'internal' | 'external';
     targetScreen: string;
@@ -60,7 +60,7 @@ const APP_PAGE_OPTIONS = [
 ] as const;
 
 const BANNER_PLACEMENTS = [
-    ['home', 'Home'], ['oneToOne', '1-to-1'], ['party', 'Party'],
+    ['home', 'Home'], ['oneToOne', '1-to-1'], ['party', 'Party'], ['me', 'Profile (Me)'],
 ] as const;
 
 export default function BannersPage() {
@@ -73,7 +73,7 @@ export default function BannersPage() {
 
     // Form states for create
     const [title, setTitle] = useState('');
-    const [placements, setPlacements] = useState<Array<'home' | 'oneToOne' | 'party'>>(['home']);
+    const [placements, setPlacements] = useState<Array<'home' | 'oneToOne' | 'party' | 'me'>>(['home']);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState('');
     const [linkName, setLinkName] = useState('');

@@ -26,6 +26,11 @@ export interface User {
     isBlocked: boolean;
     lastOnline?: Date;
     language?: string[];
+    equippedVipId?: string;
+    customDisplayId?: string;
+    equippedCustomId?: string;
+    displayId?: string;
+    uniqueId?: string;
     frameId?: string;
     userName?: string;
     isUserName: boolean;

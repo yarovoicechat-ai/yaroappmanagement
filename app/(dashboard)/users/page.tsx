@@ -75,13 +75,24 @@ export default function UsersPage() {
     const [adjustLoading, setAdjustLoading] = useState(false);
 
     useEffect(() => {
-        fetchUsers(pagination.currentPage);
+        fetchUsers(pagination.currentPage, search);
     }, [pagination.currentPage]);
 
-    const fetchUsers = async (page: number) => {
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchUsers(1, search);
+        }, 350);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const fetchUsers = async (page: number, query = search) => {
         try {
             setLoading(true);
-            const response = await apiClient.get(API_ENDPOINTS.USERS.LIST, { page, limit: pagination.limit });
+            const params: any = { page, limit: pagination.limit };
+            if (query && query.trim()) {
+                params.search = query.trim();
+            }
+            const response = await apiClient.get(API_ENDPOINTS.USERS.LIST, params);
             if (response.success && response.data) {
                 // Handle the nested response structure from backend: { usersData: { users: [], totalUsers: 0, ... } }
                 // or flat structure depending on API. Based on userController, it is response.data.usersData
@@ -239,12 +250,24 @@ export default function UsersPage() {
         }
     };
 
-    // Client-side search (temporary until backend supports it)
-    const filteredUsers = users.filter(user =>
-        user.name?.toLowerCase().includes(search.toLowerCase()) ||
-        user.email?.toLowerCase().includes(search.toLowerCase()) ||
-        user.userId?.toString().includes(search)
-    );
+    // Multi-field search support including VIP IDs and Custom Display IDs
+    const filteredUsers = users.filter((user: any) => {
+        if (!search) return true;
+        const q = search.toLowerCase().trim();
+        return (
+            user.name?.toLowerCase().includes(q) ||
+            user.email?.toLowerCase().includes(q) ||
+            user.userName?.toLowerCase().includes(q) ||
+            user.phoneNumber?.includes(q) ||
+            user.userId?.toString().includes(q) ||
+            user.meethiId?.toString().toLowerCase().includes(q) ||
+            user.equippedVipId?.toString().toLowerCase().includes(q) ||
+            user.customDisplayId?.toString().toLowerCase().includes(q) ||
+            user.equippedCustomId?.toString().toLowerCase().includes(q) ||
+            user.displayId?.toString().toLowerCase().includes(q) ||
+            user.uniqueId?.toString().toLowerCase().includes(q)
+        );
+    });
 
     const activeUsersCount = users.filter(u => !u.isBlocked).length;
 
@@ -351,7 +374,14 @@ export default function UsersPage() {
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <div className="text-slate-200">{user.name}</div>
+                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                            <span className="text-slate-200">{user.name}</span>
+                                                            {(user.equippedVipId || user.customDisplayId || user.equippedCustomId) && (
+                                                                <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-300 border-amber-500/30 px-1 py-0">
+                                                                    VIP: {user.equippedVipId || user.customDisplayId || user.equippedCustomId}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
                                                         <div className="text-xs text-slate-500">{user.email || user.phoneNumber || `#${user.userId}`}</div>
                                                     </div>
                                                 </div>
