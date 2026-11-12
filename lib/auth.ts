@@ -1,3 +1,4 @@
+import { cacheAdminUser, clearAdminUserCache } from './adminUserCache';
 import { apiClient } from './apiClient';
 import { API_ENDPOINTS } from './apiEndpoints';
 
@@ -19,13 +20,14 @@ export async function login(email: string, password: string): Promise<{ user: Us
         if (response.success && response.data) {
             const { user, token, refreshToken } = response.data;
 
+            clearAdminUserCache();
             localStorage.setItem('admin_token', token);
             localStorage.setItem('admin_refresh_token', refreshToken);
-            localStorage.setItem('admin_user', JSON.stringify(user));
+            cacheAdminUser(user);
 
             return {
                 user: {
-                    id: user._id || user.userId,
+                    id: user._id || user.id || user.userId,
                     name: user.name,
                     email: user.email,
                     role: user.role,
@@ -59,8 +61,9 @@ export async function getUser(token: string): Promise<User | null> {
         const storedUser = localStorage.getItem('admin_user');
         if (storedUser) {
             const user = JSON.parse(storedUser);
+            cacheAdminUser(user);
             return {
-                id: user._id || user.userId,
+                id: user._id || user.id || user.userId,
                 name: user.name,
                 email: user.email,
                 role: user.role,
@@ -70,9 +73,9 @@ export async function getUser(token: string): Promise<User | null> {
         const response = await apiClient.get(API_ENDPOINTS.ADMIN.PROFILE);
         if (response.success && response.data) {
             const user = response.data;
-            localStorage.setItem('admin_user', JSON.stringify(user));
+            cacheAdminUser(user);
             return {
-                id: user._id || user.userId,
+                id: user._id || user.id || user.userId,
                 name: user.name,
                 email: user.email,
                 role: user.role,

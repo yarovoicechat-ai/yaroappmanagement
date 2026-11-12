@@ -355,11 +355,10 @@ export default function EmojisManagementPage() {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
-                selectedCategory === cat
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${selectedCategory === cat
                   ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
                   : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800 hover:border-orange-500/40'
-              }`}
+                }`}
             >
               {cat}
             </button>
@@ -396,11 +395,10 @@ export default function EmojisManagementPage() {
           {filteredEmojis.map((item) => (
             <div
               key={item._id || item.code}
-              className={`rounded-2xl p-4 bg-white dark:bg-gray-900 border transition-all ${
-                item.isActive !== false
+              className={`rounded-2xl p-4 bg-white dark:bg-gray-900 border transition-all ${item.isActive !== false
                   ? 'border-gray-200 dark:border-gray-800 hover:border-orange-500/40 hover:shadow-lg'
                   : 'border-gray-200/50 dark:border-gray-850 opacity-60'
-              }`}
+                }`}
             >
               <div className="flex items-center justify-between mb-3">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-orange-50 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 border border-orange-200/50 dark:border-orange-800/40">
@@ -466,11 +464,10 @@ export default function EmojisManagementPage() {
               <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
                 <button
                   onClick={() => handleToggleActive(item)}
-                  className={`text-xs font-medium flex items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
-                    item.isActive !== false
+                  className={`text-xs font-medium flex items-center gap-1 px-2 py-1 rounded-lg transition-colors ${item.isActive !== false
                       ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-950/30'
                       : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
+                    }`}
                 >
                   {item.isActive !== false ? (
                     <>

@@ -45,8 +45,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (username: string, password: string) => {
         const data = await apiLogin(username, password) as any;
-        localStorage.setItem('admin_token', data.token);
-        localStorage.setItem('admin_refresh_token', data.refreshToken);
         // Set cookie for middleware
         document.cookie = `admin_token=${data.token}; path=/; max-age=86400; SameSite=Strict`;
         document.cookie = `admin_refresh_token=${data.refreshToken}; path=/; max-age=86400; SameSite=Strict`;
