@@ -21,7 +21,7 @@ export const API_ENDPOINTS = {
         STATS: '/api/admin/dashboard/stats',
         REVENUE_CHART: '/api/admin/dashboard/revenue-chart',
         EARNINGS_CHART: '/api/admin/dashboard/earnings-chart',
-        CALL_TRENDS: '/api/admin/dashboard/call-trends',
+        LIVE_TRENDS: '/api/live/admin/trends',
         COIN_DISTRIBUTION: '/api/admin/dashboard/coin-distribution',
     },
 

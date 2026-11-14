@@ -69,6 +69,7 @@ const sidebarSections: SidebarSection[] = [
             { name: 'Medals & Badges', href: '/store/badges', icon: Award },
             { name: 'Screen Security & Code', href: '/screen-security', icon: ShieldCheck },
             { name: 'Team & Hosting Targets', href: '/team', icon: Users },
+            { name: 'Video Live Rooms', href: '/live/rooms', icon: Radio },
             { name: 'App Settings', href: '/settings', icon: Settings },
             {
                 name: 'Communication Services',

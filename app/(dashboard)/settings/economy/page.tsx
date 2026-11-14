@@ -64,10 +64,6 @@ export default function EconomySettingsPage() {
         {field('Beans per INR (new earnings only)', '', 'beansPerInr', rules.beansPerInr)}
         {field('Gift accounting Beans per Diamond', '', 'giftBeansPerDiamond', rules.giftBeansPerDiamond)}</div>
       <p className="text-sm text-muted-foreground">One Diamond is 100 Diamond Units. Percentages use basis points: 4,500 = 45%. Purchased Diamonds have no direct Beans withdrawal conversion.</p>
-      {(['voice', 'video'] as const).map(kind => <div key={kind}><h3 className="font-semibold capitalize mb-2">{kind} calling</h3><div className="grid gap-4 sm:grid-cols-3">
-        {field('Diamond Units per started minute', kind, 'diamondUnitsPerMinute', rules[kind].diamondUnitsPerMinute)}
-        {field('Host Beans per billable minute', kind, 'hostBeansPerMinute', rules[kind].hostBeansPerMinute)}
-        {field('Reference INR paise per minute', kind, 'referencePaisePerMinute', rules[kind].referencePaisePerMinute)}</div></div>)}
       <div className="grid gap-4 sm:grid-cols-2">{field('Host instant share (basis points; cap 4,500)', 'gift', 'instantBps', rules.gift.instantBps)}
         {field('Salary reserve cap (basis points; cap 1,500)', 'gift', 'salaryMaxBps', rules.gift.salaryMaxBps)}
         {field('Agency commission cap (basis points; cap 1,000)', 'gift', 'agencyMaxBps', rules.gift.agencyMaxBps)}

@@ -119,22 +119,16 @@ export default function SettingsPage() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">App Control Settings</h2>
-          <p className="text-muted-foreground mt-1">Runtime calling, commission, economy, Agora and app behavior controls.</p>
+          <p className="text-muted-foreground mt-1">Live rooms, commission, economy, Agora and app behavior controls.</p>
         </div>
         <Button onClick={() => void save()} disabled={saving}><Save className="h-4 w-4 mr-2" />{saving ? 'Saving…' : 'Save All'}</Button>
       </div>
 
-      {user?.role === 'owner' && <Link href="/settings/economy" className="block border rounded-xl p-4 hover:bg-muted">Manage versioned Beans, calling, gifts, salary and agency economy</Link>}
+      {user?.role === 'owner' && <Link href="/settings/economy" className="block border rounded-xl p-4 hover:bg-muted">Manage versioned Beans, gifts, salary and agency economy</Link>}
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="glass-card">
-          <CardHeader><CardTitle className="flex gap-2"><PhoneCall className="h-5 w-5" />Calling & Platform Commission</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="flex gap-2"><PhoneCall className="h-5 w-5" />Chat Configuration</CardTitle></CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <Field label="Caller rate (diamonds/min)" help="Caller must have at least this balance; each started minute costs this amount.">
-              <Input type="number" min="1" value={settings.callRatePerMinute} onChange={e => numberField('callRatePerMinute', e.target.value)} />
-            </Field>
-            <Field label="Platform commission (%)" help="Recorded as the platform commission setting for call accounting.">
-              <Input type="number" min="0" max="100" value={settings.commissionRate} onChange={e => numberField('commissionRate', e.target.value)} />
-            </Field>
             <Field label="Chat message cost" help="Diamonds charged for configured paid chat messages.">
               <Input type="number" min="0" value={settings.chatMessageCost} onChange={e => numberField('chatMessageCost', e.target.value)} />
             </Field>
