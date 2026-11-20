@@ -7,7 +7,7 @@ import {
     LayoutDashboard, Settings, Menu, X, LogOut, Award, Gift, FileCheck,
     Layers, Crown, Users, FileText, Terminal, ChevronDown, ChevronRight,
     MessageCircle, Download, ShieldCheck, Share2, Smartphone, Sparkles, Sliders, Bell, ShoppingBag, Car,
-    Heart, Flame, Radio, Coins, Gem, Hash, Zap, Briefcase, Smile,
+    Heart, Flame, Radio, Coins, Gem, Hash, Zap, Briefcase, Smile, Gamepad2,
     type LucideIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -64,6 +64,7 @@ const sidebarSections: SidebarSection[] = [
             { name: 'Dashboard', href: '/', icon: LayoutDashboard },
             { name: 'App Releases (APK)', href: '/app-releases', icon: Download },
             { name: 'Feature Flags', href: '/feature-flags', icon: Sliders },
+            { name: 'Mini-Games Management', href: '/games', icon: Gamepad2 },
             { name: 'CP Space & Relations', href: '/cp', icon: Heart },
             { name: 'Family Guilds', href: '/family', icon: Users },
             { name: 'Medals & Badges', href: '/store/badges', icon: Award },
