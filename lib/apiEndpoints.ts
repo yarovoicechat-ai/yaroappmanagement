@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
     // User Management
     USERS: {
         LIST: '/api/user',
+        CREATE_FAKE: '/api/admin/users/create-fake',
         GET: (id: string) => `/api/user/${id}`,
         UPDATE: (id: string) => `/api/user/${id}`,
         DELETE: (id: string) => `/api/user/${id}`,

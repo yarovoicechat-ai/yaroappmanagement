@@ -15,6 +15,9 @@ export interface User {
     role: 'owner' | 'superAdmin' | 'admin' | 'coinSeller' | 'host' | 'user';
     authType: 'phone' | 'google' | 'email';
     coins: number;
+    diamonds?: number;
+    isFake?: boolean;
+    isMockUser?: boolean;
     level?: number;
     wealthLevel?: number;
     wealthExp?: number;
@@ -93,6 +96,9 @@ export interface Report {
 export interface CoinPrice {
     _id: string;
     coins: number;
+    diamonds?: number;
+    isFake?: boolean;
+    isMockUser?: boolean;
     price: number;
     currency: string;
     description?: string;

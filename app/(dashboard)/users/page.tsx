@@ -31,7 +31,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/AlertDialog";
-import { Ban, Edit2, Search, ShieldCheck, UserPlus, Trash2, CheckCircle, Save, Users, UserCheck, Coins, Award, Sparkles } from "lucide-react";
+import { Ban, Edit2, Search, ShieldCheck, UserPlus, Trash2, CheckCircle, Save, Users, UserCheck, Coins, Award, Sparkles, Copy, Check, Eye, EyeOff, RefreshCw, Key, CheckCircle2 } from "lucide-react";
 import { toast } from 'sonner';
 import { Pagination } from "@/components/ui/Pagination";
 import { apiClient } from '@/lib/apiClient';
@@ -49,10 +49,24 @@ export default function UsersPage() {
         limit: 10
     });
 
-    // Add User State
-    const [isAddingUser, setIsAddingUser] = useState(false);
-    const [newUserEmail, setNewUserEmail] = useState('');
-    const [newUserName, setNewUserName] = useState('');
+    // Create Fake / Test User State
+    const [isCreateFakeModalOpen, setIsCreateFakeModalOpen] = useState(false);
+    const [fakeUserName, setFakeUserName] = useState('');
+    const [fakeUserPhone, setFakeUserPhone] = useState('+91');
+    const [fakeUserPassword, setFakeUserPassword] = useState('password123');
+    const [fakeUserGender, setFakeUserGender] = useState<'male' | 'female'>('male');
+    const [fakeUserCoins, setFakeUserCoins] = useState('10000');
+    const [fakeUserDiamonds, setFakeUserDiamonds] = useState('1000');
+    const [fakeUserCustomId, setFakeUserCustomId] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [createLoading, setCreateLoading] = useState(false);
+    const [createdUserCredentials, setCreatedUserCredentials] = useState<{
+        userId: number;
+        name: string;
+        phoneNumber: string;
+        password: string;
+    } | null>(null);
+    const [copiedField, setCopiedField] = useState<string | null>(null);
 
     // Edit User State
     const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -114,10 +128,79 @@ export default function UsersPage() {
         }
     };
 
-    const handleAddUser = () => {
-        // Backend doesn't support creating users via Admin API yet
-        toast.info("Feature not available via Admin API. Please use the mobile app to register users.");
-        setIsAddingUser(false);
+    const handleGenerateRandomData = () => {
+        const firstNames = ['Rahul', 'Pooja', 'Amit', 'Neha', 'Vikas', 'Priya', 'Rohit', 'Sneha', 'Arjun', 'Anjali', 'Karan', 'Riya', 'Aman', 'Simran'];
+        const lastNames = ['Sharma', 'Verma', 'Kumar', 'Singh', 'Patel', 'Yadav', 'Gupta', 'Mishra', 'Mehta', 'Joshi', 'Choudhary'];
+        const randomName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+        const randomDigits = Math.floor(6000000000 + Math.random() * 3999999999);
+        const randomPhone = `+91${randomDigits}`;
+        const randomGender: 'male' | 'female' = Math.random() > 0.5 ? 'male' : 'female';
+
+        setFakeUserName(randomName);
+        setFakeUserPhone(randomPhone);
+        setFakeUserPassword('password123');
+        setFakeUserGender(randomGender);
+        setFakeUserCoins('10000');
+        setFakeUserDiamonds('1000');
+        setFakeUserCustomId('');
+        toast.info("Generated random test user credentials!");
+    };
+
+    const handleCreateFakeUser = async () => {
+        if (!fakeUserName.trim()) {
+            toast.error("Please enter user name");
+            return;
+        }
+        const cleanDigits = fakeUserPhone.replace(/\D/g, '');
+        if (!fakeUserPhone.trim() || cleanDigits.length < 6) {
+            toast.error("Please enter a valid mobile number (at least 6 digits)");
+            return;
+        }
+        if (!fakeUserPassword.trim() || fakeUserPassword.trim().length < 4) {
+            toast.error("Password must be at least 4 characters");
+            return;
+        }
+
+        try {
+            setCreateLoading(true);
+            const payload: any = {
+                name: fakeUserName.trim(),
+                phoneNumber: fakeUserPhone.trim(),
+                password: fakeUserPassword.trim(),
+                gender: fakeUserGender,
+                coins: parseInt(fakeUserCoins) || 0,
+                diamonds: parseInt(fakeUserDiamonds) || 0,
+            };
+            if (fakeUserCustomId.trim()) {
+                payload.customUserId = parseInt(fakeUserCustomId.trim());
+            }
+
+            const response = await apiClient.post(API_ENDPOINTS.USERS.CREATE_FAKE, payload);
+            if (response.success && response.data) {
+                const creds = response.data.loginCredentials || {
+                    userId: response.data.userId,
+                    name: response.data.name,
+                    phoneNumber: response.data.phoneNumber,
+                    password: fakeUserPassword.trim()
+                };
+                setCreatedUserCredentials(creds);
+                toast.success(`User #${creds.userId} created successfully! Ready for mobile app login.`);
+                fetchUsers(1);
+            } else {
+                toast.error(response.message || "Failed to create fake user");
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Failed to create fake user");
+        } finally {
+            setCreateLoading(false);
+        }
+    };
+
+    const handleCopy = (text: string, fieldName: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedField(fieldName);
+        toast.success(`Copied ${fieldName} to clipboard!`);
+        setTimeout(() => setCopiedField(null), 2500);
     };
 
     const handleUpdateUser = async () => {
@@ -280,8 +363,14 @@ export default function UsersPage() {
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="outline" onClick={() => toast.info("Exporting CSV...")}>Export CSV</Button>
-                    <Button onClick={() => setIsAddingUser(!isAddingUser)}>
-                        {isAddingUser ? "Cancel" : "Add User"}
+                    <Button
+                        onClick={() => {
+                            setCreatedUserCredentials(null);
+                            setIsCreateFakeModalOpen(true);
+                        }}
+                        className="bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-semibold shadow-lg shadow-purple-500/20"
+                    >
+                        <UserPlus className="mr-2 h-4 w-4" /> Create Test / Fake User
                     </Button>
                 </div>
             </div>
@@ -308,27 +397,7 @@ export default function UsersPage() {
                 </Card>
             </div>
 
-            {/* Add User Panel */}
-            {isAddingUser && (
-                <Card glass className="border-dosti-500/50 bg-dosti-900/10">
-                    <CardHeader>
-                        <CardTitle className="text-lg">Add New User</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col md:flex-row gap-4 items-end">
-                        <div className="grid w-full items-center gap-1.5">
-                            <label htmlFor="name" className="text-sm font-medium">Name</label>
-                            <Input id="name" value={newUserName} onChange={e => setNewUserName(e.target.value)} placeholder="John Doe" />
-                        </div>
-                        <div className="grid w-full items-center gap-1.5">
-                            <label htmlFor="email" className="text-sm font-medium">Email</label>
-                            <Input id="email" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="john@example.com" />
-                        </div>
-                        <Button onClick={handleAddUser} className="w-full md:w-auto bg-dosti-600 hover:bg-dosti-500">
-                            <UserPlus className="mr-2 h-4 w-4" /> Create
-                        </Button>
-                    </CardContent>
-                </Card>
-            )}
+
 
             <Card glass>
                 <CardHeader>
@@ -376,6 +445,11 @@ export default function UsersPage() {
                                                     <div>
                                                         <div className="flex items-center gap-1.5 flex-wrap">
                                                             <span className="text-slate-200">{user.name}</span>
+                                                            {(user.isFake || user.isMockUser) && (
+                                                                <Badge variant="outline" className="text-[10px] bg-purple-500/15 text-purple-300 border-purple-500/40 px-1 py-0 inline-flex items-center gap-1">
+                                                                    <Sparkles className="h-2.5 w-2.5 text-purple-400" /> Test User
+                                                                </Badge>
+                                                            )}
                                                             {(user.equippedVipId || user.customDisplayId || user.equippedCustomId) && (
                                                                 <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-300 border-amber-500/30 px-1 py-0">
                                                                     VIP: {user.equippedVipId || user.customDisplayId || user.equippedCustomId}
@@ -702,6 +776,252 @@ export default function UsersPage() {
                             {adjustLoading ? 'Applying...' : 'Apply EXP Adjustment'}
                         </Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Create Fake / Test User Dialog */}
+            <Dialog open={isCreateFakeModalOpen} onOpenChange={setIsCreateFakeModalOpen}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-xl">
+                            <Sparkles className="h-5 w-5 text-purple-400" /> Create Test / Fake User
+                        </DialogTitle>
+                        <DialogDescription>
+                            Create a real user account with Phone & Password for testing login in the mobile app.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {createdUserCredentials ? (
+                        <div className="space-y-4 py-2">
+                            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200">
+                                <div className="flex items-center gap-2 font-semibold text-emerald-400 text-base mb-1">
+                                    <CheckCircle2 className="h-5 w-5" /> User Created Successfully!
+                                </div>
+                                <p className="text-xs text-slate-300">
+                                    This user can now login directly in the Yaro mobile app with phone & password.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2.5 p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-slate-400">User ID:</span>
+                                    <span className="font-bold text-slate-100 font-mono">#{createdUserCredentials.userId}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-slate-400">Name:</span>
+                                    <span className="font-semibold text-slate-100">{createdUserCredentials.name}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-slate-400">Phone Number:</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-amber-300 font-mono">{createdUserCredentials.phoneNumber}</span>
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-7 w-7 p-0"
+                                            onClick={() => handleCopy(createdUserCredentials.phoneNumber, 'Phone')}
+                                        >
+                                            {copiedField === 'Phone' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-slate-400" />}
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-slate-400">Password:</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-purple-300 font-mono">{createdUserCredentials.password}</span>
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-7 w-7 p-0"
+                                            onClick={() => handleCopy(createdUserCredentials.password, 'Password')}
+                                        >
+                                            {copiedField === 'Password' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-slate-400" />}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300 flex items-start gap-2">
+                                <Key className="h-4 w-4 shrink-0 mt-0.5" />
+                                <div>
+                                    <span className="font-semibold">How to log in on mobile app:</span>
+                                    <ol className="list-decimal list-inside mt-1 space-y-0.5 text-slate-400">
+                                        <li>Open Yaro App and go to Sign In screen</li>
+                                        <li>Enter Phone: <span className="text-slate-200 font-mono">{createdUserCredentials.phoneNumber}</span></li>
+                                        <li>Enter Password: <span className="text-slate-200 font-mono">{createdUserCredentials.password}</span></li>
+                                        <li>Tap Sign In to immediately enter the app</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <DialogFooter className="gap-2 sm:gap-0">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        const fullCreds = `Phone: ${createdUserCredentials.phoneNumber}\nPassword: ${createdUserCredentials.password}\nUser ID: ${createdUserCredentials.userId}`;
+                                        handleCopy(fullCreds, 'Login Details');
+                                    }}
+                                >
+                                    <Copy className="mr-2 h-4 w-4" /> Copy All Credentials
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        setCreatedUserCredentials(null);
+                                        handleGenerateRandomData();
+                                    }}
+                                    className="bg-purple-600 hover:bg-purple-500 text-white"
+                                >
+                                    <UserPlus className="mr-2 h-4 w-4" /> Create Another
+                                </Button>
+                            </DialogFooter>
+                        </div>
+                    ) : (
+                        <div className="space-y-4 py-2">
+                            {/* Auto Generator Button */}
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                                <div className="text-xs text-purple-200">
+                                    <span className="font-semibold">Quick Setup:</span> Auto-fill with random Indian name & phone
+                                </div>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={handleGenerateRandomData}
+                                    className="border-purple-500/40 text-purple-300 hover:bg-purple-500/20"
+                                >
+                                    <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> 🎲 Random Auto-fill
+                                </Button>
+                            </div>
+
+                            {/* Name & Phone */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-slate-300">Full Name *</label>
+                                    <Input
+                                        placeholder="e.g. Rahul Sharma"
+                                        value={fakeUserName}
+                                        onChange={(e) => setFakeUserName(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-slate-300">Phone Number *</label>
+                                    <Input
+                                        placeholder="e.g. +919876543210"
+                                        value={fakeUserPhone}
+                                        onChange={(e) => setFakeUserPhone(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Password */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-slate-300">Login Password *</label>
+                                <div className="relative">
+                                    <Input
+                                        type={showPassword ? 'text' : 'password'}
+                                        placeholder="Enter password (e.g. password123)"
+                                        value={fakeUserPassword}
+                                        onChange={(e) => setFakeUserPassword(e.target.value)}
+                                        className="pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Gender & Custom User ID */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-slate-300">Gender</label>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant={fakeUserGender === 'male' ? 'default' : 'outline'}
+                                            className={fakeUserGender === 'male' ? 'bg-cyan-600 hover:bg-cyan-500 flex-1' : 'flex-1'}
+                                            onClick={() => setFakeUserGender('male')}
+                                        >
+                                            👨 Male
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant={fakeUserGender === 'female' ? 'default' : 'outline'}
+                                            className={fakeUserGender === 'female' ? 'bg-pink-600 hover:bg-pink-500 flex-1' : 'flex-1'}
+                                            onClick={() => setFakeUserGender('female')}
+                                        >
+                                            👩 Female
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-slate-300">Custom User ID (Optional)</label>
+                                    <Input
+                                        type="number"
+                                        placeholder="Auto-generated if empty"
+                                        value={fakeUserCustomId}
+                                        onChange={(e) => setFakeUserCustomId(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Initial Coins & Diamonds */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-slate-300 flex items-center gap-1">
+                                        🪙 Initial Coins
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        placeholder="10000"
+                                        value={fakeUserCoins}
+                                        onChange={(e) => setFakeUserCoins(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-slate-300 flex items-center gap-1">
+                                        💎 Initial Diamonds
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        placeholder="1000"
+                                        value={fakeUserDiamonds}
+                                        onChange={(e) => setFakeUserDiamonds(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <DialogFooter className="pt-2">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsCreateFakeModalOpen(false)}
+                                    disabled={createLoading}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleCreateFakeUser}
+                                    disabled={createLoading}
+                                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold"
+                                >
+                                    {createLoading ? (
+                                        <span className="flex items-center gap-2">
+                                            <RefreshCw className="h-4 w-4 animate-spin" /> Creating User...
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-2">
+                                            <UserPlus className="h-4 w-4" /> Create & Enable Login
+                                        </span>
+                                    )}
+                                </Button>
+                            </DialogFooter>
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>
